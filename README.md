@@ -27,7 +27,7 @@
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 ```
-###BLE扫描：
+### BLE扫描：
 ```
 //实例化扫描器
 BleScanner bleScanner = new BleScanner(context);
