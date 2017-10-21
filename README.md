@@ -9,6 +9,7 @@
 配置：
 
 1.直接将library依赖到项目中
+
 2.gradle配置依赖
 ```
 compile 'com.jackiepenghe:blelibrary:0.1.0'
