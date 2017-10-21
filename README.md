@@ -8,9 +8,19 @@
 
 配置：
 
-可以直接将library依赖到项目中，也可以自己从项目的附件下载aar引入
-[下载地址](https://git.oschina.net/sscl/BleSample/attach_files)
-
+1.直接将library依赖到项目中
+2.gradle配置依赖
+```
+敬请期待
+```
+3.maven配置依赖
+```
+敬请期待
+```
+4.vy配置依赖
+```
+敬请期待
+```
 
 ###  权限配置：
 ```
