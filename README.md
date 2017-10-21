@@ -11,15 +11,22 @@
 1.直接将library依赖到项目中
 2.gradle配置依赖
 ```
-敬请期待
+compile 'com.jackiepenghe:blelibrary:0.1.0'
 ```
 3.maven配置依赖
 ```
-敬请期待
+<dependency>
+  <groupId>com.jackiepenghe</groupId>
+  <artifactId>blelibrary</artifactId>
+  <version>0.1.0</version>
+  <type>pom</type>
+</dependency
 ```
 4.vy配置依赖
 ```
-敬请期待
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.1.0'>
+  <artifact name='blelibrary' ext='pom' ></artifact>
+</dependency>
 ```
 
 ###  权限配置：
