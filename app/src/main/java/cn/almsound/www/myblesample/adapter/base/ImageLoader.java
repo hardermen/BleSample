@@ -1,4 +1,4 @@
-package cn.almsound.www.myblesample.adapter.all_purpose_adapter;
+package cn.almsound.www.myblesample.adapter.base;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -28,8 +28,9 @@ import cn.almsound.www.myblesample.utils.LogUtil;
 
 
 /**
- * 图片加载类
- * Created by ALM on 2016/7/7.
+ * @author alm
+ *         Created by ALM on 2016/7/7.
+ *         图片加载类
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ImageLoader {
@@ -150,11 +151,11 @@ public class ImageLoader {
      * @param os OutputStream
      */
     private void copyStream(InputStream is, OutputStream os) {
-        final int buffer_size = 1024;
+        final int bufferSize = 1024;
         try {
-            byte[] bytes = new byte[buffer_size];
+            byte[] bytes = new byte[bufferSize];
             while (true) {
-                int count = is.read(bytes, 0, buffer_size);
+                int count = is.read(bytes, 0, bufferSize);
                 if (count == -1) {
                     break;
                 }
@@ -209,7 +210,6 @@ public class ImageLoader {
             bitmap = decodeFile(f);
             return bitmap;
         } catch (Exception e) {
-            // e.printStackTrace();
             LogUtil.d("ImageLoader getBitmap Exception");
             return null;
         }
@@ -230,17 +230,17 @@ public class ImageLoader {
                 o.inJustDecodeBounds = true;
                 BitmapFactory.decodeStream(new FileInputStream(f), null, o);
 
-                final int REQUIRED_SIZE = 70;
-                int width_tmp = o.outWidth, height_tmp = o.outHeight;
+                final int requiredSize = 70;
+                int widthTmp = o.outWidth, outHeight = o.outHeight;
                 int scale = 1;
                 // 如果长或宽大于70，那么把图片的高宽缩小一半
                 while (true) {
-                    if (width_tmp / 2 < REQUIRED_SIZE
-                            || height_tmp / 2 < REQUIRED_SIZE) {
+                    if (widthTmp / 2 < requiredSize
+                            || outHeight / 2 < requiredSize) {
                         break;
                     }
-                    width_tmp /= 2;
-                    height_tmp /= 2;
+                    widthTmp /= 2;
+                    outHeight /= 2;
                     scale *= 2;
                 }
 
@@ -258,7 +258,6 @@ public class ImageLoader {
             return isCircle ? createCircleBitmap(bitmap) : bitmap;
         } catch (FileNotFoundException e) {
             LogUtil.e("ImageLoader", e.getMessage());
-            // e.printStackTrace();
         }
         return null;
     }

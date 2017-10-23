@@ -8,8 +8,9 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 /**
- * Created by alm on 17-6-5.
- * 自定义BLE设备been类
+ * @author alm
+ *         Created by alm on 17-6-5.
+ *         自定义BLE设备been类
  */
 
 @SuppressWarnings("ALL")

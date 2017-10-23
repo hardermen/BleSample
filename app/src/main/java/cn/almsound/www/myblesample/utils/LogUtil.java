@@ -3,9 +3,9 @@ package cn.almsound.www.myblesample.utils;
 import android.util.Log;
 
 /**
- * 日志打印工具类
- * <p>
- * Created by ALM on 2016/7/7.
+ * @author alm
+ *         日志打印工具类
+ *         Created by ALM on 2016/7/7.
  */
 @SuppressWarnings("unused")
 public class LogUtil {
@@ -13,7 +13,7 @@ public class LogUtil {
     /**
      * 默认的tag
      */
-    private static final String tag = "LogUtil";
+    private static final String TAG = "LogUtil";
 
     /**
      * 调试输出的标志
@@ -22,14 +22,16 @@ public class LogUtil {
 
     /**
      * 获取tag
-     * @return tag
+     *
+     * @return TAG
      */
     public static String getTag() {
-        return tag;
+        return TAG;
     }
 
     /**
      * 获取当前调试标志
+     *
      * @return true表示打印log，false表示不打印
      */
     public static boolean isDebug() {
@@ -38,6 +40,7 @@ public class LogUtil {
 
     /**
      * s设置调试标志
+     *
      * @param debugFlag 调试标志
      */
     public static void setDebugFlag(boolean debugFlag) {
@@ -46,6 +49,7 @@ public class LogUtil {
 
     /**
      * 用 log.i 的方式打印日志信息
+     *
      * @param tag TAG
      * @param msg 日志信息
      */
@@ -57,16 +61,18 @@ public class LogUtil {
 
     /**
      * 用 log.i 的方式打印日志信息
+     *
      * @param msg 日志信息
      */
     public static void i(String msg) {
         if (debugFlag) {
-            Log.i(tag, msg);
+            Log.i(TAG, msg);
         }
     }
 
     /**
      * 用 log.d 的方式打印日志信息
+     *
      * @param tag TAG
      * @param msg 日志信息
      */
@@ -78,17 +84,19 @@ public class LogUtil {
 
     /**
      * 用 log.d 的方式打印日志信息
+     *
      * @param msg 日志信息
      */
     @SuppressWarnings("WeakerAccess")
     public static void d(String msg) {
         if (debugFlag) {
-            Log.d(tag, msg);
+            Log.d(TAG, msg);
         }
     }
 
     /**
      * 用 log.e 的方式打印日志信息
+     *
      * @param tag TAG
      * @param msg 日志信息
      */
@@ -100,16 +108,18 @@ public class LogUtil {
 
     /**
      * 用 log.e 的方式打印日志信息
+     *
      * @param msg 日志信息
      */
     public static void e(String msg) {
         if (debugFlag) {
-            Log.e(tag, msg);
+            Log.e(TAG, msg);
         }
     }
 
     /**
      * 用 log.w 的方式打印日志信息
+     *
      * @param tag TAG
      * @param msg 日志信息
      */
@@ -121,11 +131,12 @@ public class LogUtil {
 
     /**
      * 用 log.w 的方式打印日志信息
+     *
      * @param msg 日志信息
      */
     public static void w(String msg) {
         if (debugFlag) {
-            Log.w(tag, msg);
+            Log.w(TAG, msg);
         }
     }
 }

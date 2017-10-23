@@ -1,4 +1,4 @@
-package cn.almsound.www.myblesample.adapter.all_purpose_adapter;
+package cn.almsound.www.myblesample.adapter.base;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 自定义万能适配器
- * <p>
- * Created by ALM on 2016/6/28.
+ * @author alm
+ *         Created by ALM on 2016/6/28.
+ *         自定义万能适配器
  */
 @SuppressWarnings("unused")
-public abstract class AllPurposeAdapter<T> extends BaseAdapter {
+public abstract class BasePurposeAdapter<T> extends BaseAdapter {
 
     /**
      * 上下文对象
@@ -44,7 +44,7 @@ public abstract class AllPurposeAdapter<T> extends BaseAdapter {
      * @param mDatas       适配器数据
      * @param itemLayoutId 适配器每一个单独的item的布局
      */
-    protected AllPurposeAdapter(Context context, List<T> mDatas, int itemLayoutId) {
+    protected BasePurposeAdapter(Context context, List<T> mDatas, int itemLayoutId) {
         this.mContext = context;
         // 布局加载器
         LayoutInflater mInflater = LayoutInflater.from(mContext);
@@ -79,7 +79,7 @@ public abstract class AllPurposeAdapter<T> extends BaseAdapter {
      * @param i 要设置的item总数
      * @return 返回一个AllPurposeAdapter对象
      */
-    public AllPurposeAdapter setCount(int i) {
+    public BasePurposeAdapter setCount(int i) {
         countSum = i;
         this.notifyDataSetChanged();
         return this;

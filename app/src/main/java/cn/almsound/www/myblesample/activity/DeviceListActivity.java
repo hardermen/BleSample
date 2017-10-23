@@ -54,6 +54,8 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
      * BLE扫描器
      */
     private BleScanner bleScanner;
+    private static final int TWO = 2;
+
     /**
      * 标题栏的返回按钮被按下的时候回调此函数
      */
@@ -185,7 +187,7 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     doButtonClick();
                 } else {
-                    ToastUtil.L(DeviceListActivity.this, R.string.no_permission_for_local);
+                    ToastUtil.l(DeviceListActivity.this, R.string.no_permission_for_local);
                 }
                 break;
             default:
@@ -218,7 +220,7 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
         //创建扫描器实例
         bleScanner = new BleScanner(DeviceListActivity.this);
         //发现一个新设备（在此之前该设备没有被发现过）时触发此回调
-        BleInterface.OnScanFindANewDeviceListener onScanFindANewDeviceListener = bleDevice -> {
+        BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = bleDevice -> {
             //可以在此处过滤一些不需要的设备
             /*if(bleDevice.getBluetoothDevice().getAddress().equalsIgnoreCase("00:00:00:AA:SS:BB")){
                 return;
@@ -232,15 +234,15 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
             button.setText(R.string.start_scan);
             clickCount--;
         };
-        //在扫描过程中发现一个设备就会触发一次此回调，不论该设备是否被发现过。在安卓5.0之前此回调效果完全等同于BleInterface.OnScanFindANewDeviceListener
-        BleInterface.OnScanFindADeviceListener onScanFindADeviceListener = (bluetoothDevice, rssi, scanRecord) -> {
+        //在扫描过程中发现一个设备就会触发一次此回调，不论该设备是否被发现过。在安卓5.0之前此回调效果完全等同于BleInterface.OnScanFindOneNewDeviceListener
+        BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener = (bluetoothDevice, rssi, scanRecord) -> {
 
         };
 
         /*
          * 打开扫描器，并设置相关回调
          * @param scanResults                  扫描设备结果存放列表
-         * @param onScanFindANewDeviceListener 发现一个新设备的回调
+         * @param onScanFindOneNewDeviceListener 发现一个新设备的回调
          * @param scanPeriod                   扫描持续时间
          * @param scanContinueFlag             是否在扫描完成后立即进行下一次扫描的标志
          *                                     为true表示一直扫描，永远不会调用BleInterface.OnScanCompleteListener，
@@ -248,9 +250,9 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
          * @param onScanCompleteListener       扫描完成的回调
          * @return true表示打开成功
          */
-        bleScanner.open(scanList, onScanFindANewDeviceListener, 20000, true, onScanCompleteListener);
+        bleScanner.open(scanList, onScanFindOneNewDeviceListener, 20000, true, onScanCompleteListener);
         //设置回调
-        bleScanner.setOnScanFindADeviceListener(onScanFindADeviceListener);
+        bleScanner.setOnScanFindADeviceListener(onScanFindOneDeviceListener);
     }
 
 
@@ -293,7 +295,7 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
      * 扫描/停止扫描
      */
     private void doButtonClick() {
-        if (clickCount % 2 == 0) {
+        if (clickCount % TWO == 0) {
             button.setText(R.string.stop_scan);
             bleScanner.clearScanResults();
             adapterList.clear();

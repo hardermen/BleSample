@@ -5,14 +5,15 @@ import android.content.Context;
 import java.util.List;
 
 import cn.almsound.www.blelibrary.BleDevice;
-import cn.almsound.www.myblesample.adapter.all_purpose_adapter.AllPurposeAdapter;
-import cn.almsound.www.myblesample.adapter.all_purpose_adapter.ViewHolder;
+import cn.almsound.www.myblesample.adapter.base.BasePurposeAdapter;
+import cn.almsound.www.myblesample.adapter.base.ViewHolder;
 
 /**
+ * @author jackie
  * 自定义适配器(显示自定义BLE设备列表)
- * Created by jacke on 2017/1/6 0006.
+ * Created by jackie on 2017/1/6 0006.
  */
-public class DeviceListAdapter extends AllPurposeAdapter<BleDevice> {
+public class DeviceListAdapter extends BasePurposeAdapter<BleDevice> {
 
 
     /**

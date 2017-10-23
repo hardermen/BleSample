@@ -5,11 +5,12 @@ import android.support.annotation.StringRes;
 import android.util.Log;
 
 /**
- * Created by alm on 17-6-5.
- * 工具类
+ * @author alm
+ *         Created by alm on 17-6-5.
+ *         工具类
  */
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class Tool {
     //log部分
 
@@ -56,7 +57,6 @@ public class Tool {
      * @param tag     tag
      * @param message 日志信息
      */
-    @SuppressWarnings("WeakerAccess")
     public static void infoOut(String tag, String message) {
         if (!mDebug) {
             return;
@@ -79,7 +79,6 @@ public class Tool {
      * @param tag     tag
      * @param message 日志信息
      */
-    @SuppressWarnings("WeakerAccess")
     public static void errorOut(String tag, String message) {
         if (!mDebug) {
             return;
@@ -102,7 +101,6 @@ public class Tool {
      * @param tag     tag
      * @param message 日志信息
      */
-    @SuppressWarnings("WeakerAccess")
     public static void debugOut(String tag, String message) {
         if (!mDebug) {
             return;
@@ -125,7 +123,6 @@ public class Tool {
      * @param tag     tag
      * @param message 日志信息
      */
-    @SuppressWarnings("WeakerAccess")
     public static void warnOut(String tag, String message) {
         if (!mDebug) {
             return;
@@ -149,7 +146,6 @@ public class Tool {
      * @param tag     tag
      * @param message 日志信息
      */
-    @SuppressWarnings("WeakerAccess")
     public static void verOut(String tag, String message) {
         if (!mDebug) {
             return;
@@ -321,7 +317,6 @@ public class Tool {
      * @param bytes byte数组
      * @return String 每个Byte值之间空格分隔
      */
-    @SuppressWarnings("WeakerAccess")
     public static String bytesToHexStr(byte[] bytes) {
         String stmp;
         StringBuilder sb = new StringBuilder("");
@@ -421,6 +416,8 @@ public class Tool {
         return high * 256 + low;
     }
 
+    private static final int TWO = 2;
+
     /**
      * 将一个整数转换成16进制的分为高低位的数组
      *
@@ -433,7 +430,7 @@ public class Tool {
         warnOut("ConversionUtil", "hexString = " + hexString);
         byte highByte;
         byte lowByte;
-        if (hexString.length() > 2) {
+        if (hexString.length() > TWO) {
             String substring = hexString.substring(0, hexString.length() - 2);
             warnOut("ConversionUtil", "highByteHex = " + substring);
             highByte = (byte) Integer.parseInt(substring, 16);
@@ -455,17 +452,16 @@ public class Tool {
      * @param i 整数
      * @return 16进制字符串
      */
-    @SuppressWarnings("WeakerAccess")
     public static String intToHexStr(int i) {
         return Integer.toHexString(i);
     }
 
     //其他
 
-    public  static void waitTime(long timeMillis){
+    public static void waitTime(long timeMillis) {
         long currentTimeMillis = System.currentTimeMillis();
-        while (true){
-            if(System.currentTimeMillis() - currentTimeMillis >= timeMillis){
+        while (true) {
+            if (System.currentTimeMillis() - currentTimeMillis >= timeMillis) {
                 break;
             }
         }

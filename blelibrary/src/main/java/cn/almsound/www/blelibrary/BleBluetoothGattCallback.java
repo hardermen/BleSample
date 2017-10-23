@@ -46,22 +46,22 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
         switch (newState) {
             case BluetoothGatt.STATE_DISCONNECTED:
                 Tool.warnOut(TAG, "STATE_DISCONNECTED");
-                intent.setAction(BLEConstants.ACTION_GATT_DISCONNECTED);
+                intent.setAction(BleConstants.ACTION_GATT_DISCONNECTED);
                 break;
             case BluetoothGatt.STATE_CONNECTING:
                 Tool.warnOut(TAG, "STATE_CONNECTING");
-                intent.setAction(BLEConstants.ACTION_GATT_CONNECTING);
+                intent.setAction(BleConstants.ACTION_GATT_CONNECTING);
                 break;
             case BluetoothGatt.STATE_CONNECTED:
                 Tool.warnOut(TAG, "STATE_CONNECTED");
-                intent.setAction(BLEConstants.ACTION_GATT_CONNECTED);
+                intent.setAction(BleConstants.ACTION_GATT_CONNECTED);
                 if (!gatt.discoverServices()){
                     Tool.warnOut(TAG,"无法进行服务发现");
                 }
                 break;
             case BluetoothGatt.STATE_DISCONNECTING:
                 Tool.warnOut(TAG, "STATE_DISCONNECTING");
-                intent.setAction(BLEConstants.ACTION_GATT_DISCONNECTING);
+                intent.setAction(BleConstants.ACTION_GATT_DISCONNECTING);
                 break;
             default:
                 Tool.warnOut(TAG, "other state");
@@ -74,7 +74,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         super.onServicesDiscovered(gatt, status);
         Tool.warnOut(TAG, "onServicesDiscovered");
-        broadcastUpdate(BLEConstants.ACTION_GATT_SERVICES_DISCOVERED);
+        broadcastUpdate(BleConstants.ACTION_GATT_SERVICES_DISCOVERED);
         this.gatt = gatt;
     }
 
@@ -83,7 +83,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
         super.onCharacteristicRead(gatt, characteristic, status);
         Tool.warnOut(TAG, "onCharacteristicRead");
         byte[] value = characteristic.getValue();
-        broadcastUpdate(BLEConstants.ACTION_CHARACTERISTIC_READ, value);
+        broadcastUpdate(BleConstants.ACTION_CHARACTERISTIC_READ, value);
     }
 
     @Override
@@ -91,15 +91,15 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
         super.onCharacteristicWrite(gatt, characteristic, status);
         Tool.warnOut(TAG, "onCharacteristicWrite");
         byte[] value = characteristic.getValue();
-        broadcastUpdate(BLEConstants.ACTION_CHARACTERISTIC_WRITE, value);
+        broadcastUpdate(BleConstants.ACTION_CHARACTERISTIC_WRITE, value);
     }
 
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         super.onCharacteristicChanged(gatt, characteristic);
-        Tool.warnOut(TAG, "OnReceiveNotification");
+        Tool.warnOut(TAG, "onReceiveNotification");
         byte[] value = characteristic.getValue();
-        broadcastUpdate(BLEConstants.ACTION_CHARACTERISTIC_CHANGED, value);
+        broadcastUpdate(BleConstants.ACTION_CHARACTERISTIC_CHANGED, value);
     }
 
     @Override
@@ -107,7 +107,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
         super.onDescriptorRead(gatt, descriptor, status);
         Tool.warnOut(TAG, "onDescriptorRead");
         byte[] value = descriptor.getValue();
-        broadcastUpdate(BLEConstants.ACTION_DESCRIPTOR_READ, value);
+        broadcastUpdate(BleConstants.ACTION_DESCRIPTOR_READ, value);
     }
 
     @Override
@@ -115,7 +115,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
         super.onDescriptorWrite(gatt, descriptor, status);
         Tool.warnOut(TAG, "onDescriptorWrite");
         byte[] value = descriptor.getValue();
-        broadcastUpdate(BLEConstants.ACTION_DESCRIPTOR_WRITE, value);
+        broadcastUpdate(BleConstants.ACTION_DESCRIPTOR_WRITE, value);
 
     }
 
@@ -123,7 +123,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
     public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
         super.onReliableWriteCompleted(gatt, status);
         Tool.warnOut(TAG, "onReliableWriteCompleted");
-        broadcastUpdate(BLEConstants.ACTION_RELIABLE_WRITE_COMPLETED);
+        broadcastUpdate(BleConstants.ACTION_RELIABLE_WRITE_COMPLETED);
     }
 
     @Override
@@ -131,7 +131,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
         super.onReadRemoteRssi(gatt, rssi, status);
         Tool.warnOut(TAG, "onReadRemoteRssi");
         byte[] value = new byte[]{(byte) rssi};
-        broadcastUpdate(BLEConstants.ACTION_READ_REMOTE_RSSI, value);
+        broadcastUpdate(BleConstants.ACTION_READ_REMOTE_RSSI, value);
     }
 
     @Override
@@ -139,7 +139,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
         super.onMtuChanged(gatt, mtu, status);
         Tool.warnOut(TAG, "onMtuChanged");
         byte[] value = new byte[]{(byte) mtu};
-        broadcastUpdate(BLEConstants.ACTION_MTU_CHANGED, value);
+        broadcastUpdate(BleConstants.ACTION_MTU_CHANGED, value);
     }
 
     /**

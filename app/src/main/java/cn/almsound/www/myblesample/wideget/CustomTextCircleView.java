@@ -11,9 +11,9 @@ import android.view.View;
 import android.view.WindowManager;
 
 /**
- * 自定义圆形控件
- * <p>
- * Created by ALM on 2016/8/10.
+ * @author alm
+ *         Created by ALM on 2016/8/10.
+ *         自定义圆形控件
  */
 public class CustomTextCircleView extends View {
     private Paint paint;
@@ -83,7 +83,7 @@ public class CustomTextCircleView extends View {
     /**
      * 计算圆形在屏幕中的大小(仅处理在match_parent时候的宽高)
      *
-     * @param widthMeasureSpec 宽度的MeasureSpec
+     * @param widthMeasureSpec  宽度的MeasureSpec
      * @param heightMeasureSpec 高度的MeasureSpec
      */
     @Override
@@ -101,6 +101,8 @@ public class CustomTextCircleView extends View {
                 break;
             case MeasureSpec.UNSPECIFIED:
                 break;
+            default:
+                break;
         }
 
         switch (heightMode) {
@@ -110,6 +112,8 @@ public class CustomTextCircleView extends View {
             case MeasureSpec.EXACTLY:
                 break;
             case MeasureSpec.UNSPECIFIED:
+                break;
+            default:
                 break;
         }
 

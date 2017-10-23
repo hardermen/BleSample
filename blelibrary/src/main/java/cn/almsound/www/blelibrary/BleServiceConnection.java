@@ -12,9 +12,9 @@ import java.util.List;
  * BLE连接服务的连接回调
  */
 
-class BLEServiceConnection implements ServiceConnection {
+class BleServiceConnection implements ServiceConnection {
 
-    private static final String TAG = "BLEServiceConnection";
+    private static final String TAG = "BleServiceConnection";
 
     private String mAddress;
     private BluetoothLeService bluetoothLeService;
@@ -24,7 +24,7 @@ class BLEServiceConnection implements ServiceConnection {
      *
      * @param address 设备地址
      */
-    BLEServiceConnection(String address) {
+    BleServiceConnection(String address) {
         mAddress = address;
     }
 

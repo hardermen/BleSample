@@ -1,6 +1,7 @@
 package cn.almsound.www.myblesample.utils;
 
 /**
+ * @author alm
  * 转换工具（进制转换或类型转换）
  * Created by ALM on 2016/8/11.
  */
@@ -37,12 +38,12 @@ public class ConversionUtil {
      * @return 转换后获得的byte[]
      */
     public static byte[] getBytes(String s) {
-        int DEV_NAME_MAX_LEN = 20;
+        int devNameMaxLen = 20;
         byte[] data;
 
-        if (s.length() > DEV_NAME_MAX_LEN) {
-            data = new byte[DEV_NAME_MAX_LEN];
-            System.arraycopy(s.getBytes(), 0, data, 0, DEV_NAME_MAX_LEN);
+        if (s.length() > devNameMaxLen) {
+            data = new byte[devNameMaxLen];
+            System.arraycopy(s.getBytes(), 0, data, 0, devNameMaxLen);
         } else {
             data = s.getBytes();
         }
@@ -174,6 +175,8 @@ public class ConversionUtil {
         return high * 256 + low;
     }
 
+    private static final int TWO = 2;
+
     /**
      * 将一个整数转换成16进制的分为高低位的数组
      *
@@ -186,7 +189,7 @@ public class ConversionUtil {
         LogUtil.w("ConversionUtil", "hexString = " + hexString);
         byte highByte;
         byte lowByte;
-        if (hexString.length() > 2) {
+        if (hexString.length() > TWO) {
             String substring = hexString.substring(0, hexString.length() - 2);
             LogUtil.w("ConversionUtil", "highByteHex = " + substring);
             highByte = (byte) Integer.parseInt(substring, 16);

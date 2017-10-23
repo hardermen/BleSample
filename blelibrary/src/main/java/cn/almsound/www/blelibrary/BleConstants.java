@@ -1,17 +1,20 @@
 package cn.almsound.www.blelibrary;
 
 /**
- * Created by alm on 17-6-6.
- * BLE常量
+ * @author alm
+ *         Created by alm on 17-6-6.
+ *         BLE常量
  */
 
-public class BLEConstants {
+public class BleConstants {
     /**
      * 打开通知时会使用到的UUID
      */
     static final String CLIENT_CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb";
 
-    //ACTION定义区域
+    /**
+     * ACTION定义区域
+     */
     static final String ACTION_GATT_CONNECTED = "ACTION_GATT_CONNECTED";
     static final String ACTION_GATT_DISCONNECTED = "ACTION_GATT_DISCONNECTED";
     static final String ACTION_GATT_SERVICES_DISCOVERED = "ACTION_GATT_SERVICES_DISCOVERED";

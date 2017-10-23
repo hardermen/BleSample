@@ -13,7 +13,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import cn.almsound.www.baselibrary.BaseAppcompatActivity;
-import cn.almsound.www.blelibrary.BLEConstants;
+import cn.almsound.www.blelibrary.BleConstants;
 import cn.almsound.www.blelibrary.BleConnector;
 import cn.almsound.www.blelibrary.BleDevice;
 import cn.almsound.www.blelibrary.BleInterface;
@@ -86,7 +86,7 @@ public class ConnectActivity extends BaseAppcompatActivity {
         //获取BleDevice对象
         BleDevice bleDevice = bundleExtra.getParcelable(Constants.DEVICE);
         if (bleDevice == null) {
-            ToastUtil.L(ConnectActivity.this, R.string.device_info_error);
+            ToastUtil.l(ConnectActivity.this, R.string.device_info_error);
             finish();
             return;
         }
@@ -163,26 +163,26 @@ public class ConnectActivity extends BaseAppcompatActivity {
          * 注意：如果该设备不支持绑定，会直接回调绑定成功的回调，在绑定成功的回调中发起连接即可
          */
         switch (bleConnector.startBound(address)) {
-            case BLEConstants.DEVICE_BOND_START_SUCCESS:
+            case BleConstants.DEVICE_BOND_START_SUCCESS:
                 LogUtil.w(TAG, "开始绑定");
                 break;
-            case BLEConstants.DEVICE_BOND_START_FAILED:
+            case BleConstants.DEVICE_BOND_START_FAILED:
                 LogUtil.w(TAG, "发起绑定失败");
                 break;
-            case BLEConstants.DEVICE_BOND_BONDED:
+            case BleConstants.DEVICE_BOND_BONDED:
                 LogUtil.w(TAG, "此设备已经被绑定了");
                 startConnect();
                 break;
-            case BLEConstants.DEVICE_BOND_BONDING:
+            case BleConstants.DEVICE_BOND_BONDING:
                 LogUtil.w(TAG, "此设备正在绑定中");
                 break;
-            case BLEConstants.BLUETOOTH_ADAPTER_NULL:
+            case BleConstants.BLUETOOTH_ADAPTER_NULL:
                 LogUtil.w(TAG, "没有蓝牙适配器存在");
                 break;
-            case BLEConstants.BLUETOOTH_ADDRESS_INCORRECT:
+            case BleConstants.BLUETOOTH_ADDRESS_INCORRECT:
                 LogUtil.w(TAG, "蓝牙地址错误");
                 break;
-            case BLEConstants.BLUETOOTH_MANAGER_NULL:
+            case BleConstants.BLUETOOTH_MANAGER_NULL:
                 LogUtil.w(TAG, "没有蓝牙管理器存在");
                 break;
             default:
@@ -250,7 +250,7 @@ public class ConnectActivity extends BaseAppcompatActivity {
             //服务发现完成，将指示标志设置为绿色（对BLE远端设备的所有操作都在服务扫描完成之后）
             customTextCircleView.setColor(Color.GREEN);
 
-            ToastUtil.L(ConnectActivity.this, R.string.connect_success);
+            ToastUtil.l(ConnectActivity.this, R.string.connect_success);
 
             //获取服务列表
             List<BluetoothGattService> deviceServices = bleConnector.getServices();

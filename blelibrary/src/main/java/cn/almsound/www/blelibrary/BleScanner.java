@@ -28,6 +28,7 @@ import java.util.List;
  *         Created by alm on 17-6-5.
  */
 
+@SuppressWarnings("AliDeprecation")
 public class BleScanner {
     /**
      * 扫描的结果
@@ -87,12 +88,12 @@ public class BleScanner {
     /**
      * 发现一个设备进行的回调
      */
-    private BleInterface.OnScanFindADeviceListener mOnScanFindADeviceListener;
+    private BleInterface.OnScanFindOneDeviceListener mOnScanFindOneDeviceListener;
 
     /**
      * 发现一个新设备进行的回调
      */
-    private BleInterface.OnScanFindANewDeviceListener mOnScanFindANewDeviceListener;
+    private BleInterface.OnScanFindOneNewDeviceListener mOnScanFindOneNewDeviceListener;
 
     /**
      * 扫描的定时器
@@ -157,13 +158,13 @@ public class BleScanner {
                         Tool.warnOut("BleScan::API < 21::onScanResult", "address = " + device.getAddress());
                         Tool.warnOut("BleScan::API < 21::onScanResult", "rssi = " + rssi);
                         Tool.warnOut("BleScan::API < 21::onScanResult", "scanRecord = " + Tool.bytesToHexStr(scanRecord));
-                        if (mOnScanFindADeviceListener != null) {
-                            mOnScanFindADeviceListener.scanFindADevice(device, rssi, scanRecord);
+                        if (mOnScanFindOneDeviceListener != null) {
+                            mOnScanFindOneDeviceListener.scanFindOneDevice(device, rssi, scanRecord);
                         }
                         BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, null);
                         if (!mScanResults.contains(bleDevice)) {
                             mScanResults.add(bleDevice);
-                            mOnScanFindANewDeviceListener.scanFindANewDevice(bleDevice);
+                            mOnScanFindOneNewDeviceListener.scanFindOneNewDevice(bleDevice);
                         }
                     }
                 });
@@ -205,13 +206,13 @@ public class BleScanner {
                 Tool.warnOut("BleScan::API >= 21::onScanResult", "rssi = " + rssi);
                 Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecord = " + scanrecord);
                 BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, deviceName);
-                if (mOnScanFindADeviceListener != null) {
-                    mOnScanFindADeviceListener.scanFindADevice(device, rssi, scanRecord);
+                if (mOnScanFindOneDeviceListener != null) {
+                    mOnScanFindOneDeviceListener.scanFindOneDevice(device, rssi, scanRecord);
                 }
-                if (mOnScanFindANewDeviceListener != null) {
+                if (mOnScanFindOneNewDeviceListener != null) {
                     if (!mScanResults.contains(bleDevice)) {
                         mScanResults.add(bleDevice);
-                        mOnScanFindANewDeviceListener.scanFindANewDevice(bleDevice);
+                        mOnScanFindOneNewDeviceListener.scanFindOneNewDevice(bleDevice);
                     }
                 }
             }
@@ -242,13 +243,13 @@ public class BleScanner {
      * 打开扫描器
      *
      * @param scanResults                  扫描设备结果存放列表
-     * @param onScanFindANewDeviceListener 发现一个新设备的回调
+     * @param onScanFindOneNewDeviceListener 发现一个新设备的回调
      * @param scanPeriod                   扫描持续时间
      * @param scanContinueFlag             是否在扫描完成后立即进行下一次扫描的标志
      * @param onScanCompleteListener       扫描完成的回调
      * @return true表示打开成功
      */
-    public boolean open(@NonNull ArrayList<BleDevice> scanResults, @NonNull BleInterface.OnScanFindANewDeviceListener onScanFindANewDeviceListener, long scanPeriod, boolean scanContinueFlag, @NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
+    public boolean open(@NonNull ArrayList<BleDevice> scanResults, @NonNull BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener, long scanPeriod, boolean scanContinueFlag, @NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
         if (scanPeriod <= 0 || contextWeakReference.get() == null) {
             return false;
         }
@@ -262,7 +263,7 @@ public class BleScanner {
         contextWeakReference.get().registerReceiver(bluetoothStateReceiver, filter);
         mScanResults.clear();
         mOpened = true;
-        mOnScanFindANewDeviceListener = onScanFindANewDeviceListener;
+        mOnScanFindOneNewDeviceListener = onScanFindOneNewDeviceListener;
         mScanPeriod = scanPeriod;
         mScanContinue = scanContinueFlag;
         scanTimer.setOnScanCompleteListener(onScanCompleteListener);
@@ -364,8 +365,8 @@ public class BleScanner {
         mBluetoothAdapter = null;
         mLeScanCallback = null;
         mScanCallback = null;
-        mOnScanFindADeviceListener = null;
-        mOnScanFindANewDeviceListener = null;
+        mOnScanFindOneDeviceListener = null;
+        mOnScanFindOneNewDeviceListener = null;
         scanTimer = null;
         return true;
     }
@@ -386,8 +387,8 @@ public class BleScanner {
         mScanResults.clear();
     }
 
-    public void setOnScanFindADeviceListener(BleInterface.OnScanFindADeviceListener onScanFindADeviceListener) {
-        mOnScanFindADeviceListener = onScanFindADeviceListener;
+    public void setOnScanFindADeviceListener(BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener) {
+        mOnScanFindOneDeviceListener = onScanFindOneDeviceListener;
     }
 
     void setBluetoothAdapter(BluetoothAdapter bluetoothAdapter) {

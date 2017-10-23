@@ -1,4 +1,4 @@
-package cn.almsound.www.myblesample.adapter.all_purpose_adapter;
+package cn.almsound.www.myblesample.adapter.base;
 
 import android.graphics.Bitmap;
 
@@ -30,13 +30,15 @@ class MemoryCache {
 
     /**
      * 缓存中图片所占用的字节，初始0，将通过此变量严格控制缓存所占用的堆内存
+     * current allocated size
      */
-    private long size = 0;// current allocated size
+    private long size = 0;
 
     /**
      * 缓存只能占用的最大堆内存
+     * max memory in bytes
      */
-    private long limit = 1000000;// max memory in bytes
+    private long limit = 1000000;
 
     /**
      * 构造器
@@ -49,10 +51,10 @@ class MemoryCache {
     /**
      * 设置内存可用大小
      *
-     * @param new_limit 内存可用大小
+     * @param newLimit 内存可用大小
      */
-    private void setLimit(long new_limit) {
-        limit = new_limit;
+    private void setLimit(long newLimit) {
+        limit = newLimit;
         LogUtil.i(TAG, "MemoryCache will use up to " + limit / 1024. / 1024.
                 + "MB");
     }

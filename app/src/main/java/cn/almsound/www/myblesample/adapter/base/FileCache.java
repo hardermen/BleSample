@@ -1,12 +1,13 @@
-package cn.almsound.www.myblesample.adapter.all_purpose_adapter;
+package cn.almsound.www.myblesample.adapter.base;
 
 import android.content.Context;
 
 import java.io.File;
 
 /**
- * 文件缓存工具
- * Created by ALM on 2016/7/7.
+ * @author alm
+ *         Created by ALM on 2016/7/7.
+ *         文件缓存工具
  */
 class FileCache {
 
@@ -26,7 +27,7 @@ class FileCache {
             /*cacheDir = new File(
                     android.os.Environment.getExternalStorageDirectory(),
                     "LazyList");*/
-            cacheDir = FileUtil.App_Cache;
+            cacheDir = FileUtil.APP_CACHE;
         } else {
             cacheDir = context.getCacheDir();
         }
@@ -47,8 +48,6 @@ class FileCache {
     File getFile(String url) {
         // 将url的hashCode作为缓存的文件名
         String filename = String.valueOf(url.hashCode());
-        // Another possible solution
-        // String filename = URLEncoder.encode(url);
         return new File(cacheDir, filename);
 
     }

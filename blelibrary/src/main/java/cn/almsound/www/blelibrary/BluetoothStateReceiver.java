@@ -73,7 +73,11 @@ class BluetoothStateReceiver extends BroadcastReceiver {
                         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
                         bleScannerWeakReference.get().setBluetoothAdapter(bluetoothManager.getAdapter());
                         break;
+                    default:
+                        break;
                 }
+                break;
+            default:
                 break;
         }
     }

@@ -19,8 +19,9 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Created by alm on 17-6-5.
- * BLE连接的服务
+ * @author alm
+ *         Created by alm on 17-6-5.
+ *         BLE连接的服务
  */
 
 public class BluetoothLeService extends Service {
@@ -253,7 +254,7 @@ public class BluetoothLeService extends Service {
         if (!bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)) {
             return false;
         }
-        BluetoothGattDescriptor bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(UUID.fromString(BLEConstants.CLIENT_CHARACTERISTIC_CONFIG));
+        BluetoothGattDescriptor bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(UUID.fromString(BleConstants.CLIENT_CHARACTERISTIC_CONFIG));
         if (bluetoothGattDescriptor == null) {
             return false;
         } else {
@@ -283,7 +284,7 @@ public class BluetoothLeService extends Service {
         if (!bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)) {
             return false;
         }
-        BluetoothGattDescriptor bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(UUID.fromString(BLEConstants.CLIENT_CHARACTERISTIC_CONFIG));
+        BluetoothGattDescriptor bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(UUID.fromString(BleConstants.CLIENT_CHARACTERISTIC_CONFIG));
         if (bluetoothGattDescriptor == null) {
             return false;
         } else {

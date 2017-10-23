@@ -13,21 +13,22 @@ import android.widget.FrameLayout;
 
 
 /**
- * 状态栏设置工具类(沉浸式状态栏)
- * Created by ALM on 2016/6/30.
+ * @author alm
+ *         Created by ALM on 2016/6/30.
+ *         状态栏设置工具类(沉浸式状态栏)
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({"unused", "WeakerAccess", "deprecation", "AliDeprecation"})
 @TargetApi(19)
 public class StatusUtil {
 
-    private static boolean status_flag = true;
+    private static boolean statusFlag = true;
 
-    public static boolean isStatus_flag() {
-        return status_flag;
+    public static boolean isStatusFlag() {
+        return statusFlag;
     }
 
-    public static void setStatus_flag(boolean status_flag) {
-        StatusUtil.status_flag = status_flag;
+    public static void setStatusFlag(boolean statusFlag) {
+        StatusUtil.statusFlag = statusFlag;
     }
 
     /**
@@ -37,7 +38,7 @@ public class StatusUtil {
      * @return 通知栏高度
      */
     public static int getStatusBarHeight(Activity activity) {
-        if (!status_flag) {
+        if (!statusFlag) {
             return 0;
         }
         int result = 0;
@@ -95,7 +96,7 @@ public class StatusUtil {
      * @param colorResId 颜色资源ID
      */
     public static void setStatusColorByResource(Activity activity, int colorResId) {
-        if (!status_flag) {
+        if (!statusFlag) {
             return;
         }
         int color;
@@ -103,7 +104,7 @@ public class StatusUtil {
             color = activity.getColor(colorResId);
         } else {
             //noinspection deprecation
-            color =  activity.getResources().getColor(colorResId);
+            color = activity.getResources().getColor(colorResId);
         }
         setStatusByColor(activity, color);
     }
@@ -115,13 +116,13 @@ public class StatusUtil {
      * @param statusColor int型颜色值
      */
     private static void setStatusColorForKITKAT3(Activity activity, int statusColor) {
-        if (!status_flag) {
+        if (!statusFlag) {
             return;
         }
         Window window = activity.getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
-        ViewGroup mContentView = (ViewGroup) activity.findViewById(Window.ID_ANDROID_CONTENT);
+        ViewGroup mContentView = activity.findViewById(Window.ID_ANDROID_CONTENT);
         int statusBarHeight = getStatusBarHeight(activity);
 
         View mTopView = mContentView.getChildAt(0);
@@ -144,19 +145,19 @@ public class StatusUtil {
 
     /**
      * 设置状态栏颜色（安卓4.4方法2）
+     * Using this method will have a black line, and there is no solution
      *
      * @param activity    对应的activity
      * @param statusColor int型颜色值
      */
-    //Using this method will have a black line, and there is no solution
     private static void setStatusColorForKITKAT2(Activity activity, int statusColor) {
-        if (!status_flag) {
+        if (!statusFlag) {
             return;
         }
         Window window = activity.getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
-        ViewGroup mContentView = (ViewGroup) activity.findViewById(Window.ID_ANDROID_CONTENT);
+        ViewGroup mContentView = activity.findViewById(Window.ID_ANDROID_CONTENT);
         ViewGroup mContentParent = (ViewGroup) mContentView.getParent();
 
         View statusBarView = mContentParent.getChildAt(0);
@@ -187,11 +188,11 @@ public class StatusUtil {
      * @param statusColor int型颜色值
      */
     private static void setStatusColorForKITKAT1(Activity activity, int statusColor) {
-        if (!status_flag) {
+        if (!statusFlag) {
             return;
         }
         Window window = activity.getWindow();
-        ViewGroup mContentView = (ViewGroup) activity.findViewById(Window.ID_ANDROID_CONTENT);
+        ViewGroup mContentView = activity.findViewById(Window.ID_ANDROID_CONTENT);
 
         //First translucent status bar.
         window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
@@ -230,7 +231,7 @@ public class StatusUtil {
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private static void setStatusColorForLOLLIPOP(Activity activity, int statusColor) {
-        if (!status_flag) {
+        if (!statusFlag) {
             return;
         }
         Window window = activity.getWindow();
@@ -243,7 +244,7 @@ public class StatusUtil {
         //设置状态栏颜色
         window.setStatusBarColor(statusColor);
 
-        ViewGroup mContentView = (ViewGroup) activity.findViewById(Window.ID_ANDROID_CONTENT);
+        ViewGroup mContentView = activity.findViewById(Window.ID_ANDROID_CONTENT);
         View mChildView = mContentView.getChildAt(0);
         if (mChildView != null) {
             //注意不是设置 ContentView 的 FitsSystemWindows, 而是设置 ContentView 的第一个子 View . 预留出系统 View 的空间.
@@ -258,7 +259,7 @@ public class StatusUtil {
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private static void translucentStatusBarForLOLLIPOP(Activity activity) {
-        if (!status_flag) {
+        if (!statusFlag) {
             return;
         }
         Window window = activity.getWindow();
@@ -271,7 +272,7 @@ public class StatusUtil {
         //设置状态栏颜色
         window.setStatusBarColor(Color.TRANSPARENT);
 
-        ViewGroup mContentView = (ViewGroup) activity.findViewById(Window.ID_ANDROID_CONTENT);
+        ViewGroup mContentView = activity.findViewById(Window.ID_ANDROID_CONTENT);
         View mChildView = mContentView.getChildAt(0);
         if (mChildView != null) {
             //注意不是设置 ContentView 的 FitsSystemWindows, 而是设置 ContentView 的第一个子 View . 使其不为系统 View 预留空间.
@@ -285,11 +286,11 @@ public class StatusUtil {
      * @param activity 对应的activity
      */
     private static void translucentStatusBarForKITKAT1(Activity activity) {
-        if (!status_flag) {
+        if (!statusFlag) {
             return;
         }
         Window window = activity.getWindow();
-        ViewGroup mContentView = (ViewGroup) activity.findViewById(Window.ID_ANDROID_CONTENT);
+        ViewGroup mContentView = activity.findViewById(Window.ID_ANDROID_CONTENT);
 
         //首先使 ChildView 不预留空间
         View mChildView = mContentView.getChildAt(0);
@@ -323,13 +324,13 @@ public class StatusUtil {
      * @param activity 对应的activity
      */
     private static void translucentStatusBarForKITKAT2(Activity activity) {
-        if (!status_flag) {
+        if (!statusFlag) {
             return;
         }
         Window window = activity.getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
-        ViewGroup mContentView = (ViewGroup) activity.findViewById(Window.ID_ANDROID_CONTENT);
+        ViewGroup mContentView = activity.findViewById(Window.ID_ANDROID_CONTENT);
         ViewGroup mContentParent = (ViewGroup) mContentView.getParent();
 
         View statusBarView = mContentParent.getChildAt(0);
@@ -355,13 +356,13 @@ public class StatusUtil {
      * @param activity 对应的activity
      */
     private static void translucentStatusBarForKITKAT3(Activity activity) {
-        if (!status_flag) {
+        if (!statusFlag) {
             return;
         }
         Window window = activity.getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
-        ViewGroup mContentView = (ViewGroup) activity.findViewById(Window.ID_ANDROID_CONTENT);
+        ViewGroup mContentView = activity.findViewById(Window.ID_ANDROID_CONTENT);
         View statusBarView = mContentView.getChildAt(0);
         //移除假的 View
         if (statusBarView != null && statusBarView.getLayoutParams() != null && statusBarView.getLayoutParams().height == getStatusBarHeight(activity)) {

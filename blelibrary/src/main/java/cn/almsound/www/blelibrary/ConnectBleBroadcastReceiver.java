@@ -8,11 +8,12 @@ import android.content.ServiceConnection;
 import android.os.Handler;
 
 /**
- * Created by alm on 17-6-5.
- * BLE相关事件的广播接收者
+ * @author alm
+ *         Created by alm on 17-6-5.
+ *         BLE相关事件的广播接收者
  */
 
-public class ConnectBLEBroadcastReceiver extends BroadcastReceiver {
+public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 连接成功的回调
@@ -106,86 +107,86 @@ public class ConnectBLEBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         byte[] values = intent.getByteArrayExtra(LibraryConstants.VALUE);
         switch (intent.getAction()) {
-            case BLEConstants.ACTION_GATT_CONNECTED:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_GATT_CONNECTED");
+            case BleConstants.ACTION_GATT_CONNECTED:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTED");
                 if (onConnectedListener != null) {
                     onConnectedListener.onConnected();
                 }
                 break;
-            case BLEConstants.ACTION_GATT_DISCONNECTED:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
+            case BleConstants.ACTION_GATT_DISCONNECTED:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
                 if (onDisconnectedListener != null) {
                     onDisconnectedListener.onDisconnected();
                 }
                 break;
-            case BLEConstants.ACTION_GATT_SERVICES_DISCOVERED:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
+            case BleConstants.ACTION_GATT_SERVICES_DISCOVERED:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
                 if (onServicesDiscoveredListener != null) {
                     onServicesDiscoveredListener.onServicesDiscovered();
                 }
                 break;
-            case BLEConstants.ACTION_GATT_CONNECTING:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_GATT_CONNECTING");
+            case BleConstants.ACTION_GATT_CONNECTING:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTING");
                 if (onConnectingListener != null) {
                     onConnectingListener.onConnecting();
                 }
                 break;
-            case BLEConstants.ACTION_GATT_DISCONNECTING:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_GATT_DISCONNECTING");
+            case BleConstants.ACTION_GATT_DISCONNECTING:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_DISCONNECTING");
                 if (onDisconnectingListener != null) {
                     onDisconnectingListener.onDisconnecting();
                 }
                 break;
-            case BLEConstants.ACTION_CHARACTERISTIC_READ:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_CHARACTERISTIC_READ,value = " + Tool.bytesToHexStr(values));
+            case BleConstants.ACTION_CHARACTERISTIC_READ:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_READ,value = " + Tool.bytesToHexStr(values));
                 if (onCharacteristicReadListener != null) {
                     onCharacteristicReadListener.onCharacteristicRead(values);
                 }
                 break;
-            case BLEConstants.ACTION_CHARACTERISTIC_CHANGED:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_CHARACTERISTIC_CHANGED,value = " + Tool.bytesToHexStr(values));
+            case BleConstants.ACTION_CHARACTERISTIC_CHANGED:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_CHANGED,value = " + Tool.bytesToHexStr(values));
                 if (onReceiveNotificationListener != null) {
-                    onReceiveNotificationListener.OnReceiveNotification(values);
+                    onReceiveNotificationListener.onReceiveNotification(values);
                 }
                 break;
-            case BLEConstants.ACTION_CHARACTERISTIC_WRITE:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_CHARACTERISTIC_WRITE,value = " + Tool.bytesToHexStr(values));
+            case BleConstants.ACTION_CHARACTERISTIC_WRITE:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_WRITE,value = " + Tool.bytesToHexStr(values));
                 if (onCharacteristicWriteListener != null) {
                     onCharacteristicWriteListener.onCharacteristicWrite(values);
                 }
                 break;
-            case BLEConstants.ACTION_DESCRIPTOR_READ:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_DESCRIPTOR_READ,value = " + Tool.bytesToHexStr(values));
+            case BleConstants.ACTION_DESCRIPTOR_READ:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_DESCRIPTOR_READ,value = " + Tool.bytesToHexStr(values));
                 if (onDescriptorReadListener != null) {
                     onDescriptorReadListener.onDescriptorRead(values);
                 }
                 break;
-            case BLEConstants.ACTION_DESCRIPTOR_WRITE:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_DESCRIPTOR_WRITE,value = " + Tool.bytesToHexStr(values));
+            case BleConstants.ACTION_DESCRIPTOR_WRITE:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_DESCRIPTOR_WRITE,value = " + Tool.bytesToHexStr(values));
                 if (onDescriptorWriteListener != null) {
                     onDescriptorWriteListener.onDescriptorWrite(values);
                 }
                 break;
-            case BLEConstants.ACTION_RELIABLE_WRITE_COMPLETED:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_RELIABLE_WRITE_COMPLETED");
+            case BleConstants.ACTION_RELIABLE_WRITE_COMPLETED:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_RELIABLE_WRITE_COMPLETED");
                 if (onReliableWriteCompletedListener != null) {
                     onReliableWriteCompletedListener.onReliableWriteCompleted();
                 }
                 break;
-            case BLEConstants.ACTION_READ_REMOTE_RSSI:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_READ_REMOTE_RSSI,rssi = " + values[0]);
+            case BleConstants.ACTION_READ_REMOTE_RSSI:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_READ_REMOTE_RSSI,rssi = " + values[0]);
                 if (onReadRemoteRssiListener != null) {
                     onReadRemoteRssiListener.onReadRemoteRssi(values[0]);
                 }
                 break;
-            case BLEConstants.ACTION_MTU_CHANGED:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "ACTION_MTU_CHANGED,mtu = " + values[0]);
+            case BleConstants.ACTION_MTU_CHANGED:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_MTU_CHANGED,mtu = " + values[0]);
                 if (onMtuChangedListener != null) {
                     onMtuChangedListener.onMtuChanged(values[0]);
                 }
                 break;
             default:
-                Tool.warnOut("ConnectBLEBroadcastReceiver", "get other action" + intent.getAction());
+                Tool.warnOut("ConnectBleBroadcastReceiver", "get other action" + intent.getAction());
                 break;
         }
     }

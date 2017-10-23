@@ -15,9 +15,6 @@ import java.util.concurrent.TimeUnit;
  */
 
 class ScanTimer {
-    /**
-     * private Timer timer;
-     */
     private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
         @Override
         public Thread newThread(@NonNull Runnable r) {
@@ -36,7 +33,6 @@ class ScanTimer {
      */
     ScanTimer(BleScanner bleScanner) {
         bleScannerWeakReference = new WeakReference<>(bleScanner);
-//        timer = new Timer();
         handler = new Handler();
     }
 

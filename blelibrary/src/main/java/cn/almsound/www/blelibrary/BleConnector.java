@@ -14,16 +14,18 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 /**
- * Created by alm on 17-6-5.
- * BLE连接器
+ * @author alm
+ *         Created by alm on 17-6-5.
+ *         BLE连接器
  */
 
+@SuppressWarnings("unused")
 public class BleConnector {
 
     /**
      * 地址长度
      */
-    private int ADDRESS_LENGTH = 17;
+    private static final int ADDRESS_LENGTH = 17;
 
     /**
      * 记录是否执行过绑定操作的标志
@@ -38,17 +40,17 @@ public class BleConnector {
     /**
      * 服务连接工具
      */
-    private BLEServiceConnection bleServiceConnection;
+    private BleServiceConnection bleServiceConnection;
 
     /**
      * BLE连接的广播接收者
      */
-    private ConnectBLEBroadcastReceiver connectBLEBroadcastReceiver;
+    private ConnectBleBroadcastReceiver connectBleBroadcastReceiver;
 
     /**
      * BLE绑定的广播接收者
      */
-    private BoundBLEBroadcastReceiver boundBLEBroadcastReceiver;
+    private BoundBleBroadcastReceiver boundBleBroadcastReceiver;
 
     /**
      * 记录BLE连接工具是否关闭的标志
@@ -56,10 +58,10 @@ public class BleConnector {
     private boolean mClosed;
     private CloseTask closeTask;
 
-    public BleConnector(Context context){
+    public BleConnector(Context context) {
         contextWeakReference = new WeakReference<>(context);
-        connectBLEBroadcastReceiver = new ConnectBLEBroadcastReceiver();
-        boundBLEBroadcastReceiver = new BoundBLEBroadcastReceiver();
+        connectBleBroadcastReceiver = new ConnectBleBroadcastReceiver();
+        boundBleBroadcastReceiver = new BoundBleBroadcastReceiver();
         closeTask = new CloseTask(BleConnector.this);
     }
 
@@ -70,7 +72,7 @@ public class BleConnector {
      */
     private void setAddress(String address) {
         //初始化服务连接工具
-        bleServiceConnection = new BLEServiceConnection(address);
+        bleServiceConnection = new BleServiceConnection(address);
     }
 
     /**
@@ -100,7 +102,7 @@ public class BleConnector {
         mClosed = false;
 
         //注册广播接收者
-        contextWeakReference.get().registerReceiver(connectBLEBroadcastReceiver, makeConnectBLEIntentFilter());
+        contextWeakReference.get().registerReceiver(connectBleBroadcastReceiver, makeConnectBLEIntentFilter());
 
         //绑定BLE连接服务
         Intent intent = new Intent(contextWeakReference.get(), BluetoothLeService.class);
@@ -110,38 +112,40 @@ public class BleConnector {
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public int startBound(String address) {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            return BLEConstants.BLUETOOTH_ADDRESS_INCORRECT;
+            return BleConstants.BLUETOOTH_ADDRESS_INCORRECT;
         }
 
         BluetoothManager bluetoothManager = (BluetoothManager) contextWeakReference.get().getSystemService(Context.BLUETOOTH_SERVICE);
 
         if (bluetoothManager == null) {
-            return BLEConstants.BLUETOOTH_MANAGER_NULL;
+            return BleConstants.BLUETOOTH_MANAGER_NULL;
         }
 
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
 
         if (bluetoothAdapter == null) {
-            return BLEConstants.BLUETOOTH_ADAPTER_NULL;
+            return BleConstants.BLUETOOTH_ADAPTER_NULL;
         }
 
         BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(address);
         switch (remoteDevice.getBondState()) {
             case BluetoothDevice.BOND_BONDED:
-                return BLEConstants.DEVICE_BOND_BONDED;
+                return BleConstants.DEVICE_BOND_BONDED;
             case BluetoothDevice.BOND_BONDING:
-                return BLEConstants.DEVICE_BOND_BONDING;
+                return BleConstants.DEVICE_BOND_BONDING;
+            default:
+                break;
         }
 
         doBonded = true;
         //注册绑定BLE的广播接收者
-        contextWeakReference.get().registerReceiver(boundBLEBroadcastReceiver, makeBoundBLEIntentFilter());
+        contextWeakReference.get().registerReceiver(boundBleBroadcastReceiver, makeBoundBLEIntentFilter());
 
         //发起绑定
         if (remoteDevice.createBond()) {
-            return BLEConstants.DEVICE_BOND_START_SUCCESS;
+            return BleConstants.DEVICE_BOND_START_SUCCESS;
         } else {
-            return BLEConstants.DEVICE_BOND_START_FAILED;
+            return BleConstants.DEVICE_BOND_START_FAILED;
         }
     }
 
@@ -172,9 +176,9 @@ public class BleConnector {
         bleServiceConnection.closeGatt();
         bleServiceConnection.stopService();
         contextWeakReference.get().unbindService(bleServiceConnection);
-        contextWeakReference.get().unregisterReceiver(connectBLEBroadcastReceiver);
+        contextWeakReference.get().unregisterReceiver(connectBleBroadcastReceiver);
         if (doBonded) {
-            contextWeakReference.get().unregisterReceiver(boundBLEBroadcastReceiver);
+            contextWeakReference.get().unregisterReceiver(boundBleBroadcastReceiver);
         }
         checkCloseStatus();
         return true;
@@ -190,7 +194,7 @@ public class BleConnector {
      * @param onConnectedListener 连接成功的监听事件
      */
     public void setOnConnectedListener(BleInterface.OnConnectedListener onConnectedListener) {
-        connectBLEBroadcastReceiver.setOnConnectedListener(onConnectedListener);
+        connectBleBroadcastReceiver.setOnConnectedListener(onConnectedListener);
     }
 
     /**
@@ -199,7 +203,7 @@ public class BleConnector {
      * @param onDisconnectedListener 连接断开的监听事件
      */
     public void setOnDisconnectedListener(BleInterface.OnDisconnectedListener onDisconnectedListener) {
-        connectBLEBroadcastReceiver.setOnDisconnectedListener(onDisconnectedListener);
+        connectBleBroadcastReceiver.setOnDisconnectedListener(onDisconnectedListener);
     }
 
     /**
@@ -208,7 +212,7 @@ public class BleConnector {
      * @param onServicesDiscoveredListener 服务发现完成的监听事件
      */
     public void setOnServicesDiscoveredListener(BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener) {
-        connectBLEBroadcastReceiver.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
+        connectBleBroadcastReceiver.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
     }
 
     /**
@@ -217,7 +221,7 @@ public class BleConnector {
      * @param onConnectingListener 正在连接的监听事件
      */
     public void setOnConnectingListener(BleInterface.OnConnectingListener onConnectingListener) {
-        connectBLEBroadcastReceiver.setOnConnectingListener(onConnectingListener);
+        connectBleBroadcastReceiver.setOnConnectingListener(onConnectingListener);
     }
 
     /**
@@ -226,7 +230,7 @@ public class BleConnector {
      * @param onDisconnectingListener 正在断开连接的监听事件
      */
     public void setOnDisconnectingListener(BleInterface.OnDisconnectingListener onDisconnectingListener) {
-        connectBLEBroadcastReceiver.setOnDisconnectingListener(onDisconnectingListener);
+        connectBleBroadcastReceiver.setOnDisconnectingListener(onDisconnectingListener);
     }
 
     /**
@@ -235,7 +239,7 @@ public class BleConnector {
      * @param onCharacteristicReadListener 读到特征数据的回调
      */
     public void setOnCharacteristicReadListener(BleInterface.OnCharacteristicReadListener onCharacteristicReadListener) {
-        connectBLEBroadcastReceiver.setOnCharacteristicReadListener(onCharacteristicReadListener);
+        connectBleBroadcastReceiver.setOnCharacteristicReadListener(onCharacteristicReadListener);
     }
 
     /**
@@ -244,7 +248,7 @@ public class BleConnector {
      * @param onReceiveNotificationListener 特征被改变的回调
      */
     public void setOnReceiveNotificationListener(BleInterface.OnReceiveNotificationListener onReceiveNotificationListener) {
-        connectBLEBroadcastReceiver.setOnReceiveNotificationListener(onReceiveNotificationListener);
+        connectBleBroadcastReceiver.setOnReceiveNotificationListener(onReceiveNotificationListener);
     }
 
     /**
@@ -253,7 +257,7 @@ public class BleConnector {
      * @param onCharacteristicWriteListener 写入特征数据的回调
      */
     public void setOnCharacteristicWriteListener(BleInterface.OnCharacteristicWriteListener onCharacteristicWriteListener) {
-        connectBLEBroadcastReceiver.setOnCharacteristicWriteListener(onCharacteristicWriteListener);
+        connectBleBroadcastReceiver.setOnCharacteristicWriteListener(onCharacteristicWriteListener);
     }
 
     /**
@@ -262,7 +266,7 @@ public class BleConnector {
      * @param onDescriptorReadListener 读取描述符数据的回调
      */
     public void setOnDescriptorReadListener(BleInterface.OnDescriptorReadListener onDescriptorReadListener) {
-        connectBLEBroadcastReceiver.setOnDescriptorReadListener(onDescriptorReadListener);
+        connectBleBroadcastReceiver.setOnDescriptorReadListener(onDescriptorReadListener);
     }
 
     /**
@@ -271,11 +275,11 @@ public class BleConnector {
      * @param onDescriptorWriteListener 写入描述符数据的回调
      */
     public void setOnDescriptorWriteListener(BleInterface.OnDescriptorWriteListener onDescriptorWriteListener) {
-        connectBLEBroadcastReceiver.setOnDescriptorWriteListener(onDescriptorWriteListener);
+        connectBleBroadcastReceiver.setOnDescriptorWriteListener(onDescriptorWriteListener);
     }
 
     public void setOnBondStateChangedListener(BleInterface.OnDeviceBondStateChangedListener onDeviceBondStateChangedListener) {
-        boundBLEBroadcastReceiver.setOnDeviceBondStateChangedListener(onDeviceBondStateChangedListener);
+        boundBleBroadcastReceiver.setOnDeviceBondStateChangedListener(onDeviceBondStateChangedListener);
     }
 
     /**
@@ -284,7 +288,7 @@ public class BleConnector {
      * @param onReliableWriteCompletedListener 可靠数据写入完成的回调
      */
     public void setOnReliableWriteCompletedListener(BleInterface.OnReliableWriteCompletedListener onReliableWriteCompletedListener) {
-        connectBLEBroadcastReceiver.setOnReliableWriteCompletedListener(onReliableWriteCompletedListener);
+        connectBleBroadcastReceiver.setOnReliableWriteCompletedListener(onReliableWriteCompletedListener);
     }
 
     /**
@@ -293,7 +297,7 @@ public class BleConnector {
      * @param onReadRemoteRssiListener 读到远端设备rssi的回调
      */
     public void setOnReadRemoteRssiListener(BleInterface.OnReadRemoteRssiListener onReadRemoteRssiListener) {
-        connectBLEBroadcastReceiver.setOnReadRemoteRssiListener(onReadRemoteRssiListener);
+        connectBleBroadcastReceiver.setOnReadRemoteRssiListener(onReadRemoteRssiListener);
     }
 
     /**
@@ -302,44 +306,44 @@ public class BleConnector {
      * @param onMtuChangedListener 最大传输单位被改变的回调
      */
     public void setOnMtuChangedListener(BleInterface.OnMtuChangedListener onMtuChangedListener) {
-        connectBLEBroadcastReceiver.setOnMtuChangedListener(onMtuChangedListener);
+        connectBleBroadcastReceiver.setOnMtuChangedListener(onMtuChangedListener);
     }
 
-    public void  setOnCloseCompleteListener(BleInterface.OnCloseCompleteListener onCloseCompleteListener){
+    public void setOnCloseCompleteListener(BleInterface.OnCloseCompleteListener onCloseCompleteListener) {
         closeTask.setOnCloseCompleteListener(onCloseCompleteListener);
     }
 
     /**
      * 广播接收者Action过滤器
-
+     *
      * @return 接收者Action过滤器
      */
-    private IntentFilter makeConnectBLEIntentFilter()    {
+    private IntentFilter makeConnectBLEIntentFilter() {
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BLEConstants.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BLEConstants.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BLEConstants.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BLEConstants.ACTION_GATT_CONNECTING);
-        intentFilter.addAction(BLEConstants.ACTION_GATT_DISCONNECTING);
-        intentFilter.addAction(BLEConstants.ACTION_CHARACTERISTIC_READ);
-        intentFilter.addAction(BLEConstants.ACTION_CHARACTERISTIC_CHANGED);
-        intentFilter.addAction(BLEConstants.ACTION_CHARACTERISTIC_WRITE);
-        intentFilter.addAction(BLEConstants.ACTION_DESCRIPTOR_READ);
-        intentFilter.addAction(BLEConstants.ACTION_DESCRIPTOR_WRITE);
-        intentFilter.addAction(BLEConstants.ACTION_RELIABLE_WRITE_COMPLETED);
-        intentFilter.addAction(BLEConstants.ACTION_READ_REMOTE_RSSI);
-        intentFilter.addAction(BLEConstants.ACTION_MTU_CHANGED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTING);
+        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTING);
+        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_READ);
+        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_CHANGED);
+        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_WRITE);
+        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_READ);
+        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_WRITE);
+        intentFilter.addAction(BleConstants.ACTION_RELIABLE_WRITE_COMPLETED);
+        intentFilter.addAction(BleConstants.ACTION_READ_REMOTE_RSSI);
+        intentFilter.addAction(BleConstants.ACTION_MTU_CHANGED);
         intentFilter.setPriority(Integer.MAX_VALUE);
         return intentFilter;
     }
 
     /**
      * 广播接收者Action过滤器
-
+     *
      * @return 接收者Action过滤器
      */
     @TargetApi(Build.VERSION_CODES.KITKAT)
-    private IntentFilter makeBoundBLEIntentFilter()  {
+    private IntentFilter makeBoundBLEIntentFilter() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
         intentFilter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
@@ -347,11 +351,11 @@ public class BleConnector {
         return intentFilter;
     }
 
-    void setClosed(boolean Closed) {
-        mClosed = Closed;
+    void setClosed(boolean closed) {
+        mClosed = closed;
     }
 
-    public List<BluetoothGattService> getServices(){
+    public List<BluetoothGattService> getServices() {
         return bleServiceConnection.getServices();
     }
 }

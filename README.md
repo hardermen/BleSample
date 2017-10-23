@@ -32,7 +32,7 @@
 //实例化扫描器
 BleScanner bleScanner = new BleScanner(context);
 //调用open方法，传入相关的回调，并打开扫描器功能
-bleScanner.open(scanList, onScanFindANewDeviceListener, 10000, false, onScanCompleteListener);
+bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, false, onScanCompleteListener);
 //开始扫描，扫描的结果在回调中，扫描的设备列表会自动添加到上方open函数中的scanList中
 bleScanner.startScan();
 ```

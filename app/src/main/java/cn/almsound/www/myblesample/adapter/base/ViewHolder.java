@@ -1,4 +1,4 @@
-package cn.almsound.www.myblesample.adapter.all_purpose_adapter;
+package cn.almsound.www.myblesample.adapter.base;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -12,8 +12,9 @@ import android.widget.TextView;
 
 
 /**
- * 为万能适配器创建的通用的ViewHolder
- * Created by ALM on 2016/7/7.
+ * @author alm
+ *         Created by ALM on 2016/7/7.
+ *         为万能适配器创建的通用的ViewHolder
  */
 @SuppressWarnings("unused")
 public class ViewHolder {
@@ -39,8 +40,9 @@ public class ViewHolder {
 
     /**
      * 构造器
-     * @param context 上下文
-     * @param parent 父布局
+     *
+     * @param context  上下文
+     * @param parent   父布局
      * @param layoutId item布局id
      * @param position 当前的位置
      */
@@ -58,11 +60,11 @@ public class ViewHolder {
     /**
      * 拿到一个ViewHolder对象
      *
-     * @param context 上下文
+     * @param context     上下文
      * @param convertView 容器
-     * @param parent 父容器
-     * @param layoutId 布局的id
-     * @param position 选中的位置
+     * @param parent      父容器
+     * @param layoutId    布局的id
+     * @param position    选中的位置
      * @return viewHolder
      */
     static ViewHolder get(Context context, View convertView,
@@ -75,6 +77,7 @@ public class ViewHolder {
 
     /**
      * 获取item的总布局
+     *
      * @return item的总布局
      */
     @SuppressWarnings("WeakerAccess")
@@ -103,7 +106,7 @@ public class ViewHolder {
      *
      * @param viewId 控件的Id
      * @param string 要设置的字符串
-     * @return  当前ViewHolder对象
+     * @return 当前ViewHolder对象
      */
     public ViewHolder setText(int viewId, CharSequence string) {
         TextView view = getView(viewId);
@@ -115,7 +118,7 @@ public class ViewHolder {
      * 获取edit文本
      *
      * @param viewId 控件的Id
-     * @return  edit文本
+     * @return edit文本
      */
     public String getEditText(int viewId) {
         EditText ed = getView(viewId);
@@ -125,7 +128,7 @@ public class ViewHolder {
     /**
      * 为ImageView设置图片
      *
-     * @param viewId 控件的Id
+     * @param viewId     控件的Id
      * @param drawableId 图片的id
      * @return 当前ViewHolder对象
      */
@@ -150,13 +153,14 @@ public class ViewHolder {
 
     /**
      * 为ImageView设置图片
+     *
      * @param viewId 控件的Id
-     * @param url   文件url
+     * @param url    文件url
      * @param circle 是否是圆形
      * @return 当前ViewHolder对象
      */
     public ViewHolder setImageByUrl(int viewId, String url, boolean circle) {
-        ImageView imageView =  getView(viewId);
+        ImageView imageView = getView(viewId);
         imageLoader.displayImage(url, imageView, circle);
         return this;
     }
@@ -165,7 +169,7 @@ public class ViewHolder {
      * 给view设置背景色
      *
      * @param viewId 控件的Id
-     * @param color 要设置的背景色
+     * @param color  要设置的背景色
      * @return 当前ViewHolder对象
      */
     public ViewHolder setBackgroundColor(int viewId, int color) {
@@ -176,6 +180,7 @@ public class ViewHolder {
 
     /**
      * 获得当前的位置
+     *
      * @return 当前ViewHolder对象
      */
     public int getPosition() {

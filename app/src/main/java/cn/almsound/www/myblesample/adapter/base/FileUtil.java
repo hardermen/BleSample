@@ -1,4 +1,4 @@
-package cn.almsound.www.myblesample.adapter.all_purpose_adapter;
+package cn.almsound.www.myblesample.adapter.base;
 
 import android.app.Application;
 import android.content.Context;
@@ -13,8 +13,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
- * 文件工具类
- * Created by ALM on 2016/7/7.
+ * @author alm
+ *         Created by ALM on 2016/7/7.
+ *         文件工具类
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class FileUtil {
@@ -36,12 +37,12 @@ public class FileUtil {
     /**
      * 项目文件目录
      */
-    public static final File App_Dir = getAppDir();
+    public static final File APP_DIR = getAppDir();
 
     /**
      * 项目缓存目录
      */
-    public static final File App_Cache = getCache();
+    public static final File APP_CACHE = getCache();
 
     /**
      * 项目图片缓存目录
@@ -159,11 +160,7 @@ public class FileUtil {
      */
     public static void saveBitmap(Bitmap bm, String picName) {
         Log.e("", "保存图片");
-//        Log.d("text", SDPATH);
         try {
-           /* if (!isFileExist("")) {
-                File tempf = createSDDir("");
-            }*/
 
             File f = new File(getCache(), picName + ".JPEG");
             if (f.exists()) {

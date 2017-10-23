@@ -17,7 +17,7 @@ import android.os.Handler;
  * BLE绑定事件的广播接收者
  */
 
-public class BoundBLEBroadcastReceiver extends BroadcastReceiver {
+public class BoundBleBroadcastReceiver extends BroadcastReceiver {
 
     private static final String TAG = "BoundBLEBroadcastReceiv";
 
@@ -68,24 +68,24 @@ public class BoundBLEBroadcastReceiver extends BroadcastReceiver {
                 Tool.warnOut(TAG, "mType = " + mType);
                 break;
             case BluetoothDevice.ACTION_BOND_STATE_CHANGED:
-                Tool.warnOut("BoundBLEBroadcastReceiver", "ACTION_BOND_STATE_CHANGED");
+                Tool.warnOut("BoundBleBroadcastReceiver", "ACTION_BOND_STATE_CHANGED");
                 int bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
-                Tool.warnOut("BoundBLEBroadcastReceiver", "bondState = $bondState");
+                Tool.warnOut("BoundBleBroadcastReceiver", "bondState = $bondState");
                 switch (bondState) {
                     case BluetoothDevice.BOND_BONDING:
-                        Tool.warnOut("BoundBLEBroadcastReceiver", "BOND_BONDING");
+                        Tool.warnOut("BoundBleBroadcastReceiver", "BOND_BONDING");
                         if (mOnDeviceBondStateChangedListener != null) {
                             mOnDeviceBondStateChangedListener.deviceBinding();
                         }
                         break;
                     case BluetoothDevice.BOND_BONDED:
-                        Tool.warnOut("BoundBLEBroadcastReceiver", "BOND_BONDED");
+                        Tool.warnOut("BoundBleBroadcastReceiver", "BOND_BONDED");
                         if (mOnDeviceBondStateChangedListener != null) {
                             mOnDeviceBondStateChangedListener.deviceBonded();
                         }
                         break;
                     case BluetoothDevice.BOND_NONE:
-                        Tool.warnOut("BoundBLEBroadcastReceiver", "BOND_NONE");
+                        Tool.warnOut("BoundBleBroadcastReceiver", "BOND_NONE");
                         if (mOnDeviceBondStateChangedListener != null) {
                             mOnDeviceBondStateChangedListener.deviceBindNone();
                         }
