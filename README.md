@@ -8,9 +8,27 @@
 
 配置：
 
-可以直接将library依赖到项目中，也可以自己从项目的附件下载aar引入
-[下载地址](https://git.oschina.net/sscl/BleSample/attach_files)
+1.直接将library依赖到项目中
 
+2.gradle配置依赖
+```
+compile 'com.jackiepenghe:blelibrary:0.1.0'
+```
+3.maven配置依赖
+```
+<dependency>
+  <groupId>com.jackiepenghe</groupId>
+  <artifactId>blelibrary</artifactId>
+  <version>0.1.0</version>
+  <type>pom</type>
+</dependency
+```
+4.vy配置依赖
+```
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.1.0'>
+  <artifact name='blelibrary' ext='pom' ></artifact>
+</dependency>
+```
 
 ###  权限配置：
 ```
@@ -27,7 +45,7 @@
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 ```
-###BLE扫描：
+### BLE扫描：
 ```
 //实例化扫描器
 BleScanner bleScanner = new BleScanner(context);
