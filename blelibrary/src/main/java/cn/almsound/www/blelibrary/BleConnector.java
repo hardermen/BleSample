@@ -314,6 +314,67 @@ public class BleConnector {
     }
 
     /**
+     * 写入数据
+     *
+     * @param serviceUUID        服务UUID
+     * @param characteristicUUID 特征UUID
+     * @param value              数据
+     * @return true表示成功
+     */
+    public boolean writeData(String serviceUUID, String characteristicUUID, byte[] value) {
+        return bleServiceConnection != null && bleServiceConnection.writeData(serviceUUID, characteristicUUID, value);
+    }
+
+    /**
+     * 刷新蓝牙缓存
+     *
+     * @return true表示成功
+     */
+    public boolean refreshGattCache() {
+        return bleServiceConnection != null && bleServiceConnection.refreshGattCache();
+    }
+
+    /**
+     * 读取数据
+     *
+     * @param serviceUUID        服务UUID
+     * @param characteristicUUID 特征UUID
+     * @return true表示成功
+     */
+    public boolean readData(String serviceUUID, String characteristicUUID) {
+        return bleServiceConnection != null && bleServiceConnection.readData(serviceUUID, characteristicUUID);
+    }
+
+    /**
+     * 打开通知
+     *
+     * @param serviceUUID        服务UUID
+     * @param characteristicUUID 特征UUID
+     * @return true表示成功
+     */
+    public boolean openNotification(String serviceUUID, String characteristicUUID) {
+        return bleServiceConnection != null && bleServiceConnection.openNotification(serviceUUID, characteristicUUID);
+    }
+
+    /**
+     * 关闭通知
+     *
+     * @param serviceUUID        服务UUID
+     * @param characteristicUUID 特征UUID
+     * @return true表示成功
+     */
+    public boolean closeNotification(String serviceUUID, String characteristicUUID) {
+        return bleServiceConnection != null && bleServiceConnection.closeNotification(serviceUUID, characteristicUUID);
+    }
+
+    public void setOnBluetoothOpenListener(BleInterface.OnBluetoothOpenListener onBluetoothOpenListener) {
+        connectBleBroadcastReceiver.setOnBluetoothOpenListener(onBluetoothOpenListener);
+    }
+
+    public void setOnBluetoothCloseListener(BleInterface.OnBluetoothCloseListener onBluetoothCloseListener) {
+        connectBleBroadcastReceiver.setOnBluetoothCloseListener(onBluetoothCloseListener);
+    }
+    /**
      * 广播接收者Action过滤器
      *
      * @return 接收者Action过滤器

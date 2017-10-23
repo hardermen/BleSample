@@ -1,5 +1,6 @@
 package cn.almsound.www.blelibrary;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -69,6 +70,18 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     private BleInterface.OnMtuChangedListener onMtuChangedListener;
 
     /**
+     * 蓝牙被打开的回调
+     */
+    private BleInterface.OnBluetoothOpenListener onBluetoothOpenListener;
+
+    /**
+     * 蓝牙被关闭的回调
+     */
+    private BleInterface.OnBluetoothCloseListener onBluetoothCloseListener;
+    private Handler handler = new Handler();
+
+
+    /**
      * This method is called when the BroadcastReceiver is receiving an Intent
      * broadcast.  During this time you can use the other methods on
      * BroadcastReceiver to view/modify the current result values.  This method
@@ -105,66 +118,143 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     @SuppressWarnings({"JavadocReference", "JavaDoc"})
     @Override
     public void onReceive(Context context, Intent intent) {
-        byte[] values = intent.getByteArrayExtra(LibraryConstants.VALUE);
+        final byte[] values = intent.getByteArrayExtra(LibraryConstants.VALUE);
         switch (intent.getAction()) {
+            case BluetoothAdapter.ACTION_STATE_CHANGED:
+                int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -2147483648);
+                //如果蓝牙被关闭
+                if (state == BluetoothAdapter.STATE_OFF) {
+                    Tool.toastL(context, R.string.bluetooth_off);
+                    if (onBluetoothCloseListener != null) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                onBluetoothCloseListener.onBluetoothClose();
+                            }
+                        });
+                    }
+                }
+                //如果蓝牙被打开
+                else if (state == BluetoothAdapter.STATE_ON) {
+                    Tool.toastL(context, R.string.bluetooth_on);
+                    if (onBluetoothOpenListener != null) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                onBluetoothOpenListener.onBluetoothOpen();
+                            }
+                        });
+                    }
+                }
+                break;
             case BleConstants.ACTION_GATT_CONNECTED:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTED");
                 if (onConnectedListener != null) {
-                    onConnectedListener.onConnected();
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onConnectedListener.onConnected();
+                        }
+                    });
                 }
                 break;
             case BleConstants.ACTION_GATT_DISCONNECTED:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
                 if (onDisconnectedListener != null) {
-                    onDisconnectedListener.onDisconnected();
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onDisconnectedListener.onDisconnected();
+                        }
+                    });
                 }
                 break;
             case BleConstants.ACTION_GATT_SERVICES_DISCOVERED:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
                 if (onServicesDiscoveredListener != null) {
-                    onServicesDiscoveredListener.onServicesDiscovered();
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onServicesDiscoveredListener.onServicesDiscovered();
+                        }
+                    });
                 }
                 break;
             case BleConstants.ACTION_GATT_CONNECTING:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTING");
                 if (onConnectingListener != null) {
-                    onConnectingListener.onConnecting();
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onConnectingListener.onConnecting();
+                        }
+                    });
                 }
                 break;
             case BleConstants.ACTION_GATT_DISCONNECTING:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_DISCONNECTING");
                 if (onDisconnectingListener != null) {
-                    onDisconnectingListener.onDisconnecting();
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onDisconnectingListener.onDisconnecting();
+                        }
+                    });
                 }
                 break;
             case BleConstants.ACTION_CHARACTERISTIC_READ:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_READ,value = " + Tool.bytesToHexStr(values));
                 if (onCharacteristicReadListener != null) {
-                    onCharacteristicReadListener.onCharacteristicRead(values);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onCharacteristicReadListener.onCharacteristicRead(values);
+                        }
+                    });
                 }
                 break;
             case BleConstants.ACTION_CHARACTERISTIC_CHANGED:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_CHANGED,value = " + Tool.bytesToHexStr(values));
                 if (onReceiveNotificationListener != null) {
-                    onReceiveNotificationListener.onReceiveNotification(values);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onReceiveNotificationListener.onReceiveNotification(values);
+                        }
+                    });
                 }
                 break;
             case BleConstants.ACTION_CHARACTERISTIC_WRITE:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_WRITE,value = " + Tool.bytesToHexStr(values));
                 if (onCharacteristicWriteListener != null) {
-                    onCharacteristicWriteListener.onCharacteristicWrite(values);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onCharacteristicWriteListener.onCharacteristicWrite(values);
+                        }
+                    });
                 }
                 break;
             case BleConstants.ACTION_DESCRIPTOR_READ:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_DESCRIPTOR_READ,value = " + Tool.bytesToHexStr(values));
                 if (onDescriptorReadListener != null) {
-                    onDescriptorReadListener.onDescriptorRead(values);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onDescriptorReadListener.onDescriptorRead(values);
+                        }
+                    });
                 }
                 break;
             case BleConstants.ACTION_DESCRIPTOR_WRITE:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_DESCRIPTOR_WRITE,value = " + Tool.bytesToHexStr(values));
                 if (onDescriptorWriteListener != null) {
-                    onDescriptorWriteListener.onDescriptorWrite(values);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onDescriptorWriteListener.onDescriptorWrite(values);
+                        }
+                    });
                 }
                 break;
             case BleConstants.ACTION_RELIABLE_WRITE_COMPLETED:
@@ -176,13 +266,23 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
             case BleConstants.ACTION_READ_REMOTE_RSSI:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_READ_REMOTE_RSSI,rssi = " + values[0]);
                 if (onReadRemoteRssiListener != null) {
-                    onReadRemoteRssiListener.onReadRemoteRssi(values[0]);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onReadRemoteRssiListener.onReadRemoteRssi(values[0]);
+                        }
+                    });
                 }
                 break;
             case BleConstants.ACTION_MTU_CHANGED:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_MTU_CHANGED,mtu = " + values[0]);
                 if (onMtuChangedListener != null) {
-                    onMtuChangedListener.onMtuChanged(values[0]);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onMtuChangedListener.onMtuChanged(values[0]);
+                        }
+                    });
                 }
                 break;
             default:
@@ -241,5 +341,13 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     public void setOnMtuChangedListener(BleInterface.OnMtuChangedListener onMtuChangedListener) {
         this.onMtuChangedListener = onMtuChangedListener;
+    }
+
+    public void setOnBluetoothOpenListener(BleInterface.OnBluetoothOpenListener onBluetoothOpenListener) {
+        this.onBluetoothOpenListener = onBluetoothOpenListener;
+    }
+
+    public void setOnBluetoothCloseListener(BleInterface.OnBluetoothCloseListener onBluetoothCloseListener) {
+        this.onBluetoothCloseListener = onBluetoothCloseListener;
     }
 }

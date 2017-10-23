@@ -221,4 +221,24 @@ public class BleInterface {
          */
         void onMtuChanged(int mtu);
     }
+
+    /**
+     * 蓝牙被打开的回调
+     */
+    public interface OnBluetoothOpenListener{
+        /**
+         *  蓝牙被打开
+         */
+        void onBluetoothOpen();
+    }
+
+    /**
+     * 蓝牙被关闭的回调
+     */
+    public interface OnBluetoothCloseListener{
+        /**
+         *  蓝牙被关闭
+         */
+        void onBluetoothClose();
+    }
 }

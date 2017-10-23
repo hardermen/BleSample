@@ -255,20 +255,30 @@ public class ConnectActivity extends BaseAppcompatActivity {
             //获取服务列表
             List<BluetoothGattService> deviceServices = bleConnector.getServices();
 
-            for (int i = 0; i < deviceServices.size(); i++) {
-                BluetoothGattService bluetoothGattService = deviceServices.get(i);
-                LogUtil.w(TAG, "service UUID = " + bluetoothGattService.getUuid().toString());
+            if (deviceServices != null) {
 
-                List<BluetoothGattCharacteristic> characteristics = bluetoothGattService.getCharacteristics();
-                for (int j = 0; j < characteristics.size(); j++) {
-                    BluetoothGattCharacteristic bluetoothGattCharacteristic = characteristics.get(j);
-                    LogUtil.w(TAG, "bluetoothGattCharacteristic UUID = " + bluetoothGattCharacteristic.getUuid().toString());
+                for (int i = 0; i < deviceServices.size(); i++) {
+                    BluetoothGattService bluetoothGattService = deviceServices.get(i);
+                    LogUtil.w(TAG, "service UUID = " + bluetoothGattService.getUuid().toString());
+
+                    List<BluetoothGattCharacteristic> characteristics = bluetoothGattService.getCharacteristics();
+                    for (int j = 0; j < characteristics.size(); j++) {
+                        BluetoothGattCharacteristic bluetoothGattCharacteristic = characteristics.get(j);
+                        LogUtil.w(TAG, "bluetoothGattCharacteristic UUID = " + bluetoothGattCharacteristic.getUuid().toString());
+                    }
                 }
             }
 
             //提取设备名与设备地址
             nameTv.setText(bluetoothDevice.getName());
             addressTv.setText(bluetoothDevice.getAddress());
+            String serviceUUID = "C3E6FEA0-E966-1000-8000-BE99C223DF6A";
+            String chaUUID = "C3E6FEA2-E966-1000-8000-BE99C223DF6A";
+            if (!bleConnector.openNotification(serviceUUID, chaUUID)) {
+                LogUtil.w(TAG, "open notification failed");
+            } else {
+                LogUtil.w(TAG, "open notification succeed");
+            }
         };
         //与远端设备断开连接后触发此回调
         BleInterface.OnDisconnectedListener onDisconnectedListener = () -> {
