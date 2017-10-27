@@ -46,7 +46,7 @@ compile 'com.jackiepenghe:blelibrary:0.1.5'
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 ```
 ### BLE扫描：
-```
+```java
 //实例化扫描器
 BleScanner bleScanner = new BleScanner(context);
 //调用open方法，传入相关的回调，并打开扫描器功能
@@ -58,7 +58,7 @@ bleScanner.startScan();
 注销：
 一定要记得在activity被销毁之前，注销扫描器
 
-```
+```java
 bleScanner.close();
 ```
 
@@ -75,7 +75,7 @@ bleScanner.close();
 ``` 
 接下来就是Java代码了
 
-```
+```java
 //实例化连接器
  BleConnector bleConnector = new BleConnector(ConnectActivity.this);
 //设置回调，在这个回调中判断连接成功最为保险
@@ -93,43 +93,43 @@ private void startConnect() {
 ```
 
 在连接成功之后，就可以获取设备的服务列表
-```
+```java
 List<BluetoothGattService> deviceServices = bleConnector.getServices();
 ```
 
 对目标进行数据的传输
 
 发送数据
-```
+```java
 bleConnector.writeData(serviceUUID,characteristicUUID,value);
 ```
 
 获取数据
-```
+```java
 bleConnector.readData(serviceUUID,characteristicUUID);
 ```
 
 上面的发送与获取数据的方法返回的都是boolean类型，代表成功与失败(其实bleConnector的函数基本上都是返回boolean类型的)
 
 获取到的数据在回调中查看
-```
+```java
 bleConnector.setOnCharacteristicReadListener(onCharacteristicReadListener);
 ```
 
 还有通知
 
 打开通知：
-```
+```java
 bleConnector.openNotification(serviceUUID,characteristicUUID);
 ```
 
 关闭通知
-```
+```java
 bleConnector.closeNotification(serviceUUID,characteristicUUID);
 ```
 
 通知的回调
-```
+```java
 bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
 ```
 
@@ -138,7 +138,7 @@ bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
 销毁
 
 在准备销毁activity的时候，调用close方法。推荐在此处屏蔽super.onBackpressed()方法。
-```
+```java
     @Override
     public void onBackPressed() {
         bleConnector.close();
@@ -146,7 +146,7 @@ bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
 ```
 
 然后在回调中销毁activity
-```
+```java
 BleConnector.OnCloseCompleteListener onCloseCompleteListener;
 onCloseCompleteListener = new BleConnector.OnCloseCompleteListener() {
             @Override
@@ -160,7 +160,7 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
 
 ### BLE设备的绑定(也可以说是配对)：
 
-```
+```java
         /*
          * 调用绑定的方法（如果需要绑定)，否则请直接调用连接的方法
          * 注意：如果该设备不支持绑定，会直接回调绑定成功的回调，在绑定成功的回调中发起连接即可
@@ -195,7 +195,7 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
         }
 ```
 相关的回调是：
-```
+```java
   //设备的绑定(也可以说配对)状态改变后触发此回调
         BleInterface.OnDeviceBondStateChangedListener onBondStateChangedListener = new BleInterface.OnDeviceBondStateChangedListener() {
             /**
