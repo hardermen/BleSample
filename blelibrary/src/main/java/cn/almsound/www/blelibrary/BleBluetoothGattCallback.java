@@ -22,6 +22,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
      */
     private BluetoothLeService bluetoothLeService;
     private BluetoothGatt gatt;
+    private boolean autoReconnect;
 
     /**
      * 构造器
@@ -47,6 +48,9 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
             case BluetoothGatt.STATE_DISCONNECTED:
                 Tool.warnOut(TAG, "STATE_DISCONNECTED");
                 intent.setAction(BleConstants.ACTION_GATT_DISCONNECTED);
+                if (autoReconnect){
+                    gatt.connect();
+                }
                 break;
             case BluetoothGatt.STATE_CONNECTING:
                 Tool.warnOut(TAG, "STATE_CONNECTING");
@@ -175,5 +179,9 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
             return null;
         }
         return gatt.getServices();
+    }
+
+    void setAutoReconnect(boolean autoReconnect) {
+        this.autoReconnect = autoReconnect;
     }
 }

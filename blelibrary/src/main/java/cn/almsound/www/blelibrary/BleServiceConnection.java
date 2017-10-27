@@ -53,7 +53,8 @@ class BleServiceConnection implements ServiceConnection {
             Tool.warnOut(TAG, "address is null!");
             return;
         }
-        bluetoothLeService.connect(mAddress);
+        boolean connect = bluetoothLeService.connect(mAddress);
+        Tool.warnOut(TAG, "connect " + connect);
     }
 
     /**
@@ -86,6 +87,7 @@ class BleServiceConnection implements ServiceConnection {
      *
      * @return true表示成功
      */
+    @SuppressWarnings("UnusedReturnValue")
     boolean closeGatt() {
         return bluetoothLeService != null && bluetoothLeService.close();
     }
@@ -176,5 +178,9 @@ class BleServiceConnection implements ServiceConnection {
      */
     List<BluetoothGattService> getServices() {
         return bluetoothLeService.getServices();
+    }
+
+    void setAutoReconnect(boolean autoReconnect) {
+        bluetoothLeService.setAutoReconnect(autoReconnect);
     }
 }

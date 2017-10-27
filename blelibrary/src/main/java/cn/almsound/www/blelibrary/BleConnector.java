@@ -57,6 +57,7 @@ public class BleConnector {
      */
     private boolean mClosed;
     private CloseTask closeTask;
+    private boolean autoReconnect;
 
     public BleConnector(Context context) {
         contextWeakReference = new WeakReference<>(context);
@@ -95,15 +96,26 @@ public class BleConnector {
      * @return true表示开始连接
      */
     public boolean startConnect() {
+        return startConnect(false);
+    }
+
+    /**
+     * 发起连接
+     *
+     * @return true表示开始连接
+     */
+    @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
+    public boolean startConnect(boolean autoReconnect) {
         if (bleServiceConnection == null) {
             return false;
         }
+
+        bleServiceConnection.setAutoReconnect(autoReconnect);
 
         mClosed = false;
 
         //注册广播接收者
         contextWeakReference.get().registerReceiver(connectBleBroadcastReceiver, makeConnectBLEIntentFilter());
-
         //绑定BLE连接服务
         Intent intent = new Intent(contextWeakReference.get(), BluetoothLeService.class);
         return contextWeakReference.get().bindService(intent, bleServiceConnection, Context.BIND_AUTO_CREATE);
@@ -154,7 +166,9 @@ public class BleConnector {
      *
      * @return true表示成功断开
      */
+    @SuppressWarnings("UnusedReturnValue")
     private boolean disconnect() {
+        bleServiceConnection.setAutoReconnect(false);
         return bleServiceConnection != null && bleServiceConnection.disconnect();
     }
 
@@ -412,6 +426,7 @@ public class BleConnector {
         return intentFilter;
     }
 
+    @SuppressWarnings("SameParameterValue")
     void setClosed(boolean closed) {
         mClosed = closed;
     }

@@ -134,7 +134,7 @@ public class BluetoothLeService extends Service {
      * @param address 远端设备地址
      * @return true表示成功
      */
-    public boolean connect(String address) {
+    boolean connect(String address) {
         if (bluetoothAdapter == null || address == null) {
             return false;
         }
@@ -152,7 +152,7 @@ public class BluetoothLeService extends Service {
      *
      * @return true表示成功
      */
-    public boolean disconnect() {
+    boolean disconnect() {
         if (bluetoothGatt == null) {
             return false;
         }
@@ -165,7 +165,7 @@ public class BluetoothLeService extends Service {
      *
      * @return true表示成功
      */
-    public boolean close() {
+    boolean close() {
         if (bluetoothGatt == null) {
             return false;
         }
@@ -182,7 +182,7 @@ public class BluetoothLeService extends Service {
      * @param values             数据
      * @return true表示成功
      */
-    public boolean writeData(String serviceUUID, String characteristicUUID, byte[] values) {
+    boolean writeData(String serviceUUID, String characteristicUUID, byte[] values) {
         if (serviceUUID == null || characteristicUUID == null || values == null || bluetoothGatt == null) {
             return false;
         }
@@ -214,7 +214,7 @@ public class BluetoothLeService extends Service {
      *                           *
      * @return true表示成功
      */
-    public boolean readData(String serviceUUID, String characteristicUUID) {
+    boolean readData(String serviceUUID, String characteristicUUID) {
         if (serviceUUID == null || characteristicUUID == null || bluetoothGatt == null) {
             return false;
         }
@@ -242,7 +242,7 @@ public class BluetoothLeService extends Service {
      *                           *
      * @return true表示成功
      */
-    public boolean openNotification(String serviceUUID, String characteristicUUID) {
+    boolean openNotification(String serviceUUID, String characteristicUUID) {
         if (serviceUUID == null || characteristicUUID == null) {
             return false;
         }
@@ -272,7 +272,7 @@ public class BluetoothLeService extends Service {
      *                           *
      * @return true表示成功
      */
-    public boolean closeNotification(String serviceUUID, String characteristicUUID) {
+    boolean closeNotification(String serviceUUID, String characteristicUUID) {
         if (serviceUUID == null || characteristicUUID == null) {
             return false;
         }
@@ -298,7 +298,7 @@ public class BluetoothLeService extends Service {
      *
      * @return true表示成功
      */
-    public boolean getRssi() {
+    boolean getRssi() {
         return bluetoothGatt.readRemoteRssi();
     }
 
@@ -308,7 +308,7 @@ public class BluetoothLeService extends Service {
      * @return true表示成功
      */
     @SuppressWarnings("TryWithIdenticalCatches")
-    public boolean refreshGattCache() {
+    boolean refreshGattCache() {
         if (bluetoothGatt == null) {
             return false;
         }
@@ -334,7 +334,11 @@ public class BluetoothLeService extends Service {
      *
      * @return 服务列表
      */
-    public List<BluetoothGattService> getServices() {
+    List<BluetoothGattService> getServices() {
         return bleBluetoothGattCallback.getServices();
+    }
+
+    void setAutoReconnect(boolean autoReconnect){
+        bleBluetoothGattCallback.setAutoReconnect(autoReconnect);
     }
 }

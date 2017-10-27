@@ -10,11 +10,10 @@ import android.os.Build;
 import android.os.Handler;
 
 /**
- *
  * @author alm
- * Created by alm on 17-6-5.
- *
- * BLE绑定事件的广播接收者
+ *         Created by alm on 17-6-5.
+ *         <p>
+ *         BLE绑定事件的广播接收者
  */
 
 public class BoundBleBroadcastReceiver extends BroadcastReceiver {
@@ -61,7 +60,11 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     public void onReceive(Context context, Intent intent) {
-        switch (intent.getAction()) {
+        String action = intent.getAction();
+        if (action == null){
+            return;
+        }
+        switch (action) {
             case BluetoothDevice.ACTION_PAIRING_REQUEST:
                 Tool.warnOut(TAG, "ACTION_PAIRING_REQUEST");
                 int mType = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT, BluetoothDevice.ERROR);
@@ -70,7 +73,7 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
             case BluetoothDevice.ACTION_BOND_STATE_CHANGED:
                 Tool.warnOut("BoundBleBroadcastReceiver", "ACTION_BOND_STATE_CHANGED");
                 int bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
-                Tool.warnOut("BoundBleBroadcastReceiver", "bondState = $bondState");
+                Tool.warnOut("BoundBleBroadcastReceiver", "bondState = " + bondState);
                 switch (bondState) {
                     case BluetoothDevice.BOND_BONDING:
                         Tool.warnOut("BoundBleBroadcastReceiver", "BOND_BONDING");

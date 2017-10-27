@@ -119,7 +119,11 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         final byte[] values = intent.getByteArrayExtra(LibraryConstants.VALUE);
-        switch (intent.getAction()) {
+        String action = intent.getAction();
+        if (action == null){
+            return;
+        }
+        switch (action) {
             case BluetoothAdapter.ACTION_STATE_CHANGED:
                 int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -2147483648);
                 //如果蓝牙被关闭
@@ -286,7 +290,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                 }
                 break;
             default:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "get other action" + intent.getAction());
+                Tool.warnOut("ConnectBleBroadcastReceiver", "get other action" + action);
                 break;
         }
     }
