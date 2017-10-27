@@ -1,8 +1,15 @@
 package cn.almsound.www.blelibrary;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.support.annotation.StringRes;
 import android.util.Log;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * @author alm
@@ -10,7 +17,7 @@ import android.util.Log;
  *         工具类
  */
 
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"WeakerAccess", "unused", "SameParameterValue"})
 public class Tool {
     //log部分
 
@@ -465,5 +472,43 @@ public class Tool {
                 break;
             }
         }
+    }
+
+    /**
+     * 获取本机蓝牙地址
+     *
+     * @return 本机蓝牙地址
+     */
+    @RequiresApi(api = Build.VERSION_CODES.ECLAIR)
+    public static String getBluetoothAddress() {
+        try {
+            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            Field field = bluetoothAdapter.getClass().getDeclaredField("mService");
+            // 参数值为true，禁用访问控制检查
+            field.setAccessible(true);
+            Object bluetoothManagerService = field.get(bluetoothAdapter);
+            if (bluetoothManagerService == null) {
+                return null;
+            }
+            Method method = bluetoothManagerService.getClass().getMethod("getAddress");
+            Object address = method.invoke(bluetoothManagerService);
+            if (address != null && address instanceof String) {
+
+                return (String) address;
+            } else {
+                return null;
+            }
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

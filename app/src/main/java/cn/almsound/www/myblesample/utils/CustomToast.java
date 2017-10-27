@@ -41,7 +41,12 @@ class CustomToast {
      */
     public static int LENGTH_ALWAYS = 0;
 
-    private Runnable mHide = this::hide;
+    private Runnable mHide = new Runnable() {
+        @Override
+        public void run() {
+            hide();
+        }
+    };
 
     private CustomToast(Toast toast) {
         mToast = toast;

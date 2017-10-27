@@ -3,6 +3,7 @@ package cn.almsound.www.myblesample.main;
 import android.content.Intent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 
 import cn.almsound.www.baselibrary.BaseAppcompatActivity;
@@ -55,7 +56,7 @@ public class MainActivity extends BaseAppcompatActivity {
      */
     @Override
     protected void initViews() {
-        button = (Button) findViewById(R.id.button);
+        button =  findViewById(R.id.button);
     }
 
     /**
@@ -79,7 +80,12 @@ public class MainActivity extends BaseAppcompatActivity {
      */
     @Override
     protected void initEvents() {
-        button.setOnClickListener(v -> toDeviceListActivity());
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toDeviceListActivity();
+            }
+        });
     }
 
     /**
