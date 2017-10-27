@@ -1,31 +1,23 @@
-关于安卓4.4手机连接不上BLE设备的问题回复:
-
-原因：当使用minSDKVersion 19的时候，系统默认调用的BluetoothDevice类是在android-19目录下的，与程序中的回调BluetoothDevice不是同一个类为什么会这样目前还不清楚
-
-解决方案：
-只要把minSDKVersion改成其他任何一个版本，如18 20等都不会出现问题。唯独19会出现问题。
-
-
 配置：
 
 1.直接将library依赖到项目中
 
 2.gradle配置依赖
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.1.5'
+compile 'com.jackiepenghe:blelibrary:0.1.6'
 ```
 3.maven配置依赖
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.1.5</version>
+  <version>0.1.6</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖
 ```xml
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.1.5'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.1.6'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
