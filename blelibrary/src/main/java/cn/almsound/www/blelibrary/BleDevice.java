@@ -2,6 +2,7 @@ package cn.almsound.www.blelibrary;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanRecord;
+import android.bluetooth.le.ScanResult;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -32,9 +33,10 @@ public class BleDevice implements Serializable, Parcelable {
     /**
      * 广播包
      */
-    private byte[] scanRecordByte;
+    private byte[] scanRecordBytes;
 
     private ScanRecord scanRecord;
+
 
     /**
      * 构造器
@@ -57,10 +59,10 @@ public class BleDevice implements Serializable, Parcelable {
      * @param rssi            rssi值
      * @param scanRecord      广播包
      */
-    public BleDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord, String deviceName) {
+    public BleDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecordBytes, String deviceName) {
         mBluetoothDevice = bluetoothDevice;
         mRssi = rssi;
-        scanRecordByte = scanRecord;
+        this.scanRecordBytes = scanRecordBytes;
         if (bluetoothDevice.getName() == null || bluetoothDevice.getName().isEmpty()) {
             setDeviceName(deviceName);
         }
@@ -82,15 +84,19 @@ public class BleDevice implements Serializable, Parcelable {
         this.mRssi = mRssi;
     }
 
-    public byte[] getScanRecordByte() {
-        return scanRecordByte;
+    public byte[] getScanRecordBytes() {
+        return scanRecordBytes;
+    }
+
+    void setScanRecordBytes(byte[] scanRecordBytes) {
+        this.scanRecordBytes = scanRecordBytes;
     }
 
     public ScanRecord getScanRecord() {
         return scanRecord;
     }
 
-    public void setScanRecord(ScanRecord scanRecord) {
+    void setScanRecord(ScanRecord scanRecord) {
         this.scanRecord = scanRecord;
     }
 
@@ -176,13 +182,13 @@ public class BleDevice implements Serializable, Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeParcelable(this.mBluetoothDevice, flags);
         dest.writeInt(this.mRssi);
-        dest.writeByteArray(this.scanRecordByte);
+        dest.writeByteArray(this.scanRecordBytes);
     }
 
     protected BleDevice(Parcel in) {
         this.mBluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
         this.mRssi = in.readInt();
-        this.scanRecordByte = in.createByteArray();
+        this.scanRecordBytes = in.createByteArray();
     }
 
     public static final Parcelable.Creator<BleDevice> CREATOR = new Parcelable.Creator<BleDevice>() {

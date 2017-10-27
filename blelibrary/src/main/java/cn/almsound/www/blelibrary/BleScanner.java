@@ -196,22 +196,22 @@ public class BleScanner {
                 Tool.warnOut("BleScan::API >= 21::onScanResult", "callbackType = " + callbackType);
                 BluetoothDevice device = result.getDevice();
                 int rssi = result.getRssi();
-                ScanRecord scanrecord = result.getScanRecord();
-                byte[] scanRecord = null;
+                ScanRecord scanRecord = result.getScanRecord();
+                byte[] scanRecordBytes = null;
                 String deviceName = null;
-                if (scanrecord != null) {
-                    scanRecord = scanrecord.getBytes();
-                    deviceName = scanrecord.getDeviceName();
-                    Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecord.getDeviceName() = " + deviceName);
+                if (scanRecord != null) {
+                    scanRecordBytes = scanRecord.getBytes();
+                    deviceName = scanRecord.getDeviceName();
+                    Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecordBytes.getDeviceName() = " + deviceName);
                 }
                 Tool.warnOut("BleScan::API >= 21::onScanResult", "device.getName() = " + device.getName());
                 Tool.warnOut("BleScan::API >= 21::onScanResult", "device.getAddress() = " + device.getAddress());
                 Tool.warnOut("BleScan::API >= 21::onScanResult", "rssi = " + rssi);
-                Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecord = " + scanrecord);
-                BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, deviceName);
-                bleDevice.setScanRecord(scanrecord);
+                Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecordBytes = " + scanRecord);
+                BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
+                bleDevice.setScanRecord(scanRecord);
                 if (mOnScanFindOneDeviceListener != null) {
-                    mOnScanFindOneDeviceListener.scanFindOneDevice(device, rssi, scanRecord);
+                    mOnScanFindOneDeviceListener.scanFindOneDevice(device, rssi, scanRecordBytes);
                 }
                 if (mOnScanFindOneNewDeviceListener != null) {
                     if (!mScanResults.contains(bleDevice)) {

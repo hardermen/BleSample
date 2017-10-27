@@ -2,6 +2,8 @@ package cn.almsound.www.myblesample.activity;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanRecord;
+import android.bluetooth.le.ScanResult;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -228,7 +230,6 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
             /*if(bleDevice.getBluetoothDevice().getAddress().equalsIgnoreCase("00:00:00:AA:SS:BB")){
                 return;
             }*/
-
                 adapterList.add(bleDevice);
                 adapter.notifyDataSetChanged();
             }
