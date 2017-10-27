@@ -11,27 +11,27 @@
 1.直接将library依赖到项目中
 
 2.gradle配置依赖
-```
-compile 'com.jackiepenghe:blelibrary:0.1.0'
+```xml
+compile 'com.jackiepenghe:blelibrary:0.1.5'
 ```
 3.maven配置依赖
-```
+```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.5</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖
-```
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.1.0'>
+```xml
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.1.5'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
 
 ###  权限配置：
-```
+```xml
 <!--蓝牙权限-->
    <uses-permission android:name="android.permission.BLUETOOTH" />
    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
@@ -46,7 +46,7 @@ compile 'com.jackiepenghe:blelibrary:0.1.0'
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 ```
 ### BLE扫描：
-```
+```java
 //实例化扫描器
 BleScanner bleScanner = new BleScanner(context);
 //调用open方法，传入相关的回调，并打开扫描器功能
@@ -58,7 +58,7 @@ bleScanner.startScan();
 注销：
 一定要记得在activity被销毁之前，注销扫描器
 
-```
+```java
 bleScanner.close();
 ```
 
@@ -66,7 +66,7 @@ bleScanner.close();
 
 在进行连接之前，一定要检查是否在AndroidManifest中配置已一个必须的服务！
 
-``` 
+```xml 
 <service
     android:name="cn.almsound.www.almblelibrary.service.BluetoothLeService"
     android:enabled="true"
@@ -75,7 +75,7 @@ bleScanner.close();
 ``` 
 接下来就是Java代码了
 
-```
+```java
 //实例化连接器
  BleConnector bleConnector = new BleConnector(ConnectActivity.this);
 //设置回调，在这个回调中判断连接成功最为保险
@@ -89,56 +89,65 @@ private void startConnect() {
                 LogUtil.w("连接失败");              
             }
         }
+        
+     /*if (bleConnector.checkAndSetAddress(address)) {
+            //发起连接时传入true代表断链后自动重连
+            if (bleConnector.startConnect(true)) {
+                LogUtil.w("开始连接");    
+            } else {
+                LogUtil.w("连接失败");              
+            }
+        }*/
     }
 ```
 
 在连接成功之后，就可以获取设备的服务列表
-```
+```java
 List<BluetoothGattService> deviceServices = bleConnector.getServices();
 ```
 
 对目标进行数据的传输
 
 发送数据
-```
+```java
 bleConnector.writeData(serviceUUID,characteristicUUID,value);
 ```
 
 获取数据
-```
+```java
 bleConnector.readData(serviceUUID,characteristicUUID);
 ```
 
 上面的发送与获取数据的方法返回的都是boolean类型，代表成功与失败(其实bleConnector的函数基本上都是返回boolean类型的)
 
 获取到的数据在回调中查看
-```
+```java
 bleConnector.setOnCharacteristicReadListener(onCharacteristicReadListener);
 ```
 
 还有通知
 
 打开通知：
-```
+```java
 bleConnector.openNotification(serviceUUID,characteristicUUID);
 ```
 
 关闭通知
-```
+```java
 bleConnector.closeNotification(serviceUUID,characteristicUUID);
 ```
 
 通知的回调
-```
+```java
 bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
 ```
 
-还有其他的回调，看情况自己使用
+还有其他的很多回调，可以自己下载源码，根据实际需求使用
 
 销毁
 
-在准备销毁activity的时候，调用close方法
-```
+在准备销毁activity的时候，调用close方法。推荐在此处屏蔽super.onBackpressed()方法。
+```java
     @Override
     public void onBackPressed() {
         bleConnector.close();
@@ -146,7 +155,7 @@ bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
 ```
 
 然后在回调中销毁activity
-```
+```java
 BleConnector.OnCloseCompleteListener onCloseCompleteListener;
 onCloseCompleteListener = new BleConnector.OnCloseCompleteListener() {
             @Override
@@ -157,3 +166,73 @@ onCloseCompleteListener = new BleConnector.OnCloseCompleteListener() {
         };
 bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
 ```
+
+### BLE设备的绑定(也可以说是配对)：
+
+```java
+        /*
+         * 调用绑定的方法（如果需要绑定)，否则请直接调用连接的方法
+         * 注意：如果该设备不支持绑定，会直接回调绑定成功的回调，在绑定成功的回调中发起连接即可
+         * 第一次绑定某一个设备会触发回调，之后再次绑定，可根据绑定时的函数的返回值来判断绑定状态，以进行下一步操作
+         */
+        switch (bleConnector.startBound(address)) {
+            case BleConstants.DEVICE_BOND_START_SUCCESS:
+                LogUtil.w(TAG, "开始绑定");
+                break;
+            case BleConstants.DEVICE_BOND_START_FAILED:
+                LogUtil.w(TAG, "发起绑定失败");
+                break;
+            case BleConstants.DEVICE_BOND_BONDED:
+                LogUtil.w(TAG, "此设备已经被绑定了");
+                startConnect();
+                break;
+            case BleConstants.DEVICE_BOND_BONDING:
+                LogUtil.w(TAG, "此设备正在绑定中");
+                break;
+            case BleConstants.BLUETOOTH_ADAPTER_NULL:
+                LogUtil.w(TAG, "没有蓝牙适配器存在");
+                break;
+            case BleConstants.BLUETOOTH_ADDRESS_INCORRECT:
+                LogUtil.w(TAG, "蓝牙地址错误");
+                break;
+            case BleConstants.BLUETOOTH_MANAGER_NULL:
+                LogUtil.w(TAG, "没有蓝牙管理器存在");
+                break;
+            default:
+                LogUtil.w(TAG, "default");
+                break;
+        }
+```
+相关的回调是：
+```java
+  //设备的绑定(也可以说配对)状态改变后触发此回调
+        BleInterface.OnDeviceBondStateChangedListener onBondStateChangedListener = new BleInterface.OnDeviceBondStateChangedListener() {
+            /**
+             * 正在绑定设备
+             */
+            @Override
+            public void deviceBinding() {
+
+            }
+
+            /**
+             * 绑定完成
+             */
+            @Override
+            public void deviceBonded() {
+                //发起连接
+                startConnect();
+            }
+
+            /**
+             * 取消绑定或者绑定失败
+             */
+            @Override
+            public void deviceBindNone() {
+
+            }
+        };
+        //设置绑定的回调
+         bleConnector.setOnBondStateChangedListener(onBondStateChangedListener);
+```
+`
