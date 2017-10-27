@@ -29,7 +29,7 @@ public class Tool {
     /**
      * 是否打印日志信息的标志
      */
-    private static boolean mDebug = true;
+    private static boolean mDebug = false;
 
     /**
      * 获取当前日志打印标志
