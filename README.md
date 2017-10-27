@@ -11,11 +11,11 @@
 1.直接将library依赖到项目中
 
 2.gradle配置依赖
-```
+```xml
 compile 'com.jackiepenghe:blelibrary:0.1.5'
 ```
 3.maven配置依赖
-```
+```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
@@ -24,14 +24,14 @@ compile 'com.jackiepenghe:blelibrary:0.1.5'
 </dependency
 ```
 4.vy配置依赖
-```
+```xml
 <dependency org='com.jackiepenghe' name='blelibrary' rev='0.1.5'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
 
 ###  权限配置：
-```
+```xml
 <!--蓝牙权限-->
    <uses-permission android:name="android.permission.BLUETOOTH" />
    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
@@ -66,7 +66,7 @@ bleScanner.close();
 
 在进行连接之前，一定要检查是否在AndroidManifest中配置已一个必须的服务！
 
-``` 
+```xml 
 <service
     android:name="cn.almsound.www.almblelibrary.service.BluetoothLeService"
     android:enabled="true"
@@ -226,3 +226,4 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
         //设置绑定的回调
          bleConnector.setOnBondStateChangedListener(onBondStateChangedListener);
 ```
+`
