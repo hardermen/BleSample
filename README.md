@@ -89,6 +89,15 @@ private void startConnect() {
                 LogUtil.w("连接失败");              
             }
         }
+        
+     /*if (bleConnector.checkAndSetAddress(address)) {
+            //发起连接时传入true代表断链后自动重连
+            if (bleConnector.startConnect(true)) {
+                LogUtil.w("开始连接");    
+            } else {
+                LogUtil.w("连接失败");              
+            }
+        }*/
     }
 ```
 
