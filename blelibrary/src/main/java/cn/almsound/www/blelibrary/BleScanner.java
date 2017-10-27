@@ -28,7 +28,7 @@ import java.util.List;
  *         Created by alm on 17-6-5.
  */
 
-@SuppressWarnings("AliDeprecation")
+@SuppressWarnings({"AliDeprecation", "UnusedReturnValue"})
 public class BleScanner {
     /**
      * 扫描的结果
@@ -125,6 +125,9 @@ public class BleScanner {
         bluetoothStateReceiver = new BluetoothStateReceiver(BleScanner.this);
 
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        if (bluetoothManager== null){
+            return;
+        }
         mBluetoothAdapter = bluetoothManager.getAdapter();
 
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
@@ -206,6 +209,7 @@ public class BleScanner {
                 Tool.warnOut("BleScan::API >= 21::onScanResult", "rssi = " + rssi);
                 Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecord = " + scanrecord);
                 BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, deviceName);
+                bleDevice.setScanRecord(scanrecord);
                 if (mOnScanFindOneDeviceListener != null) {
                     mOnScanFindOneDeviceListener.scanFindOneDevice(device, rssi, scanRecord);
                 }
@@ -249,6 +253,7 @@ public class BleScanner {
      * @param onScanCompleteListener       扫描完成的回调
      * @return true表示打开成功
      */
+    @SuppressWarnings("SameParameterValue")
     public boolean open(@NonNull ArrayList<BleDevice> scanResults, @NonNull BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener, long scanPeriod, boolean scanContinueFlag, @NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
         if (scanPeriod <= 0 || contextWeakReference.get() == null) {
             return false;
@@ -399,6 +404,7 @@ public class BleScanner {
         return mScanning;
     }
 
+    @SuppressWarnings("SameParameterValue")
     void setScanning(boolean scanning) {
         mScanning = scanning;
     }

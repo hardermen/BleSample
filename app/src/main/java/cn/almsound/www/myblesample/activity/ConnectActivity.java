@@ -161,6 +161,7 @@ public class ConnectActivity extends BaseAppcompatActivity {
         /*
          * 调用绑定的方法（如果需要绑定)，否则请直接调用连接的方法
          * 注意：如果该设备不支持绑定，会直接回调绑定成功的回调，在绑定成功的回调中发起连接即可
+         * 第一次绑定某一个设备会触发回调，之后再次绑定，可根据绑定时的函数的返回值来判断绑定状态，以进行下一步操作
          */
         switch (bleConnector.startBound(address)) {
             case BleConstants.DEVICE_BOND_START_SUCCESS:
