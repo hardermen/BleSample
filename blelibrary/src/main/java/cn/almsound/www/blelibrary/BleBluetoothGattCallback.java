@@ -17,6 +17,8 @@ import static android.content.ContentValues.TAG;
  */
 
 class BleBluetoothGattCallback extends BluetoothGattCallback{
+
+    private static final String TAG = "BleBluetoothGattCallbac";
     /**
      * BLE连接服务
      */
@@ -49,6 +51,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
                 Tool.warnOut(TAG, "STATE_DISCONNECTED");
                 intent.setAction(BleConstants.ACTION_GATT_DISCONNECTED);
                 if (autoReconnect){
+                    Tool.warnOut(TAG,"autoReconnect");
                     gatt.connect();
                 }
                 break;

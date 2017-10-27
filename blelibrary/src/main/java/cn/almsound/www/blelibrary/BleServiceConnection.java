@@ -18,6 +18,7 @@ class BleServiceConnection implements ServiceConnection {
 
     private String mAddress;
     private BluetoothLeService bluetoothLeService;
+    private boolean autoReconnect;
 
     /**
      * 构造器
@@ -45,6 +46,7 @@ class BleServiceConnection implements ServiceConnection {
             Tool.warnOut(TAG, "bluetoothLeService is null.");
             return;
         }
+        bluetoothLeService.setAutoReconnect(autoReconnect);
         if (!bluetoothLeService.initialize()) {
             Tool.warnOut(TAG, "bluetoothLeService initialize failed!");
             return;
@@ -181,6 +183,9 @@ class BleServiceConnection implements ServiceConnection {
     }
 
     void setAutoReconnect(boolean autoReconnect) {
-        bluetoothLeService.setAutoReconnect(autoReconnect);
+        this.autoReconnect = autoReconnect;
+        if (bluetoothLeService != null) {
+            bluetoothLeService.setAutoReconnect(autoReconnect);
+        }
     }
 }

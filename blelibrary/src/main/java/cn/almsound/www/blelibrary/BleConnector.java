@@ -110,9 +110,9 @@ public class BleConnector {
             return false;
         }
 
-        bleServiceConnection.setAutoReconnect(autoReconnect);
-
         mClosed = false;
+
+        bleServiceConnection.setAutoReconnect(autoReconnect);
 
         //注册广播接收者
         contextWeakReference.get().registerReceiver(connectBleBroadcastReceiver, makeConnectBLEIntentFilter());

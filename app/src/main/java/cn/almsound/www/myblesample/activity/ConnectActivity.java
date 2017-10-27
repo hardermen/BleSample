@@ -387,7 +387,7 @@ public class ConnectActivity extends BaseAppcompatActivity {
         //先设置地址
         if (bleConnector.checkAndSetAddress(address)) {
             //发起连接
-            if (bleConnector.startConnect()) {
+            if (bleConnector.startConnect(true)) {
                 LogUtil.w("开始连接");
                 customTextCircleView.setColor(Color.YELLOW);
             } else {
