@@ -12,20 +12,20 @@
 
 2.gradle配置依赖
 ```
-compile 'com.jackiepenghe:blelibrary:0.1.0'
+compile 'com.jackiepenghe:blelibrary:0.1.5'
 ```
 3.maven配置依赖
 ```
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.5</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖
 ```
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.1.0'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.1.5'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
@@ -133,11 +133,11 @@ bleConnector.closeNotification(serviceUUID,characteristicUUID);
 bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
 ```
 
-还有其他的回调，看情况自己使用
+还有其他的很多回调，可以自己下载源码，根据实际需求使用
 
 销毁
 
-在准备销毁activity的时候，调用close方法
+在准备销毁activity的时候，调用close方法。推荐在此处屏蔽super.onBackpressed()方法。
 ```
     @Override
     public void onBackPressed() {
@@ -156,4 +156,73 @@ onCloseCompleteListener = new BleConnector.OnCloseCompleteListener() {
             }
         };
 bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
+```
+
+### BLE设备的绑定(也可以说是配对)：
+
+```
+        /*
+         * 调用绑定的方法（如果需要绑定)，否则请直接调用连接的方法
+         * 注意：如果该设备不支持绑定，会直接回调绑定成功的回调，在绑定成功的回调中发起连接即可
+         * 第一次绑定某一个设备会触发回调，之后再次绑定，可根据绑定时的函数的返回值来判断绑定状态，以进行下一步操作
+         */
+        switch (bleConnector.startBound(address)) {
+            case BleConstants.DEVICE_BOND_START_SUCCESS:
+                LogUtil.w(TAG, "开始绑定");
+                break;
+            case BleConstants.DEVICE_BOND_START_FAILED:
+                LogUtil.w(TAG, "发起绑定失败");
+                break;
+            case BleConstants.DEVICE_BOND_BONDED:
+                LogUtil.w(TAG, "此设备已经被绑定了");
+                startConnect();
+                break;
+            case BleConstants.DEVICE_BOND_BONDING:
+                LogUtil.w(TAG, "此设备正在绑定中");
+                break;
+            case BleConstants.BLUETOOTH_ADAPTER_NULL:
+                LogUtil.w(TAG, "没有蓝牙适配器存在");
+                break;
+            case BleConstants.BLUETOOTH_ADDRESS_INCORRECT:
+                LogUtil.w(TAG, "蓝牙地址错误");
+                break;
+            case BleConstants.BLUETOOTH_MANAGER_NULL:
+                LogUtil.w(TAG, "没有蓝牙管理器存在");
+                break;
+            default:
+                LogUtil.w(TAG, "default");
+                break;
+        }
+```
+相关的回调是：
+```
+  //设备的绑定(也可以说配对)状态改变后触发此回调
+        BleInterface.OnDeviceBondStateChangedListener onBondStateChangedListener = new BleInterface.OnDeviceBondStateChangedListener() {
+            /**
+             * 正在绑定设备
+             */
+            @Override
+            public void deviceBinding() {
+
+            }
+
+            /**
+             * 绑定完成
+             */
+            @Override
+            public void deviceBonded() {
+                //发起连接
+                startConnect();
+            }
+
+            /**
+             * 取消绑定或者绑定失败
+             */
+            @Override
+            public void deviceBindNone() {
+
+            }
+        };
+        //设置绑定的回调
+         bleConnector.setOnBondStateChangedListener(onBondStateChangedListener);
 ```
