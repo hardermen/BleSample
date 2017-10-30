@@ -166,7 +166,7 @@ public class BleConnector {
      * @return true表示成功断开
      */
     @SuppressWarnings("UnusedReturnValue")
-    private boolean disconnect() {
+    public boolean disconnect() {
         bleServiceConnection.setAutoReconnect(false);
         return bleServiceConnection != null && bleServiceConnection.disconnect();
     }
