@@ -63,12 +63,12 @@ public class BleScanner {
     /**
      * 是否正在扫描的标志
      */
-    private boolean mScanning;
+    private boolean scanning;
 
     /**
      * 扫描一次的时间
      */
-    private long mScanPeriod;
+    private long scanPeriod;
 
     /**
      * 系统的扫描回调(API 20 及以下)
@@ -83,7 +83,7 @@ public class BleScanner {
     /**
      * 是否在扫描完成后立即进行下一次扫描的标志
      */
-    private boolean mScanContinue;
+    private boolean scanContinue;
 
     /**
      * 发现一个设备进行的回调
@@ -93,7 +93,7 @@ public class BleScanner {
     /**
      * 发现一个新设备进行的回调
      */
-    private BleInterface.OnScanFindOneNewDeviceListener mOnScanFindOneNewDeviceListener;
+    private BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener;
 
     /**
      * 扫描的定时器
@@ -125,7 +125,7 @@ public class BleScanner {
         bluetoothStateReceiver = new BluetoothStateReceiver(BleScanner.this);
 
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        if (bluetoothManager== null){
+        if (bluetoothManager == null) {
             return;
         }
         mBluetoothAdapter = bluetoothManager.getAdapter();
@@ -167,7 +167,7 @@ public class BleScanner {
                         BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, null);
                         if (!mScanResults.contains(bleDevice)) {
                             mScanResults.add(bleDevice);
-                            mOnScanFindOneNewDeviceListener.scanFindOneNewDevice(bleDevice);
+                            onScanFindOneNewDeviceListener.scanFindOneNewDevice(bleDevice);
                         }
                     }
                 });
@@ -213,10 +213,10 @@ public class BleScanner {
                 if (mOnScanFindOneDeviceListener != null) {
                     mOnScanFindOneDeviceListener.scanFindOneDevice(device, rssi, scanRecordBytes);
                 }
-                if (mOnScanFindOneNewDeviceListener != null) {
+                if (onScanFindOneNewDeviceListener != null) {
                     if (!mScanResults.contains(bleDevice)) {
                         mScanResults.add(bleDevice);
-                        mOnScanFindOneNewDeviceListener.scanFindOneNewDevice(bleDevice);
+                        onScanFindOneNewDeviceListener.scanFindOneNewDevice(bleDevice);
                     }
                 }
             }
@@ -246,11 +246,11 @@ public class BleScanner {
     /**
      * 打开扫描器
      *
-     * @param scanResults                  扫描设备结果存放列表
+     * @param scanResults                    扫描设备结果存放列表
      * @param onScanFindOneNewDeviceListener 发现一个新设备的回调
-     * @param scanPeriod                   扫描持续时间
-     * @param scanContinueFlag             是否在扫描完成后立即进行下一次扫描的标志
-     * @param onScanCompleteListener       扫描完成的回调
+     * @param scanPeriod                     扫描持续时间
+     * @param scanContinueFlag               是否在扫描完成后立即进行下一次扫描的标志
+     * @param onScanCompleteListener         扫描完成的回调
      * @return true表示打开成功
      */
     @SuppressWarnings("SameParameterValue")
@@ -268,9 +268,9 @@ public class BleScanner {
         contextWeakReference.get().registerReceiver(bluetoothStateReceiver, filter);
         mScanResults.clear();
         mOpened = true;
-        mOnScanFindOneNewDeviceListener = onScanFindOneNewDeviceListener;
-        mScanPeriod = scanPeriod;
-        mScanContinue = scanContinueFlag;
+        this.onScanFindOneNewDeviceListener = onScanFindOneNewDeviceListener;
+        this.scanPeriod = scanPeriod;
+        scanContinue = scanContinueFlag;
         scanTimer.setOnScanCompleteListener(onScanCompleteListener);
         return true;
     }
@@ -296,11 +296,11 @@ public class BleScanner {
             return false;
         }
 
-        if (mScanning) {
+        if (scanning) {
             Tool.toastL(contextWeakReference.get(), R.string.scanning);
             return false;
         }
-        scanTimer.startTimer(mScanPeriod);
+        scanTimer.startTimer(scanPeriod);
         mScanResults.clear();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mBluetoothAdapter.getBluetoothLeScanner().startScan(mScanCallback);
@@ -308,7 +308,7 @@ public class BleScanner {
             //noinspection deprecation
             mBluetoothAdapter.startLeScan(this.mLeScanCallback);
         }
-        mScanning = true;
+        scanning = true;
         return true;
     }
 
@@ -323,7 +323,7 @@ public class BleScanner {
             return false;
         }
 
-        if (!mScanning) {
+        if (!scanning) {
             Tool.toastL(contextWeakReference.get(), R.string.not_scanning);
             return false;
         }
@@ -341,7 +341,7 @@ public class BleScanner {
             //noinspection deprecation
             this.mBluetoothAdapter.stopLeScan(this.mLeScanCallback);
         }
-        mScanning = false;
+        scanning = false;
         return true;
     }
 
@@ -351,7 +351,7 @@ public class BleScanner {
             return false;
         }
 
-        if (mScanning) {
+        if (scanning) {
             stopScan();
         }
 
@@ -359,10 +359,10 @@ public class BleScanner {
             contextWeakReference.get().unregisterReceiver(bluetoothStateReceiver);
         }
 
-        mScanPeriod = 0;
+        scanPeriod = 0;
         mOpened = false;
-        mScanning = false;
-        mScanContinue = false;
+        scanning = false;
+        scanContinue = false;
         mScanResults = null;
         bluetoothStateReceiver = null;
         contextWeakReference = null;
@@ -371,7 +371,7 @@ public class BleScanner {
         mLeScanCallback = null;
         mScanCallback = null;
         mOnScanFindOneDeviceListener = null;
-        mOnScanFindOneNewDeviceListener = null;
+        onScanFindOneNewDeviceListener = null;
         scanTimer = null;
         return true;
     }
@@ -382,7 +382,7 @@ public class BleScanner {
      * @return 是否需要继续扫描的标志
      */
     boolean isScanContinue() {
-        return mScanContinue;
+        return scanContinue;
     }
 
     /**
@@ -401,11 +401,27 @@ public class BleScanner {
     }
 
     public boolean isScanning() {
-        return mScanning;
+        return scanning;
     }
 
     @SuppressWarnings("SameParameterValue")
     void setScanning(boolean scanning) {
-        mScanning = scanning;
+        this.scanning = scanning;
+    }
+
+    public void setScanPeriod(long scanPeriod) {
+        this.scanPeriod = scanPeriod;
+    }
+
+    public void setScanContinue(boolean scanContinue) {
+        this.scanContinue = scanContinue;
+    }
+
+    public void setOnScanFindOneNewDeviceListener(BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener) {
+        this.onScanFindOneNewDeviceListener = onScanFindOneNewDeviceListener;
+    }
+
+    public void setOnScanCompleteListener(@NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
+        scanTimer.setOnScanCompleteListener(onScanCompleteListener);
     }
 }

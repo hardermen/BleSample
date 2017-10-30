@@ -434,4 +434,6 @@ public class BleConnector {
     public List<BluetoothGattService> getServices() {
         return bleServiceConnection.getServices();
     }
+
+
 }
