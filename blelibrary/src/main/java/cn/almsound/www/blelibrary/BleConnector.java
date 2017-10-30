@@ -57,7 +57,6 @@ public class BleConnector {
      */
     private boolean mClosed;
     private CloseTask closeTask;
-    private boolean autoReconnect;
 
     public BleConnector(Context context) {
         contextWeakReference = new WeakReference<>(context);

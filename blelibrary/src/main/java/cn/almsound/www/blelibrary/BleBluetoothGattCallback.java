@@ -9,14 +9,12 @@ import android.content.Intent;
 
 import java.util.List;
 
-import static android.content.ContentValues.TAG;
-
 /**
  * Created by alm on 17-6-6.
  * BLE Gatt服务的回调
  */
 
-class BleBluetoothGattCallback extends BluetoothGattCallback{
+class BleBluetoothGattCallback extends BluetoothGattCallback {
 
     private static final String TAG = "BleBluetoothGattCallbac";
     /**
@@ -50,8 +48,8 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
             case BluetoothGatt.STATE_DISCONNECTED:
                 Tool.warnOut(TAG, "STATE_DISCONNECTED");
                 intent.setAction(BleConstants.ACTION_GATT_DISCONNECTED);
-                if (autoReconnect){
-                    Tool.warnOut(TAG,"autoReconnect");
+                if (autoReconnect) {
+                    Tool.warnOut(TAG, "autoReconnect");
                     gatt.connect();
                 }
                 break;
@@ -62,8 +60,8 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
             case BluetoothGatt.STATE_CONNECTED:
                 Tool.warnOut(TAG, "STATE_CONNECTED");
                 intent.setAction(BleConstants.ACTION_GATT_CONNECTED);
-                if (!gatt.discoverServices()){
-                    Tool.warnOut(TAG,"无法进行服务发现");
+                if (!gatt.discoverServices()) {
+                    Tool.warnOut(TAG, "无法进行服务发现");
                 }
                 break;
             case BluetoothGatt.STATE_DISCONNECTING:
@@ -175,6 +173,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback{
 
     /**
      * 获取服务列表
+     *
      * @return 服务列表
      */
     List<BluetoothGattService> getServices() {
