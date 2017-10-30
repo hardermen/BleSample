@@ -3,8 +3,10 @@ package cn.almsound.www.blelibrary;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.RequiresApi;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -31,10 +33,14 @@ public class BleDevice implements Serializable, Parcelable {
     private int mRssi;
 
     /**
-     * 广播包
+     * 广播包(字节数组)
      */
     private byte[] scanRecordBytes;
 
+    /**
+     * ScanRecord.在5.0以上才用得上
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private ScanRecord scanRecord;
 
 
@@ -92,6 +98,7 @@ public class BleDevice implements Serializable, Parcelable {
         this.scanRecordBytes = scanRecordBytes;
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     public ScanRecord getScanRecord() {
         return scanRecord;
     }
