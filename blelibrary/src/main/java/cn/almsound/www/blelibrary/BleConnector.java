@@ -165,9 +165,11 @@ public class BleConnector {
      *
      * @return true表示成功断开
      */
-    @SuppressWarnings("UnusedReturnValue")
+    @SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
     public boolean disconnect() {
-        bleServiceConnection.setAutoReconnect(false);
+        if (bleServiceConnection != null) {
+            bleServiceConnection.setAutoReconnect(false);
+        }
         return bleServiceConnection != null && bleServiceConnection.disconnect();
     }
 
