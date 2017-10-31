@@ -434,5 +434,8 @@ public class BleConnector {
         return bleServiceConnection.getServices();
     }
 
+    public Context getContext(){
+        return contextWeakReference.get();
+    }
 
 }
