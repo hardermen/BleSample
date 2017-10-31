@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Button;
 
 import cn.almsound.www.baselibrary.BaseAppcompatActivity;
+import cn.almsound.www.blelibrary.Tool;
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.activity.DeviceListActivity;
 
@@ -30,7 +31,7 @@ public class MainActivity extends BaseAppcompatActivity {
      */
     @Override
     protected void doBeforeSetLayout() {
-
+        Tool.setDebugFlag(true);
     }
 
     /**

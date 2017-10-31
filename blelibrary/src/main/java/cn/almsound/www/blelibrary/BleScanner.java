@@ -207,12 +207,13 @@ public class BleScanner {
                 if (scanRecord != null) {
                     scanRecordBytes = scanRecord.getBytes();
                     deviceName = scanRecord.getDeviceName();
-                    Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecordBytes.getDeviceName() = " + deviceName);
+                    Tool.warnOut("BleScan::API >= 21::onScanResult", "device.getDeviceName() = " + deviceName);
                 }
                 Tool.warnOut("BleScan::API >= 21::onScanResult", "device.getName() = " + device.getName());
                 Tool.warnOut("BleScan::API >= 21::onScanResult", "device.getAddress() = " + device.getAddress());
                 Tool.warnOut("BleScan::API >= 21::onScanResult", "rssi = " + rssi);
-                Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecordBytes = " + scanRecord);
+                Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecord = " + scanRecord);
+                Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecordByte = " + Tool.bytesToHexStr(scanRecordBytes));
                 BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
                 bleDevice.setScanRecord(scanRecord);
                 if (mOnScanFindOneDeviceListener != null) {
