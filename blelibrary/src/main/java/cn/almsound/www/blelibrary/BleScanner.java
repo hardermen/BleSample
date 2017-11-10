@@ -109,7 +109,7 @@ public class BleScanner {
      *
      * @param context 上下文
      */
-    public BleScanner(Context context) {
+    BleScanner(Context context) {
         contextWeakReference = new WeakReference<>(context);
         scanTimer = new ScanTimer(BleScanner.this);
         mHandler = new Handler();

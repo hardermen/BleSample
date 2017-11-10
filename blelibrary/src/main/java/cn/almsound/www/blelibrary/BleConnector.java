@@ -58,7 +58,7 @@ public class BleConnector {
     private boolean mClosed;
     private CloseTask closeTask;
 
-    public BleConnector(Context context) {
+    BleConnector(Context context) {
         contextWeakReference = new WeakReference<>(context);
         connectBleBroadcastReceiver = new ConnectBleBroadcastReceiver();
         boundBleBroadcastReceiver = new BoundBleBroadcastReceiver();
