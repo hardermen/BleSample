@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 
 import java.lang.ref.WeakReference;
+import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -15,12 +16,9 @@ import java.util.concurrent.TimeUnit;
  */
 
 class ScanTimer {
-    private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
-        @Override
-        public Thread newThread(@NonNull Runnable r) {
-            return new Thread(r);
-        }
-    });
+
+    private Timer timer = new Timer();
+
     private ScanTask scanTask;
     private WeakReference<BleScanner> bleScannerWeakReference;
     private BleInterface.OnScanCompleteListener mOnScanCompleteListener;
@@ -43,32 +41,7 @@ class ScanTimer {
      */
     void startTimer(long delayTime) {
         scanTask = new ScanTask(ScanTimer.this);
-        /*timer.schedule(scanTask, delayTime);*/
-        scheduledThreadPoolExecutor.schedule(new Runnable() {
-            @Override
-            public void run() {
-
-                if (bleScannerWeakReference.get() == null) {
-                    return;
-                }
-
-                bleScannerWeakReference.get().stopScan();
-
-                if (bleScannerWeakReference.get().isScanContinue()) {
-                    bleScannerWeakReference.get().clearScanResults();
-                    bleScannerWeakReference.get().startScan();
-                } else {
-                    if (mOnScanCompleteListener != null) {
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                mOnScanCompleteListener.scanComplete();
-                            }
-                        });
-                    }
-                }
-            }
-        }, delayTime, TimeUnit.MILLISECONDS);
+        timer.schedule(scanTask, delayTime);
     }
 
     /**
