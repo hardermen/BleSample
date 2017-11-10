@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import cn.almsound.www.baselibrary.BaseAppcompatActivity;
 import cn.almsound.www.blelibrary.BleDevice;
 import cn.almsound.www.blelibrary.BleInterface;
+import cn.almsound.www.blelibrary.BleManager;
 import cn.almsound.www.blelibrary.BleScanner;
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.adapter.others.DeviceListAdapter;
@@ -221,7 +222,7 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
      */
     private void initBleScan() {
         //创建扫描器实例
-        bleScanner = new BleScanner(DeviceListActivity.this);
+        bleScanner = BleManager.newBleScanner(DeviceListActivity.this);
         //发现一个新设备（在此之前该设备没有被发现过）时触发此回调
         BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
             @Override

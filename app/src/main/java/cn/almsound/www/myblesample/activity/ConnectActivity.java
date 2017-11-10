@@ -17,6 +17,7 @@ import cn.almsound.www.blelibrary.BleConstants;
 import cn.almsound.www.blelibrary.BleConnector;
 import cn.almsound.www.blelibrary.BleDevice;
 import cn.almsound.www.blelibrary.BleInterface;
+import cn.almsound.www.blelibrary.BleManager;
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.utils.Constants;
 import cn.almsound.www.myblesample.utils.ConversionUtil;
@@ -229,7 +230,7 @@ public class ConnectActivity extends BaseAppcompatActivity {
      */
     private void initBleConnector() {
         //创建BLE连接器实例
-        bleConnector = new BleConnector(ConnectActivity.this);
+        bleConnector = BleManager.newBleConnector(ConnectActivity.this);
         //创建连接成功的回调（在设备连接成功之后会触发此回调）
         BleInterface.OnConnectedListener onConnectedListener = new BleInterface.OnConnectedListener() {
             @Override
