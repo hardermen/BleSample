@@ -99,10 +99,6 @@ public class BleScanner {
      * 扫描的定时器
      */
     private ScanTimer scanTimer;
-    /**
-     * 手机是否支持BLE
-     */
-    private boolean supportBle;
 
     /**
      * 构造器
@@ -118,7 +114,6 @@ public class BleScanner {
             Tool.toastL(context, R.string.ble_not_supported);
             return;
         }
-        supportBle = true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             //初始化扫描回调(API21及以上的设备)
             initBLeScanCallBack();
@@ -279,10 +274,6 @@ public class BleScanner {
         scanContinue = scanContinueFlag;
         scanTimer.setOnScanCompleteListener(onScanCompleteListener);
         return true;
-    }
-
-    public boolean isSupportBle() {
-        return supportBle;
     }
 
     /**
