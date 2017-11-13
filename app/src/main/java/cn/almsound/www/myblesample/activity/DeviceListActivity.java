@@ -2,8 +2,6 @@ package cn.almsound.www.myblesample.activity;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanRecord;
-import android.bluetooth.le.ScanResult;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -264,7 +262,7 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
          */
         bleScanner.open(scanList, onScanFindOneNewDeviceListener, 20000, true, onScanCompleteListener);
         //设置回调
-        bleScanner.setOnScanFindADeviceListener(onScanFindOneDeviceListener);
+        bleScanner.setOnScanFindOneDeviceListener(onScanFindOneDeviceListener);
     }
 
 

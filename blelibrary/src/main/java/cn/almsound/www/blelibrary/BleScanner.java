@@ -393,7 +393,7 @@ public class BleScanner {
         mScanResults.clear();
     }
 
-    public void setOnScanFindADeviceListener(BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener) {
+    public void setOnScanFindOneDeviceListener(BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener) {
         mOnScanFindOneDeviceListener = onScanFindOneDeviceListener;
     }
 
