@@ -338,7 +338,10 @@ public class BluetoothLeService extends Service {
         return bleBluetoothGattCallback.getServices();
     }
 
-    void setAutoReconnect(boolean autoReconnect){
-        bleBluetoothGattCallback.setAutoReconnect(autoReconnect);
+    void setAutoReconnect(boolean autoReconnect) {
+        if (bleBluetoothGattCallback != null) {
+            bleBluetoothGattCallback.setAutoReconnect(autoReconnect);
+        }
+
     }
 }

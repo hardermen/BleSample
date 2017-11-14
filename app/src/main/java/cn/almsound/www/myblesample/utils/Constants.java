@@ -1,5 +1,6 @@
 package cn.almsound.www.myblesample.utils;
 
+
 /**
  * @author jackie
  * 常量工具类
