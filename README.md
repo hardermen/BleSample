@@ -4,20 +4,20 @@
 
 2.gradle配置依赖
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.2.2'
+compile 'com.jackiepenghe:blelibrary:0.2.6'
 ```
 3.maven配置依赖
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.2.2</version>
+  <version>0.2.6</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖
 ```xml
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.2.2'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.2.6'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
@@ -37,10 +37,18 @@ compile 'com.jackiepenghe:blelibrary:0.2.2'
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 ```
+### 判断设备本身是否支持BLE：
+```java
+if(!BleManager.isSupportBle()){
+  Log.w(TAG,"设备不支持BLE");
+  return;
+}
+//设备支持BLE，继续执行代码
+```
 ### BLE扫描：
 ```java
-//实例化扫描器
-BleScanner bleScanner = new BleScanner(context);
+//创建化扫描器
+BleScanner bleScanner = BleManager.newBleScanner(context);
 //调用open方法，传入相关的回调，并打开扫描器功能
 bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, false, onScanCompleteListener);
 //开始扫描，扫描的结果在回调中，扫描的设备列表会自动添加到上方open函数中的scanList中
@@ -68,8 +76,8 @@ bleScanner.close();
 接下来就是Java代码了
 
 ```java
-//实例化连接器
- BleConnector bleConnector = new BleConnector(ConnectActivity.this);
+//创建连接器
+ BleConnector bleConnector = BleManager.newBleConnector(context);
 //设置回调，在这个回调中判断连接成功最为保险
  bleConnector.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
 //设置要连接的设备的地址，并发起连接
