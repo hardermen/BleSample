@@ -1,9 +1,12 @@
 package cn.almsound.www.blelibrary;
 
+import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
+import java.util.List;
+import java.util.UUID;
+
 /**
- *
  * @author alm
  * @date 2017/11/15
  */
@@ -23,7 +26,7 @@ public class BleDeviceController {
      * @return true表示成功
      */
     public boolean refreshGattCache() {
-        return bleMultiConnector != null && address != null&& bleMultiConnector.refreshGattCache(address);
+        return bleMultiConnector != null && address != null && bleMultiConnector.refreshGattCache(address);
     }
 
     /**
@@ -34,7 +37,7 @@ public class BleDeviceController {
      * @param values             数据
      * @return true表示成功
      */
-    public boolean writeData( String serviceUUID, String characteristicUUID, byte[] values) {
+    public boolean writeData(String serviceUUID, String characteristicUUID, byte[] values) {
         return bleMultiConnector != null && address != null && bleMultiConnector.writeData(address, serviceUUID, characteristicUUID, values);
     }
 
@@ -57,7 +60,7 @@ public class BleDeviceController {
      * @param characteristicUUID 特征UUID
      * @return true表示成功
      */
-    public boolean openNotification( String serviceUUID, String characteristicUUID) {
+    public boolean openNotification(String serviceUUID, String characteristicUUID) {
         return bleMultiConnector != null && address != null && bleMultiConnector.openNotification(address, serviceUUID, characteristicUUID);
     }
 
@@ -68,7 +71,32 @@ public class BleDeviceController {
      * @param characteristicUUID 特征UUID
      * @return true表示成功
      */
-    public boolean closeNotification( String serviceUUID, String characteristicUUID) {
+    public boolean closeNotification(String serviceUUID, String characteristicUUID) {
         return bleMultiConnector != null && address != null && bleMultiConnector.closeNotification(address, serviceUUID, characteristicUUID);
+    }
+
+    public boolean reConnect() {
+        return bleMultiConnector != null && address != null && bleMultiConnector.reConnect(address);
+    }
+
+    public List<BluetoothGattService> getServices() {
+        if (bleMultiConnector == null) {
+            return null;
+        }
+        if (address == null) {
+            return null;
+        }
+        return bleMultiConnector.getServices(address);
+    }
+
+
+    public BluetoothGattService getService(UUID uuid) {
+        if (bleMultiConnector == null) {
+            return null;
+        }
+        if (address == null) {
+            return null;
+        }
+        return bleMultiConnector.getService(address, uuid);
     }
 }

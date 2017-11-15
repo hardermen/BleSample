@@ -6,8 +6,6 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
 
@@ -101,7 +99,7 @@ public class BleMultiConnector {
      *
      * @return true表示成功
      */
-    public boolean refreshGattCache(String address) {
+    boolean refreshGattCache(String address) {
         return bluetoothMultiService != null && bluetoothMultiService.refreshGattCache(address);
     }
 
@@ -111,7 +109,7 @@ public class BleMultiConnector {
      *
      * @return true表示成功
      */
-    public void refreshAllGattCache() {
+   public void refreshAllGattCache() {
         if (bluetoothMultiService == null) {
             return;
         }
@@ -127,7 +125,7 @@ public class BleMultiConnector {
      * @param values             数据
      * @return true表示成功
      */
-    public boolean writeData(String address, String serviceUUID, String characteristicUUID, byte[] values) {
+    boolean writeData(String address, String serviceUUID, String characteristicUUID, byte[] values) {
         return bluetoothMultiService != null && bluetoothMultiService.writeData(address, serviceUUID, characteristicUUID, values);
     }
 
@@ -139,7 +137,7 @@ public class BleMultiConnector {
      * @param characteristicUUID 特征UUID
      * @return true表示成功
      */
-    public boolean readData(String address, String serviceUUID, String characteristicUUID) {
+    boolean readData(String address, String serviceUUID, String characteristicUUID) {
         return bluetoothMultiService != null && bluetoothMultiService.readData(address, serviceUUID, characteristicUUID);
     }
 
@@ -150,7 +148,7 @@ public class BleMultiConnector {
      * @param characteristicUUID 特征UUID
      * @return true表示成功
      */
-    public boolean openNotification(String address, String serviceUUID, String characteristicUUID) {
+    boolean openNotification(String address, String serviceUUID, String characteristicUUID) {
         return bluetoothMultiService != null && bluetoothMultiService.openNotification(address, serviceUUID, characteristicUUID);
     }
 
@@ -161,7 +159,7 @@ public class BleMultiConnector {
      * @param characteristicUUID 特征UUID
      * @return true表示成功
      */
-    public boolean closeNotification(String address, String serviceUUID, String characteristicUUID) {
+    boolean closeNotification(String address, String serviceUUID, String characteristicUUID) {
         return bluetoothMultiService != null && bluetoothMultiService.closeNotification(address, serviceUUID, characteristicUUID);
     }
 
