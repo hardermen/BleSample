@@ -4,20 +4,20 @@
 
 2.gradle配置依赖
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.2.6'
+compile 'com.jackiepenghe:blelibrary:0.2.9'
 ```
 3.maven配置依赖
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.2.6</version>
+  <version>0.2.9</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖
 ```xml
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.2.6'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.2.9'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
@@ -235,4 +235,59 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
         //设置绑定的回调
          bleConnector.setOnBondStateChangedListener(onBondStateChangedListener);
 ```
-`
+### 多连接
+首先要在AndroidManifest.xml添加一个服务
+```xml
+<service android:name="cn.almsound.www.blelibrary.BluetoothMultiService"
+  android:enabled="true"
+  android:exported="false"/>
+```
+获取多连接的连接器
+```java
+BleMultiConnector bleMultiConnector = BleManager.getBleMultiConnector(context);
+```
+连接多个设备
+```java
+ String device1Address = "00:02:5B:00:15:A4";
+ String device2Address = "00:02:5B:00:15:A2";
+ bleMultiConnector.connect(device1Address, device1BleCallback);
+ bleMultiConnector.connect(device2Address, device2BleCallback);
+```
+上方的callback是继承自BleConnectCallback
+```
+
+public class Device1BleCallback extends BleConnectCallback {
+    private static final String TAG = "Device1BleCallback";
+
+    /**
+     * 蓝牙连接后无法正常进行服务发现时回调
+     *
+     * @param gatt BluetoothGatt
+     */
+    @Override
+    public void onDiscoverServicesFailed(BluetoothGatt gatt) {
+        Tool.warnOut(TAG,"onDiscoverServicesFailed");
+    }
+
+    /**
+     * 蓝牙GATT被关闭时回调
+     */
+    @Override
+    public void onGattClosed() {
+        Tool.warnOut(TAG,"onGattClosed");
+    }
+}
+```
+同时连接多个设备后，如果想要对单独某一个设备进行操作
+```java
+BleDeviceController bleDeviceController =  bleMultiConnector.getBleDeviceController(address);
+bleDeviceController.writData(serviceUUID,characteristicUUID,data);
+...
+```
+在程序退出时或者当前Activity销毁前close
+```java
+  //最好是先清空一下缓存
+  bleMultiConnector.refreshAllGattCache();
+  //关闭所有gatt
+  bleMultiConnector.closeAll();
+```
