@@ -4,20 +4,20 @@
 
 2.gradle配置依赖
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.2.8'
+compile 'com.jackiepenghe:blelibrary:0.2.9'
 ```
 3.maven配置依赖
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.2.8</version>
+  <version>0.2.9</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖
 ```xml
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.2.8'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.2.9'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
