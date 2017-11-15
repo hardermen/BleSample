@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothGattService;
 import android.content.Intent;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by alm on 17-6-6.
@@ -102,7 +103,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         super.onCharacteristicChanged(gatt, characteristic);
-        Tool.warnOut(TAG, "onReceiveNotification");
+        Tool.warnOut(TAG, "onReceivedNotification");
         byte[] value = characteristic.getValue();
         broadcastUpdate(BleConstants.ACTION_CHARACTERISTIC_CHANGED, value);
     }
@@ -185,5 +186,15 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
 
     void setAutoReconnect(boolean autoReconnect) {
         this.autoReconnect = autoReconnect;
+    }
+
+    BluetoothGattService getService(UUID uuid) {
+        if (gatt == null){
+            return null;
+        }
+        if (uuid == null){
+            return  null;
+        }
+        return gatt.getService(uuid);
     }
 }

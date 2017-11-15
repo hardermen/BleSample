@@ -17,10 +17,10 @@
         <activity android:name=".main.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".activity.DeviceListActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -37,13 +37,17 @@
                     android:scheme="example" />
             </intent-filter>
         </activity>
-
         <activity android:name=".activity.ConnectActivity" />
+        <activity android:name=".activity.MultiConnectActivity"/>
 
-        <service android:name="cn.almsound.www.blelibrary.BluetoothLeService"
+        <service
+            android:name="cn.almsound.www.blelibrary.BluetoothLeService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <service android:name="cn.almsound.www.blelibrary.BluetoothMultiService"
             android:enabled="true"
             android:exported="false"/>
-
     </application>
 
 </manifest>

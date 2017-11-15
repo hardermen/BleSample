@@ -344,4 +344,11 @@ public class BluetoothLeService extends Service {
         }
 
     }
+
+    BluetoothGattService getService(UUID uuid) {
+        if (bleBluetoothGattCallback == null){
+            return null;
+        }
+        return bleBluetoothGattCallback.getService(uuid);
+    }
 }

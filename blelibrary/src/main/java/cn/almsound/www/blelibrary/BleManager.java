@@ -13,6 +13,7 @@ public class BleManager {
 
     private static BleConnector bleConnector;
     private static BleScanner bleScanner;
+    private static BleMultiConnector bleMultiConnector;
 
     public static boolean isSupportBle(Context context){
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
@@ -58,5 +59,19 @@ public class BleManager {
             }
         }
         return bleScanner;
+    }
+
+    public static BleMultiConnector getBleMultiConnector(Context context){
+        if (!isSupportBle(context)){
+            return null;
+        }
+        if (bleMultiConnector == null){
+            synchronized (BleManager.class){
+                if (bleMultiConnector == null){
+                    bleMultiConnector = new BleMultiConnector(context.getApplicationContext());
+                }
+            }
+        }
+        return bleMultiConnector;
     }
 }

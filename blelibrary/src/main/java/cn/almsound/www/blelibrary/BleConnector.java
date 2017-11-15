@@ -12,6 +12,7 @@ import android.os.Build;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author alm
@@ -435,7 +436,9 @@ public class BleConnector {
     public List<BluetoothGattService> getServices() {
         return bleServiceConnection.getServices();
     }
-
+    public BluetoothGattService getService(UUID uuid) {
+        return bleServiceConnection.getService(uuid);
+    }
     public Context getContext(){
         return contextWeakReference.get();
     }

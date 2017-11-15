@@ -6,6 +6,7 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by alm on 17-6-5.
@@ -187,5 +188,12 @@ class BleServiceConnection implements ServiceConnection {
         if (bluetoothLeService != null) {
             bluetoothLeService.setAutoReconnect(autoReconnect);
         }
+    }
+
+    BluetoothGattService getService(UUID uuid) {
+        if (bluetoothLeService == null){
+            return null;
+        }
+        return bluetoothLeService.getService(uuid);
     }
 }

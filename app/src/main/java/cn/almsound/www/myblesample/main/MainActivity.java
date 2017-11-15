@@ -10,13 +10,30 @@ import cn.almsound.www.baselibrary.BaseAppcompatActivity;
 import cn.almsound.www.blelibrary.Tool;
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.activity.DeviceListActivity;
+import cn.almsound.www.myblesample.activity.MultiConnectActivity;
 
 /**
  * @author alm
  */
 public class MainActivity extends BaseAppcompatActivity {
 
-    private Button button;
+    private Button simpleUseBtn;
+    private Button multiConnectBtn;
+    private View.OnClickListener onClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            switch (view.getId()) {
+                case R.id.simple_use_button:
+                    toDeviceListActivity();
+                    break;
+                case R.id.multi_connect_button:
+                    toMultiConnectActivity();
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
     /**
      * 标题栏的返回按钮被按下的时候回调此函数
@@ -57,7 +74,8 @@ public class MainActivity extends BaseAppcompatActivity {
      */
     @Override
     protected void initViews() {
-        button =  findViewById(R.id.button);
+        simpleUseBtn = findViewById(R.id.simple_use_button);
+        multiConnectBtn = findViewById(R.id.multi_connect_button);
     }
 
     /**
@@ -81,12 +99,8 @@ public class MainActivity extends BaseAppcompatActivity {
      */
     @Override
     protected void initEvents() {
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                toDeviceListActivity();
-            }
-        });
+        simpleUseBtn.setOnClickListener(onClickListener);
+        multiConnectBtn.setOnClickListener(onClickListener);
     }
 
     /**
@@ -122,12 +136,17 @@ public class MainActivity extends BaseAppcompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        button.setOnClickListener(null);
-        button = null;
+        simpleUseBtn.setOnClickListener(null);
+        simpleUseBtn = null;
     }
 
     private void toDeviceListActivity() {
         Intent intent = new Intent(MainActivity.this, DeviceListActivity.class);
+        startActivity(intent);
+    }
+
+    private void toMultiConnectActivity() {
+        Intent intent = new Intent(MainActivity.this,MultiConnectActivity.class);
         startActivity(intent);
     }
 }

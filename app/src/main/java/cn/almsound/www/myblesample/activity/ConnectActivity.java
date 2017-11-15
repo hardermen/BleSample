@@ -333,7 +333,7 @@ public class ConnectActivity extends BaseAppcompatActivity {
             }
         };
         /*当连接工具调用Close方法之后，在连接工具彻底关闭时会触发此回调
-         *最好是屏蔽onBackPressed()方法，onBackPressed()方法中只调用bleConnector.close().然后在这个方法中回调super.onBackPressed()结束activity
+         *最好是屏蔽onBackPressed()方法，onBackPressed()方法中只调用bleConnector.closeAll().然后在这个方法中回调super.onBackPressed()结束activity
          *一定要在这个回调中做结束activity的操作，不要直接在onDestroy中调用close避免连接工具还没有彻底关闭，activity就结束造成内存泄漏
          */
         BleInterface.OnCloseCompleteListener onCloseCompleteListener = new BleInterface.OnCloseCompleteListener() {

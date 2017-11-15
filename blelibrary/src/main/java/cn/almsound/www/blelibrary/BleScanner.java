@@ -182,7 +182,7 @@ public class BleScanner {
     private void initBLeScanCallBack() {
         mScanCallback = new ScanCallback() {
             /**
-             * Callback when a BLE advertisement has been found.
+             * BleConnectCallback when a BLE advertisement has been found.
              *
              * @param callbackType Determines how this callback was triggered. Could be one of
              *                     {@link ScanSettings#CALLBACK_TYPE_ALL_MATCHES},
@@ -223,7 +223,7 @@ public class BleScanner {
             }
 
             /**
-             * Callback when batch results are delivered.
+             * BleConnectCallback when batch results are delivered.
              *
              * @param results List of scan results that are previously scanned.
              */
@@ -233,7 +233,7 @@ public class BleScanner {
             }
 
             /**
-             * Callback when scan could not be started.
+             * BleConnectCallback when scan could not be started.
              *
              * @param errorCode Error code (one of SCAN_FAILED_*) for scan failure.
              */
