@@ -11,7 +11,7 @@ import java.util.UUID;
  * @author alm
  * @date 2017/11/15
  */
-@SuppressWarnings("UnusedReturnValue")
+@SuppressWarnings({"UnusedReturnValue", "unused"})
 public class BleDeviceController {
     private WeakReference<BleMultiConnector> bleMultiConnectorWeakReference;
     private String address;
@@ -86,6 +86,12 @@ public class BleDeviceController {
         return bleMultiConnector != null && address != null && bleMultiConnector.reConnect(address);
     }
 
+    public boolean close() {
+        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
+        return bleMultiConnector != null && bleMultiConnector.close(address);
+    }
+
+
     public List<BluetoothGattService> getServices() {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         if (bleMultiConnector == null) {
@@ -101,6 +107,7 @@ public class BleDeviceController {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         return bleMultiConnector != null && bleMultiConnector.disconnect(address);
     }
+
     public Context getContext() {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         if (bleMultiConnector == null) {
