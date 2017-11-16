@@ -30,10 +30,18 @@ public class BleServiceMultiConnection implements ServiceConnection {
      */
     @Override
     public void onServiceConnected(ComponentName name, IBinder iBinder) {
+
+        if (iBinder == null){
+            return;
+        }
+        if (bleMultiConnector == null){
+            return;
+        }
         if (iBinder instanceof BluetoothMultiServiceBinder){
             bleMultiConnector.setBluetoothMultiService(((BluetoothMultiServiceBinder) iBinder).getBluetoothMultiService());
             if (bleMultiConnector.getBluetoothMultiService().initialize()){
                 Tool.warnOut(TAG,"蓝牙多连接初始化完成");
+                bleMultiConnector.getBluetoothMultiService().setInitializeFinished(true);
             }else {
                 Tool.warnOut(TAG,"蓝牙多连接初始化失败");
             }
@@ -52,6 +60,11 @@ public class BleServiceMultiConnection implements ServiceConnection {
      */
     @Override
     public void onServiceDisconnected(ComponentName name) {
+        if (bleMultiConnector == null){
+            return;
+        }
         bleMultiConnector.setBluetoothMultiService(null);
     }
+
+
 }

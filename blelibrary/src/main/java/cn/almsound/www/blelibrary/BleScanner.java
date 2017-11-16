@@ -30,6 +30,8 @@ import java.util.List;
 
 @SuppressWarnings({"AliDeprecation", "UnusedReturnValue"})
 public class BleScanner {
+
+    private static final String TAG = "BleScanner";
     /**
      * 扫描的结果
      */
@@ -156,11 +158,12 @@ public class BleScanner {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        Tool.warnOut("BleScan::API < 21::onScanResult", "------------------------------------------------------");
-                        Tool.warnOut("BleScan::API < 21::onScanResult", "name = " + device.getName());
-                        Tool.warnOut("BleScan::API < 21::onScanResult", "address = " + device.getAddress());
-                        Tool.warnOut("BleScan::API < 21::onScanResult", "rssi = " + rssi);
-                        Tool.warnOut("BleScan::API < 21::onScanResult", "scanRecord = " + Tool.bytesToHexStr(scanRecord));
+                        Tool.warnOut(TAG, "-------------------------API < 21 onScanResult-----------------------------");
+                        Tool.warnOut(TAG, "name = " + device.getName());
+                        Tool.warnOut(TAG, "address = " + device.getAddress());
+                        Tool.warnOut(TAG, "rssi = " + rssi);
+                        Tool.warnOut(TAG, "scanRecord = " + Tool.bytesToHexStr(scanRecord));
+                        Tool.warnOut(TAG, "-------------------------API < 21 onScanResult-----------------------------");
                         if (mOnScanFindOneDeviceListener != null) {
                             mOnScanFindOneDeviceListener.scanFindOneDevice(device, rssi, scanRecord);
                         }
@@ -182,7 +185,7 @@ public class BleScanner {
     private void initBLeScanCallBack() {
         mScanCallback = new ScanCallback() {
             /**
-             * BleConnectCallback when a BLE advertisement has been found.
+             * BaseConnectCallback when a BLE advertisement has been found.
              *
              * @param callbackType Determines how this callback was triggered. Could be one of
              *                     {@link ScanSettings#CALLBACK_TYPE_ALL_MATCHES},
@@ -192,8 +195,8 @@ public class BleScanner {
              */
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
-                Tool.warnOut("BleScan::API >= 21::onScanResult", "------------------------------------------------------");
-                Tool.warnOut("BleScan::API >= 21::onScanResult", "callbackType = " + callbackType);
+                Tool.warnOut(TAG, "------------------------API >= 21 onScanResult------------------------------");
+                Tool.warnOut(TAG, "callbackType = " + callbackType);
                 BluetoothDevice device = result.getDevice();
                 int rssi = result.getRssi();
                 ScanRecord scanRecord = result.getScanRecord();
@@ -202,13 +205,14 @@ public class BleScanner {
                 if (scanRecord != null) {
                     scanRecordBytes = scanRecord.getBytes();
                     deviceName = scanRecord.getDeviceName();
-                    Tool.warnOut("BleScan::API >= 21::onScanResult", "device.getDeviceName() = " + deviceName);
+                    Tool.warnOut(TAG, "device.getDeviceName() = " + deviceName);
                 }
-                Tool.warnOut("BleScan::API >= 21::onScanResult", "device.getName() = " + device.getName());
-                Tool.warnOut("BleScan::API >= 21::onScanResult", "device.getAddress() = " + device.getAddress());
-                Tool.warnOut("BleScan::API >= 21::onScanResult", "rssi = " + rssi);
-                Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecord = " + scanRecord);
-                Tool.warnOut("BleScan::API >= 21::onScanResult", "scanRecordByte = " + Tool.bytesToHexStr(scanRecordBytes));
+                Tool.warnOut(TAG, "device.getName() = " + device.getName());
+                Tool.warnOut(TAG, "device.getAddress() = " + device.getAddress());
+                Tool.warnOut(TAG, "rssi = " + rssi);
+                Tool.warnOut(TAG, "scanRecord = " + scanRecord);
+                Tool.warnOut(TAG, "scanRecordByte = " + Tool.bytesToHexStr(scanRecordBytes));
+                Tool.warnOut(TAG, "------------------------API >= 21 onScanResult------------------------------");
                 BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
                 bleDevice.setScanRecord(scanRecord);
                 if (mOnScanFindOneDeviceListener != null) {
@@ -223,7 +227,7 @@ public class BleScanner {
             }
 
             /**
-             * BleConnectCallback when batch results are delivered.
+             * BaseConnectCallback when batch results are delivered.
              *
              * @param results List of scan results that are previously scanned.
              */
@@ -233,7 +237,7 @@ public class BleScanner {
             }
 
             /**
-             * BleConnectCallback when scan could not be started.
+             * BaseConnectCallback when scan could not be started.
              *
              * @param errorCode Error code (one of SCAN_FAILED_*) for scan failure.
              */

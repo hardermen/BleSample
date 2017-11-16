@@ -3,6 +3,7 @@ package cn.almsound.www.blelibrary;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,11 +13,11 @@ import java.util.UUID;
  */
 @SuppressWarnings("UnusedReturnValue")
 public class BleDeviceController {
-    private BleMultiConnector bleMultiConnector;
+    private WeakReference<BleMultiConnector> bleMultiConnectorWeakReference;
     private String address;
 
     BleDeviceController(BleMultiConnector bleMultiConnector, String address) {
-        this.bleMultiConnector = bleMultiConnector;
+        this.bleMultiConnectorWeakReference = new WeakReference<>(bleMultiConnector);
         this.address = address;
     }
 
@@ -26,6 +27,7 @@ public class BleDeviceController {
      * @return true表示成功
      */
     public boolean refreshGattCache() {
+        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         return bleMultiConnector != null && address != null && bleMultiConnector.refreshGattCache(address);
     }
 
@@ -38,6 +40,7 @@ public class BleDeviceController {
      * @return true表示成功
      */
     public boolean writeData(String serviceUUID, String characteristicUUID, byte[] values) {
+        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         return bleMultiConnector != null && address != null && bleMultiConnector.writeData(address, serviceUUID, characteristicUUID, values);
     }
 
@@ -50,6 +53,7 @@ public class BleDeviceController {
      * @return true表示成功
      */
     public boolean readData(String serviceUUID, String characteristicUUID) {
+        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         return bleMultiConnector != null && address != null && bleMultiConnector.readData(address, serviceUUID, characteristicUUID);
     }
 
@@ -61,6 +65,7 @@ public class BleDeviceController {
      * @return true表示成功
      */
     public boolean openNotification(String serviceUUID, String characteristicUUID) {
+        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         return bleMultiConnector != null && address != null && bleMultiConnector.openNotification(address, serviceUUID, characteristicUUID);
     }
 
@@ -72,14 +77,17 @@ public class BleDeviceController {
      * @return true表示成功
      */
     public boolean closeNotification(String serviceUUID, String characteristicUUID) {
+        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         return bleMultiConnector != null && address != null && bleMultiConnector.closeNotification(address, serviceUUID, characteristicUUID);
     }
 
     public boolean reConnect() {
+        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         return bleMultiConnector != null && address != null && bleMultiConnector.reConnect(address);
     }
 
     public List<BluetoothGattService> getServices() {
+        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         if (bleMultiConnector == null) {
             return null;
         }
@@ -89,8 +97,16 @@ public class BleDeviceController {
         return bleMultiConnector.getServices(address);
     }
 
+    public Context getContext() {
+        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
+        if (bleMultiConnector == null) {
+            return null;
+        }
+        return bleMultiConnector.getContext();
+    }
 
     public BluetoothGattService getService(UUID uuid) {
+        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         if (bleMultiConnector == null) {
             return null;
         }

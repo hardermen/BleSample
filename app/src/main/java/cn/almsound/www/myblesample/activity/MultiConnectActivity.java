@@ -6,23 +6,36 @@ import android.view.View;
 import android.widget.Button;
 
 import cn.almsound.www.baselibrary.BaseAppcompatActivity;
+import cn.almsound.www.blelibrary.BleDeviceController;
 import cn.almsound.www.blelibrary.BleManager;
 import cn.almsound.www.blelibrary.BleMultiConnector;
 import cn.almsound.www.myblesample.R;
-import cn.almsound.www.myblesample.callback.Device1BleCallback;
-import cn.almsound.www.myblesample.callback.Device2BleCallback;
+import cn.almsound.www.myblesample.callback.Device1Callback;
+import cn.almsound.www.myblesample.callback.Device2Callback;
 
 /**
  * @author alm
  */
 public class MultiConnectActivity extends BaseAppcompatActivity {
 
+
+    private static final byte[] OPEN_SOCKET_BYTE_ARRAY = new byte[]{0x00, 0x00};
+    private static final byte[] CLOSE_SOCKET_BYTE_ARRAY = new byte[]{0x00, 0x01};
+    /**
+     * 手机直控插座时，需要用到的服务UUID
+     */
+    private static final String SOCKET_SERVICE_UUID = "0000FFF0-0000-1000-8000-00805f9b34fb";
+    /**
+     * 手机直控插座时，进行开启或关闭操作的特征UUID
+     */
+    private static final String CHARACTERISTIC_PHONE_CONTROL = "0000fff3-0000-1000-8000-00805f9b34fb";
+
     private BleMultiConnector bleMultiConnector;
     private Button connectButton;
     private Button openSocket1Btn, openSocket2Btn;
     private Button closeSocket1Btn, closeSocket2Btn;
-    private Device1BleCallback device1BleCallback;
-    private Device2BleCallback device2BleCallback;
+    private Device1Callback device1BleCallback = new Device1Callback();
+    private Device2Callback device2BleCallback = new Device2Callback();
 
 
     private View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -33,33 +46,50 @@ public class MultiConnectActivity extends BaseAppcompatActivity {
                     doConnect();
                     break;
                 case R.id.open_socket1:
-                    device1BleCallback.open();
+                    openSocket1();
                     break;
                 case R.id.open_socket2:
-                    device2BleCallback.open();
+                    openSocket2();
                     break;
                 case R.id.close_socket1:
-                    device1BleCallback.close();
+                    closeSocket1();
                     break;
                 case R.id.close_socket2:
-                    device2BleCallback.close();
+                    closeSocket2();
                     break;
                 default:
                     break;
             }
         }
     };
+
     private boolean first = true;
+    private String device1Address = "00:02:5B:00:15:A4";
+    private String device2Address = "00:02:5B:00:15:A2";
 
     private void doConnect() {
-        if (!first){
+        if (!first) {
             return;
         }
         first = false;
-        String device1Address = "00:02:5B:00:15:A4";
-        String device2Address = "00:02:5B:00:15:A2";
-        bleMultiConnector.connect(device1Address, device1BleCallback);
-        bleMultiConnector.connect(device2Address, device2BleCallback);
+
+
+        //使用默认的回调连接
+//        bleMultiConnector.connect(device1Address);
+//        bleMultiConnector.connect(device2Address);
+
+        //断开后自动连接（此函数调用的是系统的API，由系统自动连接设备）
+        bleMultiConnector.connect(device1Address,true);
+        bleMultiConnector.connect(device2Address,true);
+
+        //连接时传入对应的回调，方便进行操作,通常使用这个就行了
+//        bleMultiConnector.connect(device1Address, device1BleCallback);
+//        bleMultiConnector.connect(device2Address, device2BleCallback);
+
+
+        //连接时传入对应的回调，方便进行操作,并且在连接断开之后自动尝试连接（系统会默认自动去连接该设备，这是系统自身的重连参数，推荐用这个参数进行重连）
+//        bleMultiConnector.connect(device1Address,device1BleCallback,true);
+//        bleMultiConnector.connect(device2Address,device2BleCallback,true);
     }
 
     /**
@@ -76,8 +106,6 @@ public class MultiConnectActivity extends BaseAppcompatActivity {
     @Override
     protected void doBeforeSetLayout() {
         bleMultiConnector = BleManager.getBleMultiConnector(this);
-        device1BleCallback = new Device1BleCallback(bleMultiConnector);
-        device2BleCallback = new Device2BleCallback(bleMultiConnector);
     }
 
     /**
@@ -174,5 +202,39 @@ public class MultiConnectActivity extends BaseAppcompatActivity {
         super.onBackPressed();
         bleMultiConnector.refreshAllGattCache();
         bleMultiConnector.closeAll();
+    }
+
+    private void open(BleDeviceController bleDeviceController) {
+        if (bleDeviceController == null) {
+            return;
+        }
+        bleDeviceController.writeData(SOCKET_SERVICE_UUID, CHARACTERISTIC_PHONE_CONTROL, OPEN_SOCKET_BYTE_ARRAY);
+    }
+
+    private void close(BleDeviceController bleDeviceController) {
+        if (bleDeviceController == null) {
+            return;
+        }
+        bleDeviceController.writeData(SOCKET_SERVICE_UUID, CHARACTERISTIC_PHONE_CONTROL, CLOSE_SOCKET_BYTE_ARRAY);
+    }
+
+    private void openSocket1() {
+        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device1Address);
+        open(bleDeviceController);
+    }
+
+    private void openSocket2() {
+        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device2Address);
+        open(bleDeviceController);
+    }
+
+    private void closeSocket1() {
+        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device1Address);
+        close(bleDeviceController);
+    }
+
+    private void closeSocket2() {
+        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device2Address);
+        close(bleDeviceController);
     }
 }

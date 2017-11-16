@@ -15,12 +15,12 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 
@@ -33,10 +33,11 @@ import java.util.UUID;
 public class BluetoothMultiService extends Service {
     private static final String TAG = "BluetoothMultiService";
 
-    private HashMap<String, BleConnectCallback> callbackHashMap = new HashMap<>();
+    private HashMap<String, BaseConnectCallback> callbackHashMap = new HashMap<>();
     private HashMap<String, BluetoothGatt> gattCallbackHashMap = new HashMap<>();
     private BluetoothMultiServiceBinder bluetoothMultiServiceBinder;
     private BluetoothAdapter bluetoothAdapter;
+    private boolean initializeFinished;
 
     private BluetoothGattCallback bleBluetoothMultiGattCallback = new BluetoothGattCallback() {
 
@@ -55,11 +56,10 @@ public class BluetoothMultiService extends Service {
          */
         @Override
         public void onPhyUpdate(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
-            Tool.warnOut(TAG, gatt.getDevice().getAddress() + "onPhyUpdate");
             String gattAddress = gatt.getDevice().getAddress();
             if (callbackHashMap.containsKey(gattAddress)) {
-                BleConnectCallback bleConnectCallback = callbackHashMap.get(gattAddress);
-                bleConnectCallback.onPhyUpdate(gatt, txPhy, rxPhy);
+                BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
+                baseConnectCallback.onPhyUpdate(gatt, txPhy, rxPhy);
             }
         }
 
@@ -76,16 +76,15 @@ public class BluetoothMultiService extends Service {
          */
         @Override
         public void onPhyRead(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
-            Tool.warnOut(TAG, gatt.getDevice().getAddress() + "onPhyUpdate");
             String gattAddress = gatt.getDevice().getAddress();
             if (callbackHashMap.containsKey(gattAddress)) {
-                BleConnectCallback bleConnectCallback = callbackHashMap.get(gattAddress);
-                bleConnectCallback.onPhyRead(gatt, txPhy, rxPhy);
+                BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
+                baseConnectCallback.onPhyRead(gatt, txPhy, rxPhy);
             }
         }
 
         /**
-         * BleConnectCallback indicating when GATT client has connected/disconnected to/from a remote
+         * BaseConnectCallback indicating when GATT client has connected/disconnected to/from a remote
          * GATT server.
          *
          * @param gatt     GATT client
@@ -99,45 +98,40 @@ public class BluetoothMultiService extends Service {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
 
             String gattAddress;
-            BleConnectCallback bleConnectCallback;
+            BaseConnectCallback baseConnectCallback;
 
 
             switch (newState) {
                 case BluetoothGatt.STATE_DISCONNECTED:
-                    Tool.warnOut(TAG,gatt.getDevice().getAddress() + "STATE_DISCONNECTED");
                     gattAddress = gatt.getDevice().getAddress();
                     if (callbackHashMap.containsKey(gattAddress)) {
-                        bleConnectCallback = callbackHashMap.get(gattAddress);
-                        bleConnectCallback.onDisConnected(gatt);
+                        baseConnectCallback = callbackHashMap.get(gattAddress);
+                        baseConnectCallback.onDisConnected(gatt);
                     }
                     break;
                 case BluetoothGatt.STATE_CONNECTING:
-                    Tool.warnOut(TAG, gatt.getDevice().getAddress() + "STATE_CONNECTING");
                     gattAddress = gatt.getDevice().getAddress();
                     if (callbackHashMap.containsKey(gattAddress)) {
-                        bleConnectCallback = callbackHashMap.get(gattAddress);
-                        bleConnectCallback.onConnecting(gatt);
+                        baseConnectCallback = callbackHashMap.get(gattAddress);
+                        baseConnectCallback.onConnecting(gatt);
                     }
                     break;
                 case BluetoothGatt.STATE_CONNECTED:
-                    Tool.warnOut(TAG, gatt.getDevice().getAddress() + "STATE_CONNECTED");
                     gattAddress = gatt.getDevice().getAddress();
                     if (callbackHashMap.containsKey(gattAddress)) {
-                        bleConnectCallback = callbackHashMap.get(gattAddress);
+                        baseConnectCallback = callbackHashMap.get(gattAddress);
                         if (!gatt.discoverServices()) {
-                            Tool.warnOut(TAG, "无法进行服务发现");
-                            bleConnectCallback.onDiscoverServicesFailed(gatt);
+                            baseConnectCallback.onDiscoverServicesFailed(gatt);
                             return;
                         }
-                        bleConnectCallback.onConnected(gatt);
+                        baseConnectCallback.onConnected(gatt);
                     }
                     break;
                 case BluetoothGatt.STATE_DISCONNECTING:
-                    Tool.warnOut(TAG, gatt.getDevice().getAddress() + "STATE_DISCONNECTING");
                     gattAddress = gatt.getDevice().getAddress();
                     if (callbackHashMap.containsKey(gattAddress)) {
-                        bleConnectCallback = callbackHashMap.get(gattAddress);
-                        bleConnectCallback.onDisconnecting(gatt);
+                        baseConnectCallback = callbackHashMap.get(gattAddress);
+                        baseConnectCallback.onDisconnecting(gatt);
                     }
                     break;
                 default:
@@ -155,11 +149,10 @@ public class BluetoothMultiService extends Service {
          */
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            Tool.warnOut(TAG, gatt.getDevice().getAddress() + "onServicesDiscovered");
             String gattAddress = gatt.getDevice().getAddress();
             if (callbackHashMap.containsKey(gattAddress)) {
-                BleConnectCallback bleConnectCallback = callbackHashMap.get(gattAddress);
-                bleConnectCallback.onServicesDiscovered(gatt);
+                BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
+                baseConnectCallback.onServicesDiscovered(gatt);
             }
         }
 
@@ -173,12 +166,11 @@ public class BluetoothMultiService extends Service {
          */
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            Tool.warnOut(TAG, gatt.getDevice().getAddress() + "onCharacteristicRead");
             String gattAddress = gatt.getDevice().getAddress();
             if (callbackHashMap.containsKey(gattAddress)) {
                 byte[] values = characteristic.getValue();
-                BleConnectCallback bleConnectCallback = callbackHashMap.get(gattAddress);
-                bleConnectCallback.onCharacteristicRead(gatt, values);
+                BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
+                baseConnectCallback.onCharacteristicRead(gatt, values);
             }
         }
 
@@ -199,12 +191,11 @@ public class BluetoothMultiService extends Service {
          */
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            Tool.warnOut(TAG, "onCharacteristicWrite");
-            String gattAddress =gatt.getDevice().getAddress() +  gatt.getDevice().getAddress();
+            String gattAddress = gatt.getDevice().getAddress() + gatt.getDevice().getAddress();
             if (callbackHashMap.containsKey(gattAddress)) {
                 byte[] values = characteristic.getValue();
-                BleConnectCallback bleConnectCallback = callbackHashMap.get(gattAddress);
-                bleConnectCallback.onCharacteristicWrite(gatt, values);
+                BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
+                baseConnectCallback.onCharacteristicWrite(gatt, values);
             }
         }
 
@@ -216,12 +207,11 @@ public class BluetoothMultiService extends Service {
          */
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-            Tool.warnOut(TAG, gatt.getDevice().getAddress() + "onCharacteristicWrite");
             String gattAddress = gatt.getDevice().getAddress();
             if (callbackHashMap.containsKey(gattAddress)) {
                 byte[] values = characteristic.getValue();
-                BleConnectCallback bleConnectCallback = callbackHashMap.get(gattAddress);
-                bleConnectCallback.onReceivedNotification(gatt, values);
+                BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
+                baseConnectCallback.onReceivedNotification(gatt, values);
             }
         }
 
@@ -235,12 +225,11 @@ public class BluetoothMultiService extends Service {
          */
         @Override
         public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-            Tool.warnOut(TAG, gatt.getDevice().getAddress() + "onDescriptorRead");
             String gattAddress = gatt.getDevice().getAddress();
             if (callbackHashMap.containsKey(gattAddress)) {
                 byte[] values = descriptor.getValue();
-                BleConnectCallback bleConnectCallback = callbackHashMap.get(gattAddress);
-                bleConnectCallback.onDescriptorRead(gatt, values);
+                BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
+                baseConnectCallback.onDescriptorRead(gatt, values);
             }
         }
 
@@ -255,12 +244,11 @@ public class BluetoothMultiService extends Service {
          */
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-            Tool.warnOut(TAG, gatt.getDevice().getAddress() + "onDescriptorWrite");
             String gattAddress = gatt.getDevice().getAddress();
             if (callbackHashMap.containsKey(gattAddress)) {
                 byte[] values = descriptor.getValue();
-                BleConnectCallback bleConnectCallback = callbackHashMap.get(gattAddress);
-                bleConnectCallback.onDescriptorWrite(gatt, values);
+                BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
+                baseConnectCallback.onDescriptorWrite(gatt, values);
             }
         }
 
@@ -272,11 +260,10 @@ public class BluetoothMultiService extends Service {
          */
         @Override
         public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
-            Tool.warnOut(TAG, gatt.getDevice().getAddress() + "onReliableWriteCompleted");
             String gattAddress = gatt.getDevice().getAddress();
             if (callbackHashMap.containsKey(gattAddress)) {
-                BleConnectCallback bleConnectCallback = callbackHashMap.get(gattAddress);
-                bleConnectCallback.onReliableWriteCompleted(gatt);
+                BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
+                baseConnectCallback.onReliableWriteCompleted(gatt);
             }
         }
 
@@ -292,11 +279,10 @@ public class BluetoothMultiService extends Service {
          */
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-            Tool.warnOut(TAG, gatt.getDevice().getAddress() + "onReadRemoteRssi");
             String gattAddress = gatt.getDevice().getAddress();
             if (callbackHashMap.containsKey(gattAddress)) {
-                BleConnectCallback bleConnectCallback = callbackHashMap.get(gattAddress);
-                bleConnectCallback.onReadRemoteRssi(gatt, rssi);
+                BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
+                baseConnectCallback.onReadRemoteRssi(gatt, rssi);
             }
         }
 
@@ -313,11 +299,10 @@ public class BluetoothMultiService extends Service {
          */
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-            Tool.warnOut(TAG, gatt.getDevice().getAddress() + "onMtuChanged");
             String gattAddress = gatt.getDevice().getAddress();
             if (callbackHashMap.containsKey(gattAddress)) {
-                BleConnectCallback bleConnectCallback = callbackHashMap.get(gattAddress);
-                bleConnectCallback.onMtuChanged(gatt, mtu);
+                BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
+                baseConnectCallback.onMtuChanged(gatt, mtu);
             }
         }
     };
@@ -328,7 +313,25 @@ public class BluetoothMultiService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        bluetoothMultiServiceBinder = new BluetoothMultiServiceBinder(this);
+        this.bluetoothMultiServiceBinder = new BluetoothMultiServiceBinder(this);
+    }
+
+    /**
+     * Called by the system to notify a Service that it is no longer used and is being removed.  The
+     * service should clean up any resources it holds (threads, registered
+     * receivers, etc) at this point.  Upon return, there will be no more calls
+     * in to this Service object and it is effectively dead.  Do not call this method directly.
+     */
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        gattCallbackHashMap.clear();
+        gattCallbackHashMap = null;
+        callbackHashMap.clear();
+        callbackHashMap = null;
+        bluetoothMultiServiceBinder = null;
+        bluetoothAdapter = null;
+        initializeFinished = false;
     }
 
     /**
@@ -365,21 +368,23 @@ public class BluetoothMultiService extends Service {
             Tool.warnOut("BluetoothLeService", "get bluetoothManager failed!");
             return false;
         }
-
         bluetoothAdapter = bluetoothManager.getAdapter();
-        if (bluetoothAdapter == null) {
+        if (bluetoothAdapter == null){
             Tool.warnOut("BluetoothLeService", "get bluetoothAdapter failed!");
             return false;
         }
         return true;
     }
 
-    public boolean connectDevice(String address, BleConnectCallback bleConnectCallback, boolean autoConnect) {
+    public boolean connectDevice(String address, BaseConnectCallback baseConnectCallback, boolean autoConnect) {
         if (bluetoothAdapter == null) {
             return false;
         }
         //检查蓝牙地址是否符合规范
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            return false;
+        }
+        if (bluetoothAdapter == null){
             return false;
         }
         BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(address);
@@ -390,7 +395,7 @@ public class BluetoothMultiService extends Service {
         BluetoothGatt bluetoothGatt = remoteDevice.connectGatt(this, autoConnect, bleBluetoothMultiGattCallback);
         if (autoConnect) {
             if (!callbackHashMap.containsKey(address)) {
-                callbackHashMap.put(address, bleConnectCallback);
+                callbackHashMap.put(address, baseConnectCallback);
             }
             if (!gattCallbackHashMap.containsKey(address)) {
                 gattCallbackHashMap.put(address, bluetoothGatt);
@@ -403,7 +408,7 @@ public class BluetoothMultiService extends Service {
         }
 
         if (!callbackHashMap.containsKey(address)) {
-            callbackHashMap.put(address, bleConnectCallback);
+            callbackHashMap.put(address, baseConnectCallback);
         }
         if (!gattCallbackHashMap.containsKey(address)) {
             gattCallbackHashMap.put(address, bluetoothGatt);
@@ -431,9 +436,9 @@ public class BluetoothMultiService extends Service {
             gatt.disconnect();
             gatt.close();
         }
-        for (Map.Entry<String, BleConnectCallback> entry : callbackHashMap.entrySet()) {
-            BleConnectCallback bleConnectCallback = entry.getValue();
-            bleConnectCallback.onGattClosed();
+        for (Map.Entry<String, BaseConnectCallback> entry : callbackHashMap.entrySet()) {
+            BaseConnectCallback baseConnectCallback = entry.getValue();
+            baseConnectCallback.onGattClosed(entry.getKey());
         }
         callbackHashMap.clear();
         gattCallbackHashMap.clear();
@@ -474,12 +479,15 @@ public class BluetoothMultiService extends Service {
             BluetoothGatt gatt = gattCallbackHashMap.get(address);
             return gatt.connect();
         }
+        if (bluetoothAdapter == null){
+            return false;
+        }
         BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(address);
         if (remoteDevice == null) {
             return false;
         }
         BluetoothGatt bluetoothGatt = remoteDevice.connectGatt(this, autoConnect, bleBluetoothMultiGattCallback);
-        if (autoConnect){
+        if (autoConnect) {
             if (!gattCallbackHashMap.containsKey(address)) {
                 gattCallbackHashMap.put(address, bluetoothGatt);
             }
@@ -578,18 +586,9 @@ public class BluetoothMultiService extends Service {
             return false;
         }
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (characteristic == null) {
-            return false;
-        }
+        return characteristic != null && characteristic.setValue(values) && bluetoothGatt.writeCharacteristic(characteristic);
 
 
-        if (!characteristic.setValue(values)) {
-            return false;
-        }
-
-        Tool.warnOut(TAG, "values = " + Tool.bytesToHexStr(values));
-
-        return bluetoothGatt.writeCharacteristic(characteristic);
     }
 
     public boolean readData(String address, String serviceUUID, String characteristicUUID) {
@@ -680,5 +679,13 @@ public class BluetoothMultiService extends Service {
     boolean isConnected(String address) {
         return BluetoothAdapter.checkBluetoothAddress(address) && gattCallbackHashMap.containsKey(address);
 
+    }
+
+    void setInitializeFinished(boolean initializeFinished) {
+        this.initializeFinished = initializeFinished;
+    }
+
+    boolean isInitializeFinished() {
+        return initializeFinished;
     }
 }

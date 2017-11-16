@@ -244,14 +244,14 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
 ```
 获取多连接的连接器
 ```java
-BleMultiConnector bleMultiConnector = BleManager.getBleMultiConnector(context);
+BleMultiConnector bleMultiConnectorWeakReference = BleManager.getBleMultiConnector(context);
 ```
 连接多个设备
 ```java
  String device1Address = "00:02:5B:00:15:A4";
  String device2Address = "00:02:5B:00:15:A2";
- bleMultiConnector.connect(device1Address, device1BleCallback);
- bleMultiConnector.connect(device2Address, device2BleCallback);
+ bleMultiConnectorWeakReference.connect(device1Address, device1BleCallback);
+ bleMultiConnectorWeakReference.connect(device2Address, device2BleCallback);
 ```
 上方的callback是继承自BleConnectCallback
 ```
@@ -280,14 +280,14 @@ public class Device1BleCallback extends BleConnectCallback {
 ```
 同时连接多个设备后，如果想要对单独某一个设备进行操作
 ```java
-BleDeviceController bleDeviceController =  bleMultiConnector.getBleDeviceController(address);
+BleDeviceController bleDeviceController =  bleMultiConnectorWeakReference.getBleDeviceController(address);
 bleDeviceController.writData(serviceUUID,characteristicUUID,data);
 ...
 ```
 在程序退出时或者当前Activity销毁前close
 ```java
   //最好是先清空一下缓存
-  bleMultiConnector.refreshAllGattCache();
+  bleMultiConnectorWeakReference.refreshAllGattCache();
   //关闭所有gatt
-  bleMultiConnector.closeAll();
+  bleMultiConnectorWeakReference.closeAll();
 ```

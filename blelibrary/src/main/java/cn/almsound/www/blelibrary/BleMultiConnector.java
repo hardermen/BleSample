@@ -34,18 +34,27 @@ public class BleMultiConnector {
     }
 
     public boolean disconnect(String address) {
-        return bluetoothMultiService.disconnect(address);
+        return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.disconnect(address);
     }
 
     public boolean disconnectAll() {
-        return bluetoothMultiService.disconnectAll();
+        return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.disconnectAll();
     }
 
     public boolean close(String address) {
-        return bluetoothMultiService.close(address);
+        return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.close(address);
     }
 
     public boolean closeAll() {
+        if (bluetoothMultiService == null) {
+
+            return false;
+        }
+
+        if (!bluetoothMultiService.isInitializeFinished()) {
+            return false;
+        }
+
         bluetoothMultiService.closeAll();
         Context context = contextWeakReference.get();
         if (context == null) {
@@ -56,23 +65,39 @@ public class BleMultiConnector {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        contextWeakReference = null;
+        bleServiceMultiConnection = null;
+        bluetoothMultiService = null;
+        BleManager.resetBleMultiConnector();
         return true;
     }
 
-    public boolean connect(@NonNull String address, @NonNull BleConnectCallback bleConnectCallback) {
-        return connect(address, bleConnectCallback, false);
+    public boolean connect(@NonNull String address) {
+        return connect(address,false);
     }
 
-    public boolean connect(@NonNull String address, @NonNull BleConnectCallback bleConnectCallback, boolean autoConnect) {
-        return bluetoothMultiService != null && bluetoothMultiService.connectDevice(address, bleConnectCallback, autoConnect);
+    public boolean connect(@NonNull String address, boolean autoConnect) {
+        return connect(address, new DefaultConnectCallBack(), autoConnect);
     }
 
-    public boolean reConnect(String address) {
-        return bluetoothMultiService != null && bluetoothMultiService.reConnect(address);
+    public boolean connect(@NonNull String address, @NonNull BaseConnectCallback baseConnectCallback) {
+        return connect(address, baseConnectCallback,false);
+    }
+
+    public boolean connect(@NonNull String address, @NonNull BaseConnectCallback baseConnectCallback, boolean autoConnect) {
+        return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectDevice(address, baseConnectCallback, autoConnect);
+    }
+
+    boolean reConnect(String address) {
+        return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.reConnect(address);
     }
 
     public List<BluetoothGattService> getServices(String address) {
         if (bluetoothMultiService == null) {
+            return null;
+        }
+
+        if (!bluetoothMultiService.isInitializeFinished()) {
             return null;
         }
         return bluetoothMultiService.getServices(address);
@@ -83,6 +108,9 @@ public class BleMultiConnector {
         if (bluetoothMultiService == null) {
             return null;
         }
+        if (!bluetoothMultiService.isInitializeFinished()) {
+            return null;
+        }
         return bluetoothMultiService.getService(address, uuid);
     }
 
@@ -90,7 +118,7 @@ public class BleMultiConnector {
         return bluetoothMultiService;
     }
 
-    public void setBluetoothMultiService(BluetoothMultiService bluetoothMultiService) {
+    void setBluetoothMultiService(BluetoothMultiService bluetoothMultiService) {
         this.bluetoothMultiService = bluetoothMultiService;
     }
 
@@ -109,7 +137,7 @@ public class BleMultiConnector {
      *
      * @return true表示成功
      */
-   public void refreshAllGattCache() {
+    public void refreshAllGattCache() {
         if (bluetoothMultiService == null) {
             return;
         }
@@ -163,17 +191,17 @@ public class BleMultiConnector {
         return bluetoothMultiService != null && bluetoothMultiService.closeNotification(address, serviceUUID, characteristicUUID);
     }
 
-    public Context getContext() {
+    Context getContext() {
         return contextWeakReference.get();
     }
 
-    public BleDeviceController getBleDeviceController(String address){
-        if (bluetoothMultiService == null){
+    public BleDeviceController getBleDeviceController(String address) {
+        if (bluetoothMultiService == null) {
             return null;
         }
-       if (!bluetoothMultiService.isConnected(address)){
+        if (!bluetoothMultiService.isConnected(address)) {
             return null;
-       }
-        return new BleDeviceController(this,address);
+        }
+        return new BleDeviceController(this, address);
     }
 }

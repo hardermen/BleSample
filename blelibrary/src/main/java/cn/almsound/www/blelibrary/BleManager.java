@@ -74,4 +74,8 @@ public class BleManager {
         }
         return bleMultiConnector;
     }
+
+    static void resetBleMultiConnector() {
+        bleMultiConnector = null;
+    }
 }

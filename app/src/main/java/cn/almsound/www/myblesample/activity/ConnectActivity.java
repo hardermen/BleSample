@@ -157,40 +157,40 @@ public class ConnectActivity extends BaseAppcompatActivity {
     @Override
     protected void doAfterAll() {
         //发起连接
-        /*startConnect();*/
+        startConnect();
 
-        /*
-         * 调用绑定的方法（如果需要绑定)，否则请直接调用连接的方法
-         * 注意：如果该设备不支持绑定，会直接回调绑定成功的回调，在绑定成功的回调中发起连接即可
-         * 第一次绑定某一个设备会触发回调，之后再次绑定，可根据绑定时的函数的返回值来判断绑定状态，以进行下一步操作
-         */
-        switch (bleConnector.startBound(address)) {
-            case BleConstants.DEVICE_BOND_START_SUCCESS:
-                LogUtil.w(TAG, "开始绑定");
-                break;
-            case BleConstants.DEVICE_BOND_START_FAILED:
-                LogUtil.w(TAG, "发起绑定失败");
-                break;
-            case BleConstants.DEVICE_BOND_BONDED:
-                LogUtil.w(TAG, "此设备已经被绑定了");
-                startConnect();
-                break;
-            case BleConstants.DEVICE_BOND_BONDING:
-                LogUtil.w(TAG, "此设备正在绑定中");
-                break;
-            case BleConstants.BLUETOOTH_ADAPTER_NULL:
-                LogUtil.w(TAG, "没有蓝牙适配器存在");
-                break;
-            case BleConstants.BLUETOOTH_ADDRESS_INCORRECT:
-                LogUtil.w(TAG, "蓝牙地址错误");
-                break;
-            case BleConstants.BLUETOOTH_MANAGER_NULL:
-                LogUtil.w(TAG, "没有蓝牙管理器存在");
-                break;
-            default:
-                LogUtil.w(TAG, "default");
-                break;
-        }
+//        /*
+//         * 调用绑定的方法（如果需要绑定)，否则请直接调用连接的方法
+//         * 注意：如果该设备不支持绑定，会直接回调绑定成功的回调，在绑定成功的回调中发起连接即可
+//         * 第一次绑定某一个设备会触发回调，之后再次绑定，可根据绑定时的函数的返回值来判断绑定状态，以进行下一步操作
+//         */
+//        switch (bleConnector.startBound(address)) {
+//            case BleConstants.DEVICE_BOND_START_SUCCESS:
+//                LogUtil.w(TAG, "开始绑定");
+//                break;
+//            case BleConstants.DEVICE_BOND_START_FAILED:
+//                LogUtil.w(TAG, "发起绑定失败");
+//                break;
+//            case BleConstants.DEVICE_BOND_BONDED:
+//                LogUtil.w(TAG, "此设备已经被绑定了");
+//                startConnect();
+//                break;
+//            case BleConstants.DEVICE_BOND_BONDING:
+//                LogUtil.w(TAG, "此设备正在绑定中");
+//                break;
+//            case BleConstants.BLUETOOTH_ADAPTER_NULL:
+//                LogUtil.w(TAG, "没有蓝牙适配器存在");
+//                break;
+//            case BleConstants.BLUETOOTH_ADDRESS_INCORRECT:
+//                LogUtil.w(TAG, "蓝牙地址错误");
+//                break;
+//            case BleConstants.BLUETOOTH_MANAGER_NULL:
+//                LogUtil.w(TAG, "没有蓝牙管理器存在");
+//                break;
+//            default:
+//                LogUtil.w(TAG, "default");
+//                break;
+//        }
     }
 
     /**

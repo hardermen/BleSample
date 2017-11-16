@@ -2,6 +2,8 @@ package cn.almsound.www.blelibrary;
 
 import android.os.Binder;
 
+import java.lang.ref.WeakReference;
+
 /**
  *
  * @author alm
