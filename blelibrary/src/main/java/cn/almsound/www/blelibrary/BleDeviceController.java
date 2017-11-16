@@ -97,6 +97,10 @@ public class BleDeviceController {
         return bleMultiConnector.getServices(address);
     }
 
+    public boolean disconnect() {
+        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
+        return bleMultiConnector != null && bleMultiConnector.disconnect(address);
+    }
     public Context getContext() {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         if (bleMultiConnector == null) {

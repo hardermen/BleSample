@@ -33,7 +33,7 @@ public class BleMultiConnector {
         context.getApplicationContext().bindService(intent, bleServiceMultiConnection, Context.BIND_AUTO_CREATE);
     }
 
-    public boolean disconnect(String address) {
+    boolean disconnect(String address) {
         return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.disconnect(address);
     }
 
@@ -41,7 +41,7 @@ public class BleMultiConnector {
         return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.disconnectAll();
     }
 
-    public boolean close(String address) {
+    boolean close(String address) {
         return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.close(address);
     }
 

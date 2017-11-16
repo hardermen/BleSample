@@ -132,9 +132,10 @@ public class BluetoothLeService extends Service {
      * 发起连接远端设备的请求
      *
      * @param address 远端设备地址
+     * @param autoReconnect 自动重连标志
      * @return true表示成功
      */
-    boolean connect(String address) {
+    boolean connect(String address, boolean autoReconnect) {
         if (bluetoothAdapter == null || address == null) {
             return false;
         }
@@ -143,8 +144,10 @@ public class BluetoothLeService extends Service {
         if (remoteDevice == null) {
             return false;
         }
-        bluetoothGatt = remoteDevice.connectGatt(this, false, bleBluetoothGattCallback);
-        return bluetoothGatt != null && bluetoothGatt.connect();
+
+        bluetoothGatt = remoteDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback);
+
+        return autoReconnect || bluetoothGatt != null && bluetoothGatt.connect();
     }
 
     /**

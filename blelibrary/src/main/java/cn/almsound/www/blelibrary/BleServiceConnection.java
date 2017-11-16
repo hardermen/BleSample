@@ -56,7 +56,7 @@ class BleServiceConnection implements ServiceConnection {
             Tool.warnOut(TAG, "address is null!");
             return;
         }
-        boolean connect = bluetoothLeService.connect(mAddress);
+        boolean connect = bluetoothLeService.connect(mAddress,autoReconnect);
         Tool.warnOut(TAG, "connect " + connect);
     }
 

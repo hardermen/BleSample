@@ -219,7 +219,7 @@ public class ConnectActivity extends BaseAppcompatActivity {
     public void onBackPressed() {
         //屏蔽返回键
         /*super.onBackPressed();*/
-        //关闭连接工具
+        //关闭连接工具,如果返回false,直接调用super.onBackPressed()，否则在close的回调中调用返回
         if (!bleConnector.close()) {
             super.onBackPressed();
         }
