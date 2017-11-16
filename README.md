@@ -253,10 +253,10 @@ BleMultiConnector bleMultiConnectorWeakReference = BleManager.getBleMultiConnect
  bleMultiConnectorWeakReference.connect(device1Address, device1BleCallback);
  bleMultiConnectorWeakReference.connect(device2Address, device2BleCallback);
 ```
-上方的callback是继承自BleConnectCallback
+上方的callback是继承自BaseConnectCallback
 ```
 
-public class Device1BleCallback extends BleConnectCallback {
+public class Device1BleCallback extends BaseConnectCallback {
     private static final String TAG = "Device1BleCallback";
 
     /**
