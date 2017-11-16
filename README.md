@@ -4,20 +4,20 @@
 
 2.gradle配置依赖
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.2.9'
+compile 'com.jackiepenghe:blelibrary:0.3.1'
 ```
 3.maven配置依赖
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.2.9</version>
+  <version>0.3.1</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖
 ```xml
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.2.9'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.3.1'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
@@ -248,15 +248,30 @@ BleMultiConnector bleMultiConnectorWeakReference = BleManager.getBleMultiConnect
 ```
 连接多个设备
 ```java
- String device1Address = "00:02:5B:00:15:A4";
- String device2Address = "00:02:5B:00:15:A2";
- bleMultiConnectorWeakReference.connect(device1Address, device1BleCallback);
- bleMultiConnectorWeakReference.connect(device2Address, device2BleCallback);
+    String device1Address = "00:02:5B:00:15:A4";
+    String device2Address = "00:02:5B:00:15:A2";
+
+    //使用默认的回调连接
+//  bleMultiConnector.connect(device1Address);
+//  bleMultiConnector.connect(device2Address);
+
+    //断开后自动连接（此函数调用的是系统的API，由系统自动连接设备）
+    bleMultiConnector.connect(device1Address,true);
+    bleMultiConnector.connect(device2Address,true);
+
+    //连接时传入对应的回调，方便进行操作,通常使用这个就行了
+//  bleMultiConnector.connect(device1Address, device1BleCallback);
+//  bleMultiConnector.connect(device2Address, device2BleCallback);
+
+
+    //连接时传入对应的回调，方便进行操作,并且在连接断开之后自动尝试连接（系统会默认自动去连接该设备，这是系统自身的重连参数，推荐用这个参数进行重连）
+//  bleMultiConnector.connect(device1Address,device1BleCallback,true);
+//  bleMultiConnector.connect(device2Address,device2BleCallback,true);
 ```
-上方的callback是继承自BleConnectCallback
+上方的callback是继承自BaseConnectCallback
 ```
 
-public class Device1BleCallback extends BleConnectCallback {
+public class Device1BleCallback extends BaseConnectCallback {
     private static final String TAG = "Device1BleCallback";
 
     /**
@@ -286,8 +301,13 @@ bleDeviceController.writData(serviceUUID,characteristicUUID,data);
 ```
 在程序退出时或者当前Activity销毁前close
 ```java
-  //最好是先清空一下缓存
-  bleMultiConnectorWeakReference.refreshAllGattCache();
-  //关闭所有gatt
-  bleMultiConnectorWeakReference.closeAll();
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        //最好是先清空一下缓存
+        bleMultiConnectorWeakReference.refreshAllGattCache();
+        //关闭所有gatt
+        bleMultiConnectorWeakReference.closeAll();
+    }
+ 
 ```
