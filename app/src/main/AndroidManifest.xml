@@ -41,11 +41,11 @@
         <activity android:name=".activity.MultiConnectActivity"/>
 
         <service
-            android:name="cn.almsound.www.blelibrary.BluetoothLeService"
+            android:name="com.jackiepenghe.blelibrary.BluetoothLeService"
             android:enabled="true"
             android:exported="false" />
 
-        <service android:name="cn.almsound.www.blelibrary.BluetoothMultiService"
+        <service android:name="com.jackiepenghe.blelibrary.BluetoothMultiService"
             android:enabled="true"
             android:exported="false"/>
     </application>

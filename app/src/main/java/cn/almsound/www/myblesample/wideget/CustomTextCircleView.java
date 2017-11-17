@@ -38,6 +38,9 @@ public class CustomTextCircleView extends View {
     public CustomTextCircleView(Context context, AttributeSet attrs) {
         super(context, attrs);
         WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        if (windowManager == null){
+            return;
+        }
         Display defaultDisplay = windowManager.getDefaultDisplay();
         Point point = new Point();
         defaultDisplay.getSize(point);
@@ -77,7 +80,7 @@ public class CustomTextCircleView extends View {
      */
     public void setColor(int color) {
         this.color = color;
-        invalidate();
+        postInvalidate();
     }
 
     /**

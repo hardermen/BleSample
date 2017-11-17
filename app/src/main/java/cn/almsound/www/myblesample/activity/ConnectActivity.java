@@ -10,14 +10,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.jackiepenghe.baselibrary.BaseAppcompatActivity;
+import com.jackiepenghe.blelibrary.BleConnector;
+import com.jackiepenghe.blelibrary.BleDevice;
+import com.jackiepenghe.blelibrary.BleInterface;
+import com.jackiepenghe.blelibrary.BleManager;
+
 import java.util.List;
 
-import cn.almsound.www.baselibrary.BaseAppcompatActivity;
-import cn.almsound.www.blelibrary.BleConstants;
-import cn.almsound.www.blelibrary.BleConnector;
-import cn.almsound.www.blelibrary.BleDevice;
-import cn.almsound.www.blelibrary.BleInterface;
-import cn.almsound.www.blelibrary.BleManager;
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.utils.Constants;
 import cn.almsound.www.myblesample.utils.ConversionUtil;

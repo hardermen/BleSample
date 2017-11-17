@@ -36,5 +36,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:design:26.1.0'
     compile project(':blelibrary')
-    compile 'com.jackiepenghe:baselibrary:0.3.4'
+    compile 'com.jackiepenghe:baselibrary:0.3.6'
 }

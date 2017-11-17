@@ -5,13 +5,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
-import cn.almsound.www.baselibrary.BaseAppcompatActivity;
-import cn.almsound.www.blelibrary.BleDeviceController;
-import cn.almsound.www.blelibrary.BleManager;
-import cn.almsound.www.blelibrary.BleMultiConnector;
+import com.jackiepenghe.baselibrary.BaseAppcompatActivity;
+import com.jackiepenghe.blelibrary.BleDeviceController;
+import com.jackiepenghe.blelibrary.BleManager;
+import com.jackiepenghe.blelibrary.BleMultiConnector;
+
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.callback.Device1Callback;
 import cn.almsound.www.myblesample.callback.Device2Callback;
+import cn.almsound.www.myblesample.callback.Device3Callback;
+import cn.almsound.www.myblesample.callback.Device4Callback;
+import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 
 /**
  * @author alm
@@ -32,10 +36,18 @@ public class MultiConnectActivity extends BaseAppcompatActivity {
 
     private BleMultiConnector bleMultiConnector;
     private Button connectButton;
-    private Button openSocket1Btn, openSocket2Btn;
-    private Button closeSocket1Btn, closeSocket2Btn;
-    private Device1Callback device1BleCallback = new Device1Callback();
-    private Device2Callback device2BleCallback = new Device2Callback();
+    private Button openSocket1Btn, openSocket2Btn,openSocket3Btn,openSocket4Btn;
+    private Button closeSocket1Btn, closeSocket2Btn,closeSocket3Btn,closeSocket4Btn;
+private CustomTextCircleView customTextCircleView1,customTextCircleView2,customTextCircleView3,customTextCircleView4;
+    private boolean first = true;
+    private String device1Address = "00:02:5B:00:15:A4";
+    private String device2Address = "00:02:5B:00:15:A2";
+    private String device3Address = "00:02:5B:00:15:A9";
+    private String device4Address = "00:02:5B:00:15:A8";
+    private Device1Callback device1BleCallback;
+    private Device2Callback device2BleCallback;
+    private Device3Callback device3BleCallback;
+    private Device4Callback device4BleCallback;
 
 
     private View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -57,15 +69,23 @@ public class MultiConnectActivity extends BaseAppcompatActivity {
                 case R.id.close_socket2:
                     closeSocket2();
                     break;
+                case R.id.open_socket3:
+                    openSocket3();
+                    break;
+                case R.id.close_socket3:
+                    closeSocket3();
+                    break;
+                case R.id.open_socket4:
+                    openSocket4();
+                    break;
+                case R.id.close_socket4:
+                    closeSocket4();
+                    break;
                 default:
                     break;
             }
         }
     };
-
-    private boolean first = true;
-    private String device1Address = "00:02:5B:00:15:A4";
-    private String device2Address = "00:02:5B:00:15:A2";
 
     private void doConnect() {
         if (!first) {
@@ -78,9 +98,12 @@ public class MultiConnectActivity extends BaseAppcompatActivity {
 //        bleMultiConnector.connect(device1Address);
 //        bleMultiConnector.connect(device2Address);
 
-        //断开后自动连接（此函数调用的是系统的API，由系统自动连接设备）
-        bleMultiConnector.connect(device1Address,true);
-        bleMultiConnector.connect(device2Address,true);
+        //断开后自动连接（此函数调用的是系统的API，由系统自动连接设备） 经测试，最稳定的链接个数应该是4个。超过4个会连接4个，第5个之后无法连接
+        bleMultiConnector.connect(device1Address,device1BleCallback,true);
+        bleMultiConnector.connect(device2Address,device2BleCallback,true);
+        bleMultiConnector.connect(device3Address,device3BleCallback,true);
+        bleMultiConnector.connect(device4Address,device4BleCallback,true);
+//        bleMultiConnector.connect(device5Address,device5BleCallback,true);
 
         //连接时传入对应的回调，方便进行操作,通常使用这个就行了
 //        bleMultiConnector.connect(device1Address, device1BleCallback);
@@ -136,6 +159,15 @@ public class MultiConnectActivity extends BaseAppcompatActivity {
         openSocket2Btn = findViewById(R.id.open_socket2);
         closeSocket1Btn = findViewById(R.id.close_socket1);
         closeSocket2Btn = findViewById(R.id.close_socket2);
+        openSocket3Btn = findViewById(R.id.open_socket3);
+        closeSocket3Btn = findViewById(R.id.close_socket3);
+        openSocket4Btn = findViewById(R.id.open_socket4);
+        closeSocket4Btn = findViewById(R.id.close_socket4);
+
+        customTextCircleView1 = findViewById(R.id.circle_device1);
+        customTextCircleView2 = findViewById(R.id.circle_device2);
+        customTextCircleView3 = findViewById(R.id.circle_device3);
+        customTextCircleView4 = findViewById(R.id.circle_device4);
     }
 
     /**
@@ -151,7 +183,10 @@ public class MultiConnectActivity extends BaseAppcompatActivity {
      */
     @Override
     protected void initOtherData() {
-
+        device1BleCallback = new Device1Callback(customTextCircleView1);
+        device2BleCallback = new Device2Callback(customTextCircleView2);
+        device3BleCallback = new Device3Callback(customTextCircleView3);
+        device4BleCallback = new Device4Callback(customTextCircleView4);
     }
 
     /**
@@ -164,6 +199,10 @@ public class MultiConnectActivity extends BaseAppcompatActivity {
         openSocket2Btn.setOnClickListener(onClickListener);
         closeSocket1Btn.setOnClickListener(onClickListener);
         closeSocket2Btn.setOnClickListener(onClickListener);
+        openSocket3Btn.setOnClickListener(onClickListener);
+        closeSocket3Btn.setOnClickListener(onClickListener);
+        openSocket4Btn.setOnClickListener(onClickListener);
+        closeSocket4Btn.setOnClickListener(onClickListener);
     }
 
 
@@ -235,6 +274,26 @@ public class MultiConnectActivity extends BaseAppcompatActivity {
 
     private void closeSocket2() {
         BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device2Address);
+        close(bleDeviceController);
+    }
+
+    private void openSocket3() {
+        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device3Address);
+        open(bleDeviceController);
+    }
+
+    private void closeSocket3() {
+        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device3Address);
+        close(bleDeviceController);
+    }
+
+    private void openSocket4() {
+        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device4Address);
+        open(bleDeviceController);
+    }
+
+    private void closeSocket4() {
+        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device4Address);
         close(bleDeviceController);
     }
 }

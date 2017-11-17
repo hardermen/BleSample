@@ -1,11 +1,12 @@
 package cn.almsound.www.myblesample.callback;
 
 import android.bluetooth.BluetoothGatt;
+import android.graphics.Color;
 
-import cn.almsound.www.baselibrary.Tool;
-import cn.almsound.www.blelibrary.BaseConnectCallback;
-import cn.almsound.www.blelibrary.BleDeviceController;
-import cn.almsound.www.blelibrary.BleMultiConnector;
+import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.blelibrary.BaseConnectCallback;
+
+import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 
 /**
  *
@@ -16,6 +17,11 @@ import cn.almsound.www.blelibrary.BleMultiConnector;
 public class Device1Callback extends BaseConnectCallback {
     private static final String TAG = "Device1Callback";
 
+    private CustomTextCircleView customTextCircleView;
+    public Device1Callback(CustomTextCircleView customTextCircleView) {
+        this.customTextCircleView = customTextCircleView;
+    }
+
     /**
      * 蓝牙连接后无法正常进行服务发现时回调
      *
@@ -24,6 +30,7 @@ public class Device1Callback extends BaseConnectCallback {
     @Override
     public void onDiscoverServicesFailed(BluetoothGatt gatt) {
         Tool.warnOut(TAG,"onDiscoverServicesFailed");
+        customTextCircleView.setColor(Color.RED);
     }
 
     /**
@@ -38,10 +45,16 @@ public class Device1Callback extends BaseConnectCallback {
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt) {
         Tool.warnOut(TAG,"设备1 onServicesDiscovered");
+        customTextCircleView.setColor(Color.GREEN);
     }
 
+    @Override
+    public void onConnected(BluetoothGatt gatt) {
+        customTextCircleView.setColor(Color.BLUE);
+    }
 
     @Override
     public void onDisConnected(BluetoothGatt gatt) {
+        customTextCircleView.setColor(Color.RED);
     }
 }

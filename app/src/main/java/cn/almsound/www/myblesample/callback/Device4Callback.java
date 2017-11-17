@@ -14,12 +14,11 @@ import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
  * @date 2017/11/15
  */
 
-public class Device2Callback extends BaseConnectCallback {
+public class Device4Callback extends BaseConnectCallback {
 
-    private static final String TAG = "Device2Callback";
-
+    private static final String TAG = "Device4Callback";
     private CustomTextCircleView customTextCircleView;
-    public Device2Callback(CustomTextCircleView customTextCircleView) {
+    public Device4Callback(CustomTextCircleView customTextCircleView) {
         this.customTextCircleView = customTextCircleView;
     }
     /**
@@ -44,7 +43,7 @@ public class Device2Callback extends BaseConnectCallback {
 
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt) {
-        Tool.warnOut(TAG,"设备2 onServicesDiscovered");
+        Tool.warnOut(TAG,"设备4 onServicesDiscovered");
         customTextCircleView.setColor(Color.GREEN);
     }
 

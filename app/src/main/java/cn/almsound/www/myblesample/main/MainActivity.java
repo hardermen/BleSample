@@ -6,8 +6,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
-import cn.almsound.www.baselibrary.BaseAppcompatActivity;
-import cn.almsound.www.blelibrary.Tool;
+import com.jackiepenghe.baselibrary.BaseAppcompatActivity;
+import com.jackiepenghe.baselibrary.Tool;
+
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.activity.DeviceListActivity;
 import cn.almsound.www.myblesample.activity.MultiConnectActivity;

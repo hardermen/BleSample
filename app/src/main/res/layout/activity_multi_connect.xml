@@ -3,11 +3,43 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+
+    <LinearLayout
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <cn.almsound.www.myblesample.wideget.CustomTextCircleView
+            android:id="@+id/circle_device1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <cn.almsound.www.myblesample.wideget.CustomTextCircleView
+            android:id="@+id/circle_device2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal" />
+
+        <cn.almsound.www.myblesample.wideget.CustomTextCircleView
+            android:id="@+id/circle_device3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal" />
+
+        <cn.almsound.www.myblesample.wideget.CustomTextCircleView
+            android:id="@+id/circle_device4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal" />
+
+    </LinearLayout>
+
     <Button
         android:id="@+id/connect_button"
         android:text="@string/connect"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
 
     <Button
         android:text="@string/open_socket1"
@@ -30,6 +62,30 @@
     <Button
         android:text="@string/close_socket2"
         android:id="@+id/close_socket2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:text="@string/open_socket3"
+        android:id="@+id/open_socket3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:text="@string/close_socket3"
+        android:id="@+id/close_socket3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:text="@string/open_socket4"
+        android:id="@+id/open_socket4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:text="@string/close_socket4"
+        android:id="@+id/close_socket4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

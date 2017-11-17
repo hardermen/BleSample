@@ -16,15 +16,16 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 
+import com.jackiepenghe.baselibrary.BaseAppcompatActivity;
+import com.jackiepenghe.blelibrary.BleDevice;
+import com.jackiepenghe.blelibrary.BleInterface;
+import com.jackiepenghe.blelibrary.BleManager;
+import com.jackiepenghe.blelibrary.BleScanner;
+
 import java.util.ArrayList;
 
-import cn.almsound.www.baselibrary.BaseAppcompatActivity;
-import cn.almsound.www.blelibrary.BleDevice;
-import cn.almsound.www.blelibrary.BleInterface;
-import cn.almsound.www.blelibrary.BleManager;
-import cn.almsound.www.blelibrary.BleScanner;
 import cn.almsound.www.myblesample.R;
-import cn.almsound.www.myblesample.adapter.others.DeviceListAdapter;
+import cn.almsound.www.myblesample.adapter.DeviceListAdapter;
 import cn.almsound.www.myblesample.utils.Constants;
 import cn.almsound.www.myblesample.utils.ToastUtil;
 

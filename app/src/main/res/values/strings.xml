@@ -19,4 +19,10 @@
     <string name="open_socket2">开启插座2</string>
     <string name="close_socket2">关闭插座2</string>
     <string name="information">详细使用方法请看源码</string>
+    <string name="open_socket3">开启插座3</string>
+    <string name="close_socket3">关闭插座3</string>
+    <string name="open_socket4">开启插座4</string>
+    <string name="close_socket4">关闭插座4</string>
+    <string name="open_socket5">开启插座5</string>
+    <string name="close_socket5">关闭插足5</string>
 </resources>
