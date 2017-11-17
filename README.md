@@ -4,20 +4,20 @@
 
 2.gradle配置依赖
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.3.3'
+compile 'com.jackiepenghe:blelibrary:0.3.4'
 ```
 3.maven配置依赖
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.3.3</version>
+  <version>0.3.4</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖
 ```xml
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.3.3'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.3.4'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
@@ -68,7 +68,7 @@ bleScanner.close();
 
 ```xml 
 <service
-    android:name="cn.almsound.www.almblelibrary.service.BluetoothLeService"
+    android:name="com.jackiepenghe.blelibrary.BluetoothLeService"
     android:enabled="true"
     android:exported="false" />
 
@@ -238,7 +238,7 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
 ### 多连接
 首先要在AndroidManifest.xml添加一个服务
 ```xml
-<service android:name="cn.almsound.www.blelibrary.BluetoothMultiService"
+<service android:name="com.jackiepenghe.blelibrary.BluetoothMultiService"
   android:enabled="true"
   android:exported="false"/>
 ```
