@@ -1,97 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="wrap_content">
 
     <LinearLayout
-        android:gravity="center"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <cn.almsound.www.myblesample.wideget.CustomTextCircleView
-            android:id="@+id/circle_device1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center">
 
-        <cn.almsound.www.myblesample.wideget.CustomTextCircleView
-            android:id="@+id/circle_device2"
+            <cn.almsound.www.myblesample.wideget.CustomTextCircleView
+                android:id="@+id/circle_device1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal" />
+
+            <cn.almsound.www.myblesample.wideget.CustomTextCircleView
+                android:id="@+id/circle_device2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal" />
+
+            <cn.almsound.www.myblesample.wideget.CustomTextCircleView
+                android:id="@+id/circle_device3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal" />
+
+            <cn.almsound.www.myblesample.wideget.CustomTextCircleView
+                android:id="@+id/circle_device4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal" />
+
+            <cn.almsound.www.myblesample.wideget.CustomTextCircleView
+                android:id="@+id/circle_device5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/connect_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/connect" />
+
+
+        <Button
+            android:id="@+id/open_socket1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/open_socket1" />
+
+        <Button
+            android:id="@+id/close_socket1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/close_socket1" />
+
+        <Button
+            android:id="@+id/open_socket2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/open_socket2" />
+
+        <Button
+            android:id="@+id/close_socket2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/close_socket2" />
+
+        <Button
+            android:id="@+id/open_socket3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/open_socket3" />
+
+        <Button
+            android:id="@+id/close_socket3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/close_socket3" />
+
+        <Button
+            android:id="@+id/open_socket4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/open_socket4" />
+
+        <Button
+            android:id="@+id/close_socket4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/close_socket4" />
+
+
+        <Button
+            android:id="@+id/open_socket5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/open_socket5" />
+
+        <Button
+            android:id="@+id/close_socket5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/close_socket5" />
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal" />
-
-        <cn.almsound.www.myblesample.wideget.CustomTextCircleView
-            android:id="@+id/circle_device3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal" />
-
-        <cn.almsound.www.myblesample.wideget.CustomTextCircleView
-            android:id="@+id/circle_device4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal" />
-
+            android:layout_gravity="center"
+            android:text="@string/information" />
     </LinearLayout>
-
-    <Button
-        android:id="@+id/connect_button"
-        android:text="@string/connect"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-
-    <Button
-        android:text="@string/open_socket1"
-        android:id="@+id/open_socket1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:text="@string/close_socket1"
-        android:id="@+id/close_socket1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:text="@string/open_socket2"
-        android:id="@+id/open_socket2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:text="@string/close_socket2"
-        android:id="@+id/close_socket2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:text="@string/open_socket3"
-        android:id="@+id/open_socket3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:text="@string/close_socket3"
-        android:id="@+id/close_socket3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:text="@string/open_socket4"
-        android:id="@+id/open_socket4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:text="@string/close_socket4"
-        android:id="@+id/close_socket4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <TextView
-        android:layout_gravity="center"
-        android:text="@string/information"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-</LinearLayout>
+</ScrollView>
