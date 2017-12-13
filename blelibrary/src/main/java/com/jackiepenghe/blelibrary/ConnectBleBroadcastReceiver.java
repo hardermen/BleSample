@@ -8,9 +8,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Handler;
 
-import com.jackiepenghe.blelibrary.BleInterface;
-
-import cn.almsound.www.blelibrary.R;
 
 /**
  * @author alm

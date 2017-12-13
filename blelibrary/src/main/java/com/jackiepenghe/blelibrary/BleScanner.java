@@ -21,8 +21,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import cn.almsound.www.blelibrary.R;
-
 /**
  * BLE扫描器
  *

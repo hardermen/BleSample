@@ -114,6 +114,7 @@ public class MultiConnectActivity extends BaseAppcompatActivity {
 //        bleMultiConnector.connect(device4Address, device4BleCallback, true);
 //        bleMultiConnector.connect(device5Address, device5BleCallback, true);
 
+        // 使用县城 顺序发起连接
         new Thread() {
             @Override
             public void run() {

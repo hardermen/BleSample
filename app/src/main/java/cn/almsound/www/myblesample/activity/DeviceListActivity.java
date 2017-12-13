@@ -38,9 +38,21 @@ import cn.almsound.www.myblesample.utils.ToastUtil;
 public class DeviceListActivity extends BaseAppcompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
 
     /**
+     * TAG
+     */
+    private static final String TAG = "DeviceListActivity";
+
+    /**
      * 权限请求的requestCode
      */
     private static final int REQUEST_CODE_ASK_ACCESS_COARSE_LOCATION = 1;
+
+    /**
+     * 设备名最短字符数
+     */
+    private static final int DEVICE_NAME_MIN_LENGTH = 5;
+    private static final String DEVICE_NAME = "Y11-";
+
     /**
      * 扫描到的所有设备列表
      */
@@ -102,8 +114,8 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
      */
     @Override
     protected void initViews() {
-        listView =  findViewById(R.id.device_list);
-        button =  findViewById(R.id.button);
+        listView = findViewById(R.id.device_list);
+        button = findViewById(R.id.button);
     }
 
     /**
@@ -230,10 +242,12 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
             /*if(bleDevice.getBluetoothDevice().getAddress().equalsIgnoreCase("00:00:00:AA:SS:BB")){
                 return;
             }*/
+
                 adapterList.add(bleDevice);
                 adapter.notifyDataSetChanged();
             }
         };
+
         //扫描结束后会触发此回调
         BleInterface.OnScanCompleteListener onScanCompleteListener = new BleInterface.OnScanCompleteListener() {
             @Override
@@ -243,10 +257,10 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
             }
         };
         //在扫描过程中发现一个设备就会触发一次此回调，不论该设备是否被发现过。在安卓5.0之前此回调效果完全等同于BleInterface.OnScanFindOneNewDeviceListener
-        BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener =new BleInterface.OnScanFindOneDeviceListener() {
+        BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener = new BleInterface.OnScanFindOneDeviceListener() {
             @Override
             public void scanFindOneDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord) {
-
+                //只要发现一个设备就会回调此函数
             }
         };
 
@@ -261,7 +275,7 @@ public class DeviceListActivity extends BaseAppcompatActivity implements View.On
          * @param onScanCompleteListener       扫描完成的回调
          * @return true表示打开成功
          */
-        bleScanner.open(scanList, onScanFindOneNewDeviceListener, 20000, true, onScanCompleteListener);
+        bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, false, onScanCompleteListener);
         //设置回调
         bleScanner.setOnScanFindOneDeviceListener(onScanFindOneDeviceListener);
     }

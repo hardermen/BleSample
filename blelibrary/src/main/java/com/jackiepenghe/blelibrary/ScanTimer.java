@@ -84,7 +84,6 @@ class ScanTimer {
             bleScanner.stopScan();
 
             if (bleScanner.isScanContinue()) {
-                bleScanner.clearScanResults();
                 bleScanner.startScan();
             } else {
                 if (scanTimer.mOnScanCompleteListener != null) {
