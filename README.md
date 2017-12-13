@@ -4,20 +4,20 @@
 
 2.gradle配置依赖
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.3.4'
+compile 'com.jackiepenghe:blelibrary:0.3.5'
 ```
 3.maven配置依赖
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.3.4</version>
+  <version>0.3.5</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖
 ```xml
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.3.4'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.3.5'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
@@ -311,3 +311,5 @@ bleDeviceController.writData(serviceUUID,characteristicUUID,data);
     }
  
 ```
+# 特别注意
+安卓手机因为系统各个厂家定制的原因，可能会有一些莫名其妙的问题。如：UUID发现后跟设备本身不一致等。这种问题通常可以通过重启蓝牙解决。但是也有那种顽固无比的手机。如：三星盖乐世3.这个手机必须要回复出厂设置才能正确发现UUID，原因是：系统记录了同一个设备地址的UUID。一旦连接的是同一个地址，UUID第一次发现之后，后续不论怎么更改设备的UUID，系统的缓存都是不会更新的。对于这种手机，只想说：别用BLE了。没救了
