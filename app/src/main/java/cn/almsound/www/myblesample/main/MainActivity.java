@@ -6,7 +6,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
-import com.jackiepenghe.baselibrary.BaseAppcompatActivity;
+import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.baselibrary.Tool;
 
 import cn.almsound.www.myblesample.R;
@@ -16,7 +16,7 @@ import cn.almsound.www.myblesample.activity.MultiConnectActivity;
 /**
  * @author alm
  */
-public class MainActivity extends BaseAppcompatActivity {
+public class MainActivity extends BaseAppCompatActivity {
 
     private Button simpleUseBtn;
     private Button multiConnectBtn;

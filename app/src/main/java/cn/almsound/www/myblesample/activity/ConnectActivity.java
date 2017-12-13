@@ -10,7 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import com.jackiepenghe.baselibrary.BaseAppcompatActivity;
+import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.blelibrary.BleConnector;
 import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
@@ -30,7 +30,7 @@ import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
  *
  * @author jacke
  */
-public class ConnectActivity extends BaseAppcompatActivity {
+public class ConnectActivity extends BaseAppCompatActivity {
 
     private static final String TAG = "ConnectActivity";
 

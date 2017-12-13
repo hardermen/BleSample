@@ -5,7 +5,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
-import com.jackiepenghe.baselibrary.BaseAppcompatActivity;
+import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.blelibrary.BleDeviceController;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleMultiConnector;
@@ -21,7 +21,7 @@ import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 /**
  * @author alm
  */
-public class MultiConnectActivity extends BaseAppcompatActivity {
+public class MultiConnectActivity extends BaseAppCompatActivity {
 
 
     private static final byte[] OPEN_SOCKET_BYTE_ARRAY = new byte[]{0x00, 0x00};

@@ -16,7 +16,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 
-import com.jackiepenghe.baselibrary.BaseAppcompatActivity;
+import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
@@ -35,7 +35,7 @@ import cn.almsound.www.myblesample.utils.ToastUtil;
  * @author alm
  *         Created by jackie on 2017/1/12 0012.
  */
-public class DeviceListActivity extends BaseAppcompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
+public class DeviceListActivity extends BaseAppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
 
     /**
      * TAG
