@@ -33,7 +33,7 @@ public class MyApplication extends Application {
         //初始化文件工具类
         FileUtil.init("BleSample");
 
-        //初始化全局异常捕获类
+//        初始化全局异常捕获类
         CrashHandler crashHandler = CrashHandler.getInstance();
         crashHandler.init(this);
     }

@@ -15,6 +15,7 @@ import com.jackiepenghe.blelibrary.BleConnector;
 import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
+import com.jackiepenghe.baselibrary.Tool;
 
 import java.util.List;
 
@@ -22,7 +23,6 @@ import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.utils.Constants;
 import cn.almsound.www.myblesample.utils.ConversionUtil;
 import cn.almsound.www.myblesample.utils.LogUtil;
-import cn.almsound.www.myblesample.utils.ToastUtil;
 import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 
 /**
@@ -87,7 +87,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         //获取BleDevice对象
         BleDevice bleDevice = bundleExtra.getParcelable(Constants.DEVICE);
         if (bleDevice == null) {
-            ToastUtil.l(ConnectActivity.this, R.string.device_info_error);
+           Tool.toastL(ConnectActivity.this, R.string.device_info_error);
             finish();
             return;
         }
@@ -257,7 +257,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                 //服务发现完成，将指示标志设置为绿色（对BLE远端设备的所有操作都在服务扫描完成之后）
                 customTextCircleView.setColor(Color.GREEN);
 
-                ToastUtil.l(ConnectActivity.this, R.string.connect_success);
+                Tool.toastL(ConnectActivity.this, R.string.connect_success);
 
                 //获取服务列表
                 List<BluetoothGattService> deviceServices = bleConnector.getServices();

@@ -5,7 +5,9 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
@@ -101,6 +103,16 @@ public class BleScanner {
      * 扫描的定时器
      */
     private ScanTimer scanTimer;
+
+    /**
+     * 扫描过滤器
+     */
+    private ArrayList<ScanFilter> scanFilters;
+
+    /**
+     * 扫描设置
+     */
+    private ScanSettings scanSettings;
 
     /**
      * 构造器
@@ -280,11 +292,6 @@ public class BleScanner {
         return true;
     }
 
-    /**
-     * 开始扫描
-     *
-     * @return true表示成功开始扫描
-     */
     public boolean startScan() {
         if (mBluetoothAdapter == null) {
             Tool.toastL(contextWeakReference.get(), R.string.no_bluetooth_mode);
@@ -308,7 +315,16 @@ public class BleScanner {
         scanTimer.startTimer(scanPeriod);
         mScanResults.clear();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mBluetoothAdapter.getBluetoothLeScanner().startScan(mScanCallback);
+            if (scanFilters == null) {
+                scanFilters.add(new ScanFilter.Builder().build());
+            }
+            if (scanSettings == null) {
+                scanSettings = new ScanSettings.Builder()
+                        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                        .build();
+            }
+            mBluetoothAdapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings, mScanCallback);
+
         } else {
             //noinspection deprecation
             mBluetoothAdapter.startLeScan(this.mLeScanCallback);
@@ -379,6 +395,46 @@ public class BleScanner {
         onScanFindOneNewDeviceListener = null;
         scanTimer = null;
         return true;
+    }
+
+    /**
+     * 获取扫描过滤器列表
+     *
+     * @return 扫描过滤器列表
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public ArrayList<ScanFilter> getScanFilters() {
+        return scanFilters;
+    }
+
+    /**
+     * 设置扫描过滤器列表
+     *
+     * @param scanFilters 扫描过滤器列表
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public void setScanFilters(ArrayList<ScanFilter> scanFilters) {
+        this.scanFilters = scanFilters;
+    }
+
+    /**
+     * 获取扫描参数
+     *
+     * @return 扫描参数
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public ScanSettings getScanSettings() {
+        return scanSettings;
+    }
+
+    /**
+     * 设置扫描参数
+     *
+     * @param scanSettings 扫描参数
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public void setScanSettings(ScanSettings scanSettings) {
+        this.scanSettings = scanSettings;
     }
 
     /**
