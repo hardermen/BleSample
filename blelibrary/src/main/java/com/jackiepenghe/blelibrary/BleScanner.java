@@ -292,6 +292,10 @@ public class BleScanner {
         return true;
     }
 
+    /**
+     * 开始扫描
+     * @return true表示成功开启扫描
+     */
     public boolean startScan() {
         if (mBluetoothAdapter == null) {
             Tool.toastL(contextWeakReference.get(), R.string.no_bluetooth_mode);
@@ -316,7 +320,11 @@ public class BleScanner {
         mScanResults.clear();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (scanFilters == null) {
-                scanFilters.add(new ScanFilter.Builder().build());
+                scanFilters = new ArrayList<>();
+                ScanFilter scanFilter = new ScanFilter.Builder()
+                        .build();
+
+                scanFilters.add(scanFilter);
             }
             if (scanSettings == null) {
                 scanSettings = new ScanSettings.Builder()

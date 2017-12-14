@@ -2,8 +2,6 @@ package cn.almsound.www.myblesample.activity;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanFilter;
-import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -25,7 +23,6 @@ import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleScanner;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.adapter.DeviceListAdapter;
@@ -328,20 +325,20 @@ public class DeviceListActivity extends BaseAppCompatActivity implements View.On
             bleScanner.clearScanResults();
             adapterList.clear();
             adapter.notifyDataSetChanged();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-                ScanFilter scanFilter = new ScanFilter.Builder()
-                        .build();
-                ArrayList<ScanFilter> scanFilters = new ArrayList<>();
-                scanFilters.add(scanFilter);
-                ScanSettings scanSettings = new ScanSettings.Builder()
-                        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                        .build();
-                bleScanner.setScanFilters(scanFilters);
-                bleScanner.setScanSettings(scanSettings);
-                bleScanner.startScan();
-            }else {
-                bleScanner.startScan();
-            }
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+//                ScanFilter scanFilter = new ScanFilter.Builder()
+//                        .build();
+//                ArrayList<ScanFilter> scanFilters = new ArrayList<>();
+//                scanFilters.add(scanFilter);
+//                ScanSettings scanSettings = new ScanSettings.Builder()
+//                        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+//                        .build();
+//                bleScanner.setScanFilters(scanFilters);
+//                bleScanner.setScanSettings(scanSettings);
+//                bleScanner.startScan();
+//            }else {
+            bleScanner.startScan();
+//            }
         } else {
             button.setText(R.string.start_scan);
             bleScanner.stopScan();
