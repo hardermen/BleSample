@@ -275,7 +275,7 @@ public class DeviceListActivity extends BaseAppCompatActivity implements View.On
          * @param onScanCompleteListener       扫描完成的回调
          * @return true表示打开成功
          */
-        bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, false, onScanCompleteListener);
+        bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, true, onScanCompleteListener);
         //设置回调
         bleScanner.setOnScanFindOneDeviceListener(onScanFindOneDeviceListener);
     }

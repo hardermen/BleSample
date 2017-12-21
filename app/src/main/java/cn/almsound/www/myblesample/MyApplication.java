@@ -34,7 +34,7 @@ public class MyApplication extends Application {
         FileUtil.init("BleSample");
 
 //        初始化全局异常捕获类
-//        CrashHandler crashHandler = CrashHandler.getInstance();
-//        crashHandler.init(this);
+        CrashHandler crashHandler = CrashHandler.getInstance();
+        crashHandler.init(this);
     }
 }

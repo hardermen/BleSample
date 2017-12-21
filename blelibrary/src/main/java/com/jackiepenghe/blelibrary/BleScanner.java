@@ -317,7 +317,6 @@ public class BleScanner {
             return false;
         }
         scanTimer.startTimer(scanPeriod);
-        mScanResults.clear();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (scanFilters == null) {
                 scanFilters = new ArrayList<>();

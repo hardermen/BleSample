@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.Handler;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -38,10 +39,14 @@ public class BleConnector {
      */
     private WeakReference<Context> contextWeakReference;
 
+    private BleInterface.OnCloseCompleteListener onCloseCompleteListener;
+
     /**
      * 服务连接工具
      */
     private BleServiceConnection bleServiceConnection;
+
+    private Handler handler = new Handler();
 
     /**
      * BLE连接的广播接收者
@@ -57,13 +62,11 @@ public class BleConnector {
      * 记录BLE连接工具是否关闭的标志
      */
     private boolean mClosed;
-    private CloseTask closeTask;
 
     BleConnector(Context context) {
         contextWeakReference = new WeakReference<>(context);
         connectBleBroadcastReceiver = new ConnectBleBroadcastReceiver();
         boundBleBroadcastReceiver = new BoundBleBroadcastReceiver();
-        closeTask = new CloseTask(BleConnector.this);
     }
 
     /**
@@ -168,9 +171,6 @@ public class BleConnector {
      */
     @SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
     public boolean disconnect() {
-        if (bleServiceConnection != null) {
-            bleServiceConnection.setAutoReconnect(false);
-        }
         return bleServiceConnection != null && bleServiceConnection.disconnect();
     }
 
@@ -201,7 +201,15 @@ public class BleConnector {
     }
 
     private void checkCloseStatus() {
-        closeTask.execute();
+        setClosed(true);
+        if (onCloseCompleteListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onCloseCompleteListener.onCloseComplete();
+                }
+            });
+        }
     }
 
     /**
@@ -326,7 +334,8 @@ public class BleConnector {
     }
 
     public void setOnCloseCompleteListener(BleInterface.OnCloseCompleteListener onCloseCompleteListener) {
-        closeTask.setOnCloseCompleteListener(onCloseCompleteListener);
+        this.onCloseCompleteListener = onCloseCompleteListener;
+//        closeTask.setOnCloseCompleteListener(onCloseCompleteListener);
     }
 
     /**
@@ -390,6 +399,7 @@ public class BleConnector {
     public void setOnBluetoothCloseListener(BleInterface.OnBluetoothCloseListener onBluetoothCloseListener) {
         connectBleBroadcastReceiver.setOnBluetoothCloseListener(onBluetoothCloseListener);
     }
+
     /**
      * 广播接收者Action过滤器
      *
@@ -436,10 +446,12 @@ public class BleConnector {
     public List<BluetoothGattService> getServices() {
         return bleServiceConnection.getServices();
     }
+
     public BluetoothGattService getService(UUID uuid) {
         return bleServiceConnection.getService(uuid);
     }
-    public Context getContext(){
+
+    public Context getContext() {
         return contextWeakReference.get();
     }
 
