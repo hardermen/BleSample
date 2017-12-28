@@ -3,7 +3,9 @@ package com.jackiepenghe.blelibrary;
 import android.bluetooth.BluetoothGattService;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.IBinder;
+import android.support.annotation.RequiresApi;
 
 import java.util.List;
 import java.util.UUID;
@@ -191,5 +193,15 @@ class BleServiceConnection implements ServiceConnection {
             return null;
         }
         return bluetoothLeService.getService(uuid);
+    }
+
+    /**
+     * 请求改变最大传输字节限制
+     * @param mtu 最大传输字节数
+     * @return true表示成功
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    boolean requestMtu(int mtu) {
+        return bluetoothLeService != null && bluetoothLeService.requestMtu(mtu);
     }
 }

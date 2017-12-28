@@ -10,8 +10,10 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -347,4 +349,10 @@ public class BluetoothLeService extends Service {
         }
         return bleBluetoothGattCallback.getService(uuid);
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    boolean requestMtu(int mtu) {
+        return bluetoothGatt != null && bluetoothGatt.requestMtu(mtu);
+    }
+
 }

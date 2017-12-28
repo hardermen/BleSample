@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -286,6 +287,17 @@ public class ConnectActivity extends BaseAppCompatActivity {
                 } else {
                     LogUtil.w(TAG, "open notification succeed");
                 }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    int mtu = 24;
+                    if (bleConnector.requestMtu(mtu)){
+                        LogUtil.w(TAG, mtu + " 字节MTU请求成功");
+                    }else {
+                        LogUtil.w(TAG, mtu + " 字节MTU请求失败");
+                    }
+                }else {
+                    LogUtil.w(TAG, "系统版本过低，无法请求更新MTU");
+                }
             }
         };
         //与远端设备断开连接后触发此回调
@@ -369,6 +381,12 @@ public class ConnectActivity extends BaseAppCompatActivity {
 
             }
         };
+        BleInterface.OnMtuChangedListener onMtuChangedListener = new BleInterface.OnMtuChangedListener() {
+            @Override
+            public void onMtuChanged(int mtu) {
+                LogUtil.w(TAG,"onMtuChanged:mtu = " + mtu);
+            }
+        };
 
         /*设置连接工具一系列的监听事件*/
         bleConnector.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
@@ -380,6 +398,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         bleConnector.setOnReadRemoteRssiListener(onReadRemoteRssiListener);
         bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
         bleConnector.setOnBondStateChangedListener(onBondStateChangedListener);
+        bleConnector.setOnMtuChangedListener(onMtuChangedListener);
     }
 
     /**

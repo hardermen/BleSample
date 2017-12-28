@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
+import android.support.annotation.RequiresApi;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -91,6 +92,11 @@ public class BleConnector {
         }
         setAddress(address);
         return true;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public boolean requestMtu(int mtu){
+        return bleServiceConnection != null && bleServiceConnection.requestMtu(mtu);
     }
 
     /**
