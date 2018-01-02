@@ -34,7 +34,7 @@ dependencies {
     compile 'com.jackiepenghe:baselibrary:0.5.2'
 }
 
-version = "0.4.2"
+version = "0.4.3 beta"
 
 def siteUrl = 'https://github.com/JackiePenghe/BleSample'
 def gitUrl = 'git@github.com:JackiePenghe/BleSample.git'

@@ -6,7 +6,4 @@
     <string name="bluetooth_on">Bluetooth has been opened</string>
     <string name="bluetooth_not_enable">Some functions cannot be used before you open the bluetooth</string>
     <string name="no_bluetooth_mode">>Your phone has no bluetooth function</string>
-    <string name="scanner_not_opened">Scanner not opened</string>
-    <string name="scanning">Scanner still scanning, can not to start the scan</string>
-    <string name="not_scanning">Scanner not scanning, can not to stop the scan</string>
 </resources>

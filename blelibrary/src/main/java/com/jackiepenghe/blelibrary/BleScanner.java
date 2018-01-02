@@ -307,7 +307,6 @@ public class BleScanner {
         }
 
         if (!mOpened) {
-            Tool.toastL(contextWeakReference.get(), R.string.scanner_not_opened);
             return false;
         }
 
@@ -317,7 +316,6 @@ public class BleScanner {
         }
 
         if (scanning) {
-            Tool.toastL(contextWeakReference.get(), R.string.scanning);
             return false;
         }
         scanTimer.startTimer(scanPeriod);
@@ -351,12 +349,10 @@ public class BleScanner {
      */
     public boolean stopScan() {
         if (!mOpened) {
-            Tool.toastL(contextWeakReference.get(), R.string.scanner_not_opened);
             return false;
         }
 
         if (!scanning) {
-            Tool.toastL(contextWeakReference.get(), R.string.not_scanning);
             return false;
         }
 
@@ -379,7 +375,6 @@ public class BleScanner {
 
     public boolean close() {
         if (!mOpened) {
-            Tool.toastL(contextWeakReference.get(), R.string.scanner_not_opened);
             return false;
         }
 
