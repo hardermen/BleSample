@@ -28,18 +28,18 @@ class CustomToast {
      * 短时间
      */
     @SuppressWarnings("WeakerAccess")
-    public static int LENGTH_SHORT = 2000;
+    public static final int LENGTH_SHORT = 2000;
 
     /**
      * 长时间
      */
     @SuppressWarnings("WeakerAccess")
-    public static int LENGTH_LONG = 3000;
+    public static final int LENGTH_LONG = 3000;
 
     /**
      * 总是显示，不消失
      */
-    public static int LENGTH_ALWAYS = 0;
+    public static final int LENGTH_ALWAYS = 0;
 
     private Runnable mHide = new Runnable() {
         @Override

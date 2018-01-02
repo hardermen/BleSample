@@ -21,13 +21,13 @@ import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleScanner;
+import com.jackiepenghe.blelibrary.Tool;
 
 import java.util.ArrayList;
 
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.adapter.DeviceListAdapter;
 import cn.almsound.www.myblesample.utils.Constants;
-import cn.almsound.www.myblesample.utils.ToastUtil;
 
 /**
  * 扫描设备列表的界面
@@ -202,7 +202,7 @@ public class DeviceListActivity extends BaseAppCompatActivity implements View.On
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     doButtonClick();
                 } else {
-                    ToastUtil.l(DeviceListActivity.this, R.string.no_permission_for_local);
+                    Tool.toastL(DeviceListActivity.this, R.string.no_permission_for_local);
                 }
                 break;
             default:

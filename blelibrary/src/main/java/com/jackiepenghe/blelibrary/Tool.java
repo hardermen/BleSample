@@ -6,6 +6,7 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.annotation.StringRes;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -169,6 +170,7 @@ public class Tool {
         verOut(TAG, message);
     }
 
+
     //Toast部分
 
     /**
@@ -179,7 +181,22 @@ public class Tool {
      * @param duration 持续时间
      */
     private static void showToast(Context context, String message, int duration) {
-        CustomToast.makeText(context, message, duration).show();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            CustomToast.makeText(context, message, duration).show();
+            return;
+        }
+
+        switch (duration) {
+            case CustomToast.LENGTH_LONG:
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+                break;
+            case CustomToast.LENGTH_SHORT:
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                break;
+            default:
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+                break;
+        }
     }
 
     /**
@@ -190,7 +207,21 @@ public class Tool {
      * @param duration   持续时间
      */
     private static void showToast(Context context, @StringRes int messageRes, int duration) {
-        CustomToast.makeText(context, messageRes, duration).show();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            CustomToast.makeText(context, messageRes, duration).show();
+            return;
+        }
+        switch (duration) {
+            case CustomToast.LENGTH_LONG:
+                Toast.makeText(context, messageRes, Toast.LENGTH_LONG).show();
+                break;
+            case CustomToast.LENGTH_SHORT:
+                Toast.makeText(context, messageRes, Toast.LENGTH_SHORT).show();
+                break;
+            default:
+                Toast.makeText(context, messageRes, Toast.LENGTH_LONG).show();
+                break;
+        }
     }
 
     /**
