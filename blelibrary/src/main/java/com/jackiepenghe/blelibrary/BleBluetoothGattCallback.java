@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Intent;
 
+import com.jackiepenghe.baselibrary.Tool;
+
 import java.util.List;
 import java.util.UUID;
 

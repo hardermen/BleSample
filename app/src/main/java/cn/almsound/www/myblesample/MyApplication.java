@@ -2,15 +2,13 @@ package cn.almsound.www.myblesample;
 
 import android.app.Application;
 
-import com.jackiepenghe.baselibrary.CrashHandler;
 import com.jackiepenghe.baselibrary.FileUtil;
-import com.jackiepenghe.blelibrary.Tool;
+import com.jackiepenghe.baselibrary.Tool;
 
 /**
- *
  * @author jacke
  * @date 2017/12/11 0011
- *
+ * <p>
  * 应用程序
  */
 
@@ -29,12 +27,12 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         Tool.setDebugFlag(true);
-
+        Tool.setDefaultTAG("BleLibrary");
         //初始化文件工具类
-        FileUtil.init("BleSample");
+        FileUtil.init(this);
 
 //        初始化全局异常捕获类
-        CrashHandler crashHandler = CrashHandler.getInstance();
-        crashHandler.init(this);
+//        CrashHandler crashHandler = CrashHandler.getInstance();
+//        crashHandler.init(this);
     }
 }

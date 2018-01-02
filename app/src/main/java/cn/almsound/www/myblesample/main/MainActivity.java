@@ -8,6 +8,7 @@ import android.widget.Button;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.blelibrary.BleManager;
 
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.activity.DeviceListActivity;
@@ -142,11 +143,21 @@ public class MainActivity extends BaseAppCompatActivity {
     }
 
     private void toDeviceListActivity() {
+
+        if (!BleManager.isSupportBle(this)){
+            Tool.toastL(this,R.string.ble_not_supported);
+            return;
+        }
         Intent intent = new Intent(MainActivity.this, DeviceListActivity.class);
         startActivity(intent);
     }
 
     private void toMultiConnectActivity() {
+
+        if (!BleManager.isSupportBle(this)){
+            Tool.toastL(this,R.string.ble_not_supported);
+            return;
+        }
         Intent intent = new Intent(MainActivity.this,MultiConnectActivity.class);
         startActivity(intent);
     }

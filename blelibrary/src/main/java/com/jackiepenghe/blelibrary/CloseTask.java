@@ -2,6 +2,7 @@ package com.jackiepenghe.blelibrary;
 
 import android.os.AsyncTask;
 
+import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BleConnector;
 import com.jackiepenghe.blelibrary.BleInterface;
 
@@ -58,7 +59,7 @@ class CloseTask extends AsyncTask<Object, Object, Object> {
             return;
         }
         bleConnector.setClosed(true);
-        Tool.waitTime(100);
+        Tool.sleep(100);
         if (mOnCloseCompleteListener!= null) {
             mOnCloseCompleteListener.onCloseComplete();
         }

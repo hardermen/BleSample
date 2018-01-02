@@ -7,6 +7,8 @@ import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.RequiresApi;
 
+import com.jackiepenghe.baselibrary.Tool;
+
 import java.util.List;
 import java.util.UUID;
 

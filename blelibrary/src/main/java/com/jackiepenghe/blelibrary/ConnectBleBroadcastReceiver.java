@@ -8,6 +8,8 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Handler;
 
+import com.jackiepenghe.baselibrary.Tool;
+
 
 /**
  * @author alm

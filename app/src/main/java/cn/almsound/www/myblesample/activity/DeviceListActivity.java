@@ -17,11 +17,11 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleScanner;
-import com.jackiepenghe.blelibrary.Tool;
 
 import java.util.ArrayList;
 
@@ -232,6 +232,7 @@ public class DeviceListActivity extends BaseAppCompatActivity implements View.On
      * 初始化扫描器
      */
     private void initBleScan() {
+
         //创建扫描器实例
         bleScanner = BleManager.newBleScanner(DeviceListActivity.this);
         //发现一个新设备（在此之前该设备没有被发现过）时触发此回调

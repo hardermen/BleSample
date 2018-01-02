@@ -19,6 +19,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
+import com.jackiepenghe.baselibrary.Tool;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -223,7 +225,9 @@ public class BleScanner {
                 Tool.warnOut(TAG, "device.getAddress() = " + device.getAddress());
                 Tool.warnOut(TAG, "rssi = " + rssi);
                 Tool.warnOut(TAG, "scanRecord = " + scanRecord);
-                Tool.warnOut(TAG, "scanRecordByte = " + Tool.bytesToHexStr(scanRecordBytes));
+                if (scanRecordBytes != null) {
+                    Tool.warnOut(TAG, "scanRecordByte = " + Tool.bytesToHexStr(scanRecordBytes));
+                }
                 Tool.warnOut(TAG, "------------------------API >= 21 onScanResult------------------------------");
                 BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
                 bleDevice.setScanRecord(scanRecord);

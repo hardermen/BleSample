@@ -31,9 +31,10 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:26.1.0'
     testCompile 'junit:junit:4.12'
+    compile 'com.jackiepenghe:baselibrary:0.5.2'
 }
 
-version = "0.4.0"
+version = "0.4.1"
 
 def siteUrl = 'https://github.com/JackiePenghe/BleSample'
 def gitUrl = 'git@github.com:JackiePenghe/BleSample.git'

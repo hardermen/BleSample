@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
 
+import com.jackiepenghe.baselibrary.Tool;
+
 import java.lang.ref.WeakReference;
 
 /**

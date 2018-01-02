@@ -9,6 +9,8 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
 
+import com.jackiepenghe.baselibrary.Tool;
+
 /**
  * @author alm
  *         Created by alm on 17-6-5.
