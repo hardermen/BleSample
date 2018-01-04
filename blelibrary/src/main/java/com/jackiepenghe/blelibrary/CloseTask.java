@@ -2,10 +2,6 @@ package com.jackiepenghe.blelibrary;
 
 import android.os.AsyncTask;
 
-import com.jackiepenghe.baselibrary.Tool;
-import com.jackiepenghe.blelibrary.BleConnector;
-import com.jackiepenghe.blelibrary.BleInterface;
-
 import java.lang.ref.WeakReference;
 
 /**

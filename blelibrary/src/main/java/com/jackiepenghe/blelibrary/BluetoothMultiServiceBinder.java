@@ -2,7 +2,6 @@ package com.jackiepenghe.blelibrary;
 
 import android.os.Binder;
 
-import com.jackiepenghe.baselibrary.Tool;
 
 /**
  *

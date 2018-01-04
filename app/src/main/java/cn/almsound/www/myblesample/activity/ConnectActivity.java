@@ -16,14 +16,12 @@ import com.jackiepenghe.blelibrary.BleConnector;
 import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
-import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.blelibrary.Tool;
 
 import java.util.List;
 
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.utils.Constants;
-import cn.almsound.www.myblesample.utils.ConversionUtil;
-import cn.almsound.www.myblesample.utils.LogUtil;
 import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 
 /**
@@ -167,29 +165,29 @@ public class ConnectActivity extends BaseAppCompatActivity {
 //         */
 //        switch (bleConnector.startBound(address)) {
 //            case BleConstants.DEVICE_BOND_START_SUCCESS:
-//                LogUtil.w(TAG, "开始绑定");
+//               Tool.warnOut(TAG, "开始绑定");
 //                break;
 //            case BleConstants.DEVICE_BOND_START_FAILED:
-//                LogUtil.w(TAG, "发起绑定失败");
+//               Tool.warnOut(TAG, "发起绑定失败");
 //                break;
 //            case BleConstants.DEVICE_BOND_BONDED:
-//                LogUtil.w(TAG, "此设备已经被绑定了");
+//               Tool.warnOut(TAG, "此设备已经被绑定了");
 //                startConnect();
 //                break;
 //            case BleConstants.DEVICE_BOND_BONDING:
-//                LogUtil.w(TAG, "此设备正在绑定中");
+//               Tool.warnOut(TAG, "此设备正在绑定中");
 //                break;
 //            case BleConstants.BLUETOOTH_ADAPTER_NULL:
-//                LogUtil.w(TAG, "没有蓝牙适配器存在");
+//               Tool.warnOut(TAG, "没有蓝牙适配器存在");
 //                break;
 //            case BleConstants.BLUETOOTH_ADDRESS_INCORRECT:
-//                LogUtil.w(TAG, "蓝牙地址错误");
+//               Tool.warnOut(TAG, "蓝牙地址错误");
 //                break;
 //            case BleConstants.BLUETOOTH_MANAGER_NULL:
-//                LogUtil.w(TAG, "没有蓝牙管理器存在");
+//               Tool.warnOut(TAG, "没有蓝牙管理器存在");
 //                break;
 //            default:
-//                LogUtil.w(TAG, "default");
+//               Tool.warnOut(TAG, "default");
 //                break;
 //        }
     }
@@ -267,12 +265,12 @@ public class ConnectActivity extends BaseAppCompatActivity {
 
                     for (int i = 0; i < deviceServices.size(); i++) {
                         BluetoothGattService bluetoothGattService = deviceServices.get(i);
-                        LogUtil.w(TAG, "service UUID = " + bluetoothGattService.getUuid().toString());
+                       Tool.warnOut(TAG, "service UUID = " + bluetoothGattService.getUuid().toString());
 
                         List<BluetoothGattCharacteristic> characteristics = bluetoothGattService.getCharacteristics();
                         for (int j = 0; j < characteristics.size(); j++) {
                             BluetoothGattCharacteristic bluetoothGattCharacteristic = characteristics.get(j);
-                            LogUtil.w(TAG, "bluetoothGattCharacteristic UUID = " + bluetoothGattCharacteristic.getUuid().toString());
+                           Tool.warnOut(TAG, "bluetoothGattCharacteristic UUID = " + bluetoothGattCharacteristic.getUuid().toString());
                         }
                     }
                 }
@@ -283,20 +281,20 @@ public class ConnectActivity extends BaseAppCompatActivity {
                 String serviceUUID = "C3E6FEA0-E966-1000-8000-BE99C223DF6A";
                 String chaUUID = "C3E6FEA2-E966-1000-8000-BE99C223DF6A";
                 if (!bleConnector.openNotification(serviceUUID, chaUUID)) {
-                    LogUtil.w(TAG, "open notification failed");
+                   Tool.warnOut(TAG, "open notification failed");
                 } else {
-                    LogUtil.w(TAG, "open notification succeed");
+                   Tool.warnOut(TAG, "open notification succeed");
                 }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     int mtu = 24;
                     if (bleConnector.requestMtu(mtu)){
-                        LogUtil.w(TAG, mtu + " 字节MTU请求成功");
+                       Tool.warnOut(TAG, mtu + " 字节MTU请求成功");
                     }else {
-                        LogUtil.w(TAG, mtu + " 字节MTU请求失败");
+                       Tool.warnOut(TAG, mtu + " 字节MTU请求失败");
                     }
                 }else {
-                    LogUtil.w(TAG, "系统版本过低，无法请求更新MTU");
+                   Tool.warnOut(TAG, "系统版本过低，无法请求更新MTU");
                 }
             }
         };
@@ -320,7 +318,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         BleInterface.OnCharacteristicReadListener onCharacteristicReadListener = new BleInterface.OnCharacteristicReadListener() {
             @Override
             public void onCharacteristicRead(byte[] values) {
-                LogUtil.w(TAG, "读取到的数据 = " + ConversionUtil.bytesToHexStr(values));
+               Tool.warnOut(TAG, "读取到的数据 = " + Tool.bytesToHexStr(values));
             }
         };
         //正在连接时触发此回调（不过此回调从来没有被触发过，我也不知道为何）
@@ -334,14 +332,14 @@ public class ConnectActivity extends BaseAppCompatActivity {
         BleInterface.OnReceiveNotificationListener onReceiveNotificationListener = new BleInterface.OnReceiveNotificationListener() {
             @Override
             public void onReceiveNotification(byte[] values) {
-                LogUtil.w("ConnectActivity", "value = " + ConversionUtil.bytesToHexStr(values));
+               Tool.warnOut("ConnectActivity", "value = " + Tool.bytesToHexStr(values));
             }
         };
         //读取到远端设备的RSSI值时触发此回调
         BleInterface.OnReadRemoteRssiListener onReadRemoteRssiListener = new BleInterface.OnReadRemoteRssiListener() {
             @Override
             public void onReadRemoteRssi(int rssi) {
-                LogUtil.w("ConnectActivity", "rssi = " + rssi);
+               Tool.warnOut("ConnectActivity", "rssi = " + rssi);
             }
         };
         /*当连接工具调用Close方法之后，在连接工具彻底关闭时会触发此回调
@@ -384,7 +382,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         BleInterface.OnMtuChangedListener onMtuChangedListener = new BleInterface.OnMtuChangedListener() {
             @Override
             public void onMtuChanged(int mtu) {
-                LogUtil.w(TAG,"onMtuChanged:mtu = " + mtu);
+               Tool.warnOut(TAG,"onMtuChanged:mtu = " + mtu);
             }
         };
 
@@ -409,10 +407,10 @@ public class ConnectActivity extends BaseAppCompatActivity {
         if (bleConnector.checkAndSetAddress(address)) {
             //发起连接
             if (bleConnector.startConnect(true)) {
-                LogUtil.w("开始连接");
+               Tool.warnOut("开始连接");
                 customTextCircleView.setColor(Color.YELLOW);
             } else {
-                LogUtil.w("发起连接失败");
+               Tool.warnOut("发起连接失败");
             }
         }
     }

@@ -2,8 +2,10 @@ package cn.almsound.www.myblesample;
 
 import android.app.Application;
 
+import com.jackiepenghe.baselibrary.CrashHandler;
 import com.jackiepenghe.baselibrary.FileUtil;
-import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.blelibrary.Tool;
+
 
 /**
  * @author jacke

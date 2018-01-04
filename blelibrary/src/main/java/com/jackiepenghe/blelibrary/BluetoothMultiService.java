@@ -16,7 +16,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BaseConnectCallback;
 
 import java.lang.ref.WeakReference;

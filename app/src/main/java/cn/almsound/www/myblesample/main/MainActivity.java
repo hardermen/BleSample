@@ -7,8 +7,8 @@ import android.view.View;
 import android.widget.Button;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
-import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BleManager;
+import com.jackiepenghe.blelibrary.Tool;
 
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.activity.DeviceListActivity;

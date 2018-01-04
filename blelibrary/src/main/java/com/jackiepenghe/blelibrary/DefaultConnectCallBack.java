@@ -3,7 +3,6 @@ package com.jackiepenghe.blelibrary;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 
-import com.jackiepenghe.baselibrary.Tool;
 
 /**
  * Created by alm on 2017/11/16.

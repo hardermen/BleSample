@@ -3,8 +3,8 @@ package cn.almsound.www.myblesample.callback;
 import android.bluetooth.BluetoothGatt;
 import android.graphics.Color;
 
-import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BaseConnectCallback;
+import com.jackiepenghe.blelibrary.Tool;
 
 import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 

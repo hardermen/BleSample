@@ -17,11 +17,11 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
-import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleScanner;
+import com.jackiepenghe.blelibrary.Tool;
 
 import java.util.ArrayList;
 

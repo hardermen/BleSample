@@ -19,7 +19,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
-import com.jackiepenghe.baselibrary.Tool;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
