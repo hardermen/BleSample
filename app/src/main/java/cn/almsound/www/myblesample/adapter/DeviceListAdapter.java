@@ -8,6 +8,8 @@ import com.jackiepenghe.blelibrary.BleDevice;
 
 import java.util.ArrayList;
 
+import cn.almsound.www.myblesample.R;
+
 
 /**
  * @author jackie
@@ -24,12 +26,13 @@ public class DeviceListAdapter extends BasePurposeAdapter<BleDevice> {
      * @param mDatas  数据
      */
     public DeviceListAdapter(Context context, ArrayList<BleDevice> mDatas) {
-        super(context, mDatas, android.R.layout.simple_list_item_2);
+        super(context, mDatas, R.layout.adapter_device_list);
     }
 
     @Override
     protected void convert(ViewHolder viewHolder, int position, BleDevice item) {
         viewHolder.setText(android.R.id.text1, item.getBluetoothDevice().getName())
-                .setText(android.R.id.text2, item.getBluetoothDevice().getAddress());
+                .setText(android.R.id.text2, item.getBluetoothDevice().getAddress())
+                .setText(R.id.rssi, String.valueOf(item.getRssi()));
     }
 }

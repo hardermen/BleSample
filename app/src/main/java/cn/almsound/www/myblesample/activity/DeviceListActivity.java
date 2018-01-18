@@ -244,8 +244,8 @@ public class DeviceListActivity extends BaseAppCompatActivity implements View.On
                 return;
             }*/
 
-                adapterList.add(bleDevice);
-                adapter.notifyDataSetChanged();
+//                adapterList.add(bleDevice);
+//                adapter.notifyDataSetChanged();
             }
         };
 
@@ -262,6 +262,13 @@ public class DeviceListActivity extends BaseAppCompatActivity implements View.On
             @Override
             public void scanFindOneDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord) {
                 //只要发现一个设备就会回调此函数
+                BleDevice bleDevice = new BleDevice(bluetoothDevice, rssi, scanRecord, bluetoothDevice.getName());
+                if (!adapterList.contains(bleDevice)) {
+                    adapterList.add(bleDevice);
+                } else {
+                    adapterList.set(adapterList.indexOf(bleDevice), bleDevice);
+                }
+                adapter.notifyDataSetChanged();
             }
         };
 
