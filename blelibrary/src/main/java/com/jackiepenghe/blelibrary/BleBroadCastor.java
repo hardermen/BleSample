@@ -108,7 +108,6 @@ public class BleBroadCastor {
          */
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-            super.onStartSuccess(settingsInEffect);
             Tool.warnOut(TAG, "onStartSuccess");
             if (settingsInEffect != null) {
                 Tool.warnOut(TAG, "onStartSuccess TxPowerLv=" + settingsInEffect.getTxPowerLevel() + " mode=" + settingsInEffect.getMode()
@@ -127,7 +126,6 @@ public class BleBroadCastor {
          */
         @Override
         public void onStartFailure(int errorCode) {
-            super.onStartFailure(errorCode);
             Tool.warnOut(TAG, "onStartFailure");
             if (errorCode == ADVERTISE_FAILED_DATA_TOO_LARGE) {
                 Tool.errorOut(TAG, "Failed to start advertising as the advertise data to be broadcasted is larger than 31 bytes.");

@@ -129,6 +129,19 @@ public class BleManager {
     }
 
     /**
+     * 创建一个新的广播实例
+     *
+     * @param context 上下文
+     * @return 广播实例
+     */
+    public static BleBroadCastor newBleBroadCastor(Context context) {
+        if (!isSupportBle(context)) {
+            return null;
+        }
+        return new BleBroadCastor(context);
+    }
+
+    /**
      * 获取BLE多连接单例
      *
      * @param context 上下文

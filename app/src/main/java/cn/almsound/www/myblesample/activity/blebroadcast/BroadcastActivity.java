@@ -35,11 +35,17 @@ public class BroadcastActivity extends BaseAppCompatActivity {
     @Override
     protected void doBeforeSetLayout() {
         bleBroadCastor = BleManager.getBleBroadCastor(this);
-        Tool.warnOut(TAG,"bleBroadCastor = " + bleBroadCastor);
+        Tool.warnOut(TAG, "bleBroadCastor = " + bleBroadCastor);
+        //默认的初始化
         bleBroadCastor.init();
         if (bleBroadCastor != null) {
             boolean b = bleBroadCastor.startAdvertising();
-            Tool.warnOut(TAG,"startAdvertising = " + b);
+            Tool.warnOut(TAG, "startAdvertising = " + b);
+            if (b) {
+                Tool.warnOut(TAG, "广播请求发起成功（是否真的成功，在init的advertiseCallback回调中查看）");
+            }else {
+                Tool.warnOut(TAG, "广播请求发起失败（这是真的失败了，连请求都没有发起成功）");
+            }
         }
     }
 
@@ -130,7 +136,7 @@ public class BroadcastActivity extends BaseAppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        if (bleBroadCastor != null){
+        if (bleBroadCastor != null) {
             bleBroadCastor.stopAdvertising();
             bleBroadCastor.close();
         }

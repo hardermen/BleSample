@@ -2,10 +2,13 @@ package cn.almsound.www.myblesample.activity.bleconnect;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -24,6 +27,7 @@ import com.jackiepenghe.blelibrary.BleScanner;
 import com.jackiepenghe.blelibrary.Tool;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.adapter.DeviceListAdapter;
@@ -283,6 +287,7 @@ public class DeviceListActivity extends BaseAppCompatActivity implements View.On
          * @return true表示打开成功
          */
         bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, true, onScanCompleteListener);
+
         //设置回调
         bleScanner.setOnScanFindOneDeviceListener(onScanFindOneDeviceListener);
     }
