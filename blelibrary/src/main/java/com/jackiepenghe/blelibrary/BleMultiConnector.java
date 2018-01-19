@@ -9,6 +9,8 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.UUID;
 
+import static com.jackiepenghe.blelibrary.BleManager.resetBleMultiConnector;
+
 /**
  * @author alm
  * @date 2017/11/15
@@ -47,7 +49,6 @@ public class BleMultiConnector {
 
     public boolean closeAll() {
         if (bluetoothMultiService == null) {
-
             return false;
         }
 
@@ -68,7 +69,7 @@ public class BleMultiConnector {
         contextWeakReference = null;
         bleServiceMultiConnection = null;
         bluetoothMultiService = null;
-        BleManager.resetBleMultiConnector();
+        resetBleMultiConnector();
         return true;
     }
 
@@ -134,8 +135,6 @@ public class BleMultiConnector {
 
     /**
      * 刷新蓝牙缓存
-     *
-     * @return true表示成功
      */
     public void refreshAllGattCache() {
         if (bluetoothMultiService == null) {

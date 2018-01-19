@@ -1,4 +1,4 @@
-package cn.almsound.www.myblesample.activity;
+package cn.almsound.www.myblesample.activity.bleconnect;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;

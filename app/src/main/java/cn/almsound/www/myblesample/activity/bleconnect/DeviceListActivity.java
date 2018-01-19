@@ -1,4 +1,4 @@
-package cn.almsound.www.myblesample.activity;
+package cn.almsound.www.myblesample.activity.bleconnect;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
@@ -48,10 +48,9 @@ public class DeviceListActivity extends BaseAppCompatActivity implements View.On
     private static final int REQUEST_CODE_ASK_ACCESS_COARSE_LOCATION = 1;
 
     /**
-     * 设备名最短字符数
+     * 要连接的设备的地址
      */
-    private static final int DEVICE_NAME_MIN_LENGTH = 5;
-    private static final String DEVICE_NAME = "Y11-";
+    private static final String CONNECT_DEVICE_NAME = "红米手机";
 
     /**
      * 扫描到的所有设备列表
@@ -316,10 +315,10 @@ public class DeviceListActivity extends BaseAppCompatActivity implements View.On
             button.setText(R.string.start_scan);
             clickCount--;
         }
-        BleDevice customBleDeviceInfo = adapterList.get(position);
+        BleDevice bleDevice = adapterList.get(position);
         Intent intent = new Intent(DeviceListActivity.this, ConnectActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putParcelable(Constants.DEVICE, customBleDeviceInfo);
+        bundle.putParcelable(Constants.DEVICE, bleDevice);
         intent.putExtra(Constants.BUNDLE, bundle);
         startActivity(intent);
     }

@@ -1,4 +1,4 @@
-package cn.almsound.www.myblesample.activity;
+package cn.almsound.www.myblesample.activity.blemulticonnect;
 
 import android.view.Menu;
 import android.view.MenuItem;

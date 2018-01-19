@@ -1,6 +1,7 @@
 package cn.almsound.www.myblesample.main;
 
 import android.content.Intent;
+import android.os.Build;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -11,8 +12,9 @@ import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.Tool;
 
 import cn.almsound.www.myblesample.R;
-import cn.almsound.www.myblesample.activity.DeviceListActivity;
-import cn.almsound.www.myblesample.activity.MultiConnectActivity;
+import cn.almsound.www.myblesample.activity.blebroadcast.BroadcastActivity;
+import cn.almsound.www.myblesample.activity.bleconnect.DeviceListActivity;
+import cn.almsound.www.myblesample.activity.blemulticonnect.MultiConnectActivity;
 
 /**
  * @author alm
@@ -21,6 +23,7 @@ public class MainActivity extends BaseAppCompatActivity {
 
     private Button simpleUseBtn;
     private Button multiConnectBtn;
+    private Button bleBroadCastBtn;
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -30,6 +33,9 @@ public class MainActivity extends BaseAppCompatActivity {
                     break;
                 case R.id.multi_connect_button:
                     toMultiConnectActivity();
+                    break;
+                case R.id.ble_broadcast_button:
+                    toBroadcastActivity();
                     break;
                 default:
                     break;
@@ -78,6 +84,7 @@ public class MainActivity extends BaseAppCompatActivity {
     protected void initViews() {
         simpleUseBtn = findViewById(R.id.simple_use_button);
         multiConnectBtn = findViewById(R.id.multi_connect_button);
+        bleBroadCastBtn = findViewById(R.id.ble_broadcast_button);
     }
 
     /**
@@ -103,6 +110,7 @@ public class MainActivity extends BaseAppCompatActivity {
     protected void initEvents() {
         simpleUseBtn.setOnClickListener(onClickListener);
         multiConnectBtn.setOnClickListener(onClickListener);
+        bleBroadCastBtn.setOnClickListener(onClickListener);
     }
 
     /**
@@ -142,23 +150,46 @@ public class MainActivity extends BaseAppCompatActivity {
         simpleUseBtn = null;
     }
 
+    /**
+     * 跳转到设备搜索界面
+     */
     private void toDeviceListActivity() {
 
-        if (!BleManager.isSupportBle(this)){
-            Tool.toastL(this,R.string.ble_not_supported);
+        if (!BleManager.isSupportBle(this)) {
+            Tool.toastL(this, R.string.ble_not_supported);
             return;
         }
         Intent intent = new Intent(MainActivity.this, DeviceListActivity.class);
         startActivity(intent);
     }
 
+    /**
+     * 跳转到多连接界面
+     */
     private void toMultiConnectActivity() {
 
-        if (!BleManager.isSupportBle(this)){
-            Tool.toastL(this,R.string.ble_not_supported);
+        if (!BleManager.isSupportBle(this)) {
+            Tool.toastL(this, R.string.ble_not_supported);
             return;
         }
-        Intent intent = new Intent(MainActivity.this,MultiConnectActivity.class);
+        Intent intent = new Intent(MainActivity.this, MultiConnectActivity.class);
+        startActivity(intent);
+    }
+
+    /**
+     * 跳转到BLE蓝牙广播界面
+     */
+    private void toBroadcastActivity() {
+        if (!BleManager.isSupportBle(this)) {
+            Tool.toastL(this, R.string.ble_not_supported);
+            return;
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            Tool.toastL(this, R.string.android_version_too_low);
+            return;
+        }
+
+        Intent intent = new Intent(MainActivity.this,BroadcastActivity.class);
         startActivity(intent);
     }
 }

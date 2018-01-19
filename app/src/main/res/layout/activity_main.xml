@@ -16,4 +16,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/multi_connect" />
+    <Button
+        android:id="@+id/ble_broadcast_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/ble_broadcast" />
+
 </LinearLayout>
