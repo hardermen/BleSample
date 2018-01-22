@@ -176,7 +176,7 @@ public class BleDevice implements Serializable, Parcelable {
         }
 
         BleDevice bleDevice = (BleDevice) obj;
-        return bleDevice.getDeviceAddress().equals(getDeviceAddress());
+        return bleDevice.getBluetoothDevice().equals(getBluetoothDevice());
     }
 
 

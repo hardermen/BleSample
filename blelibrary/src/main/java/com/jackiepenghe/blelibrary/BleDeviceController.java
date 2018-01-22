@@ -1,5 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
@@ -16,6 +17,11 @@ public class BleDeviceController {
     private WeakReference<BleMultiConnector> bleMultiConnectorWeakReference;
     private String address;
 
+    /**
+     * 构造器
+     * @param bleMultiConnector BleMultiConnector
+     * @param address 设备地址
+     */
     BleDeviceController(BleMultiConnector bleMultiConnector, String address) {
         this.bleMultiConnectorWeakReference = new WeakReference<>(bleMultiConnector);
         this.address = address;
@@ -81,17 +87,28 @@ public class BleDeviceController {
         return bleMultiConnector != null && address != null && bleMultiConnector.closeNotification(address, serviceUUID, characteristicUUID);
     }
 
+    /**
+     * 重连之前连接过的设备
+     * @return true表示发起连接成功
+     */
     public boolean reConnect() {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         return bleMultiConnector != null && address != null && bleMultiConnector.reConnect(address);
     }
 
+    /**
+     * 关闭当前连接
+     * @return true表示关闭成功
+     */
     public boolean close() {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         return bleMultiConnector != null && bleMultiConnector.close(address);
     }
 
-
+    /**
+     * 获取服务列表
+     * @return 服务列表
+     */
     public List<BluetoothGattService> getServices() {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         if (bleMultiConnector == null) {
@@ -103,11 +120,19 @@ public class BleDeviceController {
         return bleMultiConnector.getServices(address);
     }
 
+    /**
+     * 断开连接
+     * @return true表示断开成功
+     */
     public boolean disconnect() {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         return bleMultiConnector != null && bleMultiConnector.disconnect(address);
     }
 
+    /**
+     * 获取上下文
+     * @return 上下文
+     */
     public Context getContext() {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         if (bleMultiConnector == null) {
@@ -116,6 +141,11 @@ public class BleDeviceController {
         return bleMultiConnector.getContext();
     }
 
+    /**
+     * 根据指定UUID获取服务
+     * @param uuid UUID
+     * @return 服务
+     */
     public BluetoothGattService getService(UUID uuid) {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         if (bleMultiConnector == null) {
@@ -125,5 +155,105 @@ public class BleDeviceController {
             return null;
         }
         return bleMultiConnector.getService(address, uuid);
+    }
+
+    /**
+     * 检查特征是否支持通知
+     * @param serviceUUID 服务UUID
+     * @param characteristicUUID 特征UUID
+     * @return true表示支持通知
+     */
+    public boolean canNotify(String serviceUUID,String characteristicUUID){
+        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
+        if (service == null){
+            return false;
+        }
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+        if (characteristic == null){
+            return false;
+        }
+
+        int properties = characteristic.getProperties();
+        return (properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0;
+    }
+
+    /**
+     * 检查特征是否支持读取
+     * @param serviceUUID 服务UUID
+     * @param characteristicUUID 特征UUID
+     * @return true表示支持读取
+     */
+    public boolean canRead(String serviceUUID,String characteristicUUID){
+        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
+        if (service == null){
+            return false;
+        }
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+        if (characteristic == null){
+            return false;
+        }
+
+        int properties = characteristic.getProperties();
+        return (properties & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
+    }
+
+    /**
+     * 检查特征是否支持写入（带符号）
+     * @param serviceUUID 服务UUID
+     * @param characteristicUUID 特征UUID
+     * @return true表示支持写入（带符号）
+     */
+    public boolean canSignedWrite(String serviceUUID,String characteristicUUID){
+        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
+        if (service == null){
+            return false;
+        }
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+        if (characteristic == null){
+            return false;
+        }
+
+        int properties = characteristic.getProperties();
+        return (properties & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) != 0;
+    }
+
+    /**
+     * 检查特征是否支持写入
+     * @param serviceUUID 服务UUID
+     * @param characteristicUUID 特征UUID
+     * @return true表示支持写入
+     */
+    public boolean canWrite(String serviceUUID,String characteristicUUID){
+        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
+        if (service == null){
+            return false;
+        }
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+        if (characteristic == null){
+            return false;
+        }
+
+        int properties = characteristic.getProperties();
+        return (properties & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
+    }
+
+    /**
+     * 检查特征是否支持写入（无回复方式）
+     * @param serviceUUID 服务UUID
+     * @param characteristicUUID 特征UUID
+     * @return true表示支持写入（无回复方式）
+     */
+    public boolean canWriteNoResponse(String serviceUUID,String characteristicUUID){
+        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
+        if (service == null){
+            return false;
+        }
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+        if (characteristic == null){
+            return false;
+        }
+
+        int properties = characteristic.getProperties();
+        return (properties & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0;
     }
 }

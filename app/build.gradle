@@ -38,5 +38,6 @@ dependencies {
     implementation 'com.android.support:design:26.1.0'
     implementation 'com.jackiepenghe:baselibrary:0.5.7'
     implementation 'com.yanzhenjie:permission:1.1.2'
+    implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.30'
     implementation project(':blelibrary')
 }

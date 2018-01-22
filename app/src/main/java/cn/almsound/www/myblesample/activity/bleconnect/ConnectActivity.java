@@ -3,25 +3,39 @@ package cn.almsound.www.myblesample.activity.bleconnect;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 
+import com.chad.library.adapter.base.entity.MultiItemEntity;
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.DefaultItemDecoration;
 import com.jackiepenghe.blelibrary.BleConnector;
 import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.Tool;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import cn.almsound.www.myblesample.R;
+import cn.almsound.www.myblesample.adapter.ServicesCharacteristicsListAdapter;
+import cn.almsound.www.myblesample.adapter.entity.services_characteristics_list_entity.CharacteristicUuidItem;
+import cn.almsound.www.myblesample.adapter.entity.services_characteristics_list_entity.ServiceUuidItem;
 import cn.almsound.www.myblesample.utils.Constants;
+import cn.almsound.www.myblesample.watcher.EditTextWatcherForHexData;
 import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 
 /**
@@ -67,6 +81,29 @@ public class ConnectActivity extends BaseAppCompatActivity {
     private BluetoothDevice bluetoothDevice;
 
     /**
+     * 显示设备的服务与特征的列表
+     */
+    private RecyclerView recyclerView;
+
+    /**
+     * adapter的数据
+     */
+    private ArrayList<MultiItemEntity> adapterData = new ArrayList<>();
+
+    /**
+     * 用于显示服务UUID和特征UUID的Adapter
+     */
+    private ServicesCharacteristicsListAdapter servicesCharacteristicsListAdapter;
+
+    private ServicesCharacteristicsListAdapter.OnCharacteristicClickListener onCharacteristicClickListener = new ServicesCharacteristicsListAdapter.OnCharacteristicClickListener() {
+        @Override
+        public void onCharacteristicClick(String serviceUUID, String characteristicUUID) {
+            Tool.warnOut(TAG, "serviceUUID = " + serviceUUID + ",characteristicUUID = " + characteristicUUID);
+            showOptionsDialog(serviceUUID, characteristicUUID);
+        }
+    };
+
+    /**
      * 标题栏的返回按钮被按下的时候回调此函数
      */
     @Override
@@ -86,7 +123,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         //获取BleDevice对象
         BleDevice bleDevice = bundleExtra.getParcelable(Constants.DEVICE);
         if (bleDevice == null) {
-           Tool.toastL(ConnectActivity.this, R.string.device_info_error);
+            Tool.toastL(ConnectActivity.this, R.string.device_info_error);
             finish();
             return;
         }
@@ -113,7 +150,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doBeforeInitOthers() {
-
+        servicesCharacteristicsListAdapter = new ServicesCharacteristicsListAdapter(adapterData);
     }
 
     /**
@@ -121,9 +158,10 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void initViews() {
-        customTextCircleView =  findViewById(R.id.custom_text_circle_view);
-        nameTv =  findViewById(R.id.device_name);
-        addressTv =  findViewById(R.id.device_address);
+        customTextCircleView = findViewById(R.id.custom_text_circle_view);
+        nameTv = findViewById(R.id.device_name);
+        addressTv = findViewById(R.id.device_address);
+        recyclerView = findViewById(R.id.services_characteristics_list);
     }
 
     /**
@@ -131,7 +169,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void initViewData() {
-
+        initRecyclerView();
     }
 
     /**
@@ -147,7 +185,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void initEvents() {
-
+        servicesCharacteristicsListAdapter.setOnCharacteristicClickListener(onCharacteristicClickListener);
     }
 
     /**
@@ -265,36 +303,41 @@ public class ConnectActivity extends BaseAppCompatActivity {
 
                     for (int i = 0; i < deviceServices.size(); i++) {
                         BluetoothGattService bluetoothGattService = deviceServices.get(i);
-                       Tool.warnOut(TAG, "service UUID = " + bluetoothGattService.getUuid().toString());
+                        String serviceUuidString = bluetoothGattService.getUuid().toString();
+                        Tool.warnOut(TAG, "service UUID = " + serviceUuidString);
 
+                        ServiceUuidItem serviceUuidItem = new ServiceUuidItem(serviceUuidString);
                         List<BluetoothGattCharacteristic> characteristics = bluetoothGattService.getCharacteristics();
                         for (int j = 0; j < characteristics.size(); j++) {
                             BluetoothGattCharacteristic bluetoothGattCharacteristic = characteristics.get(j);
-                           Tool.warnOut(TAG, "bluetoothGattCharacteristic UUID = " + bluetoothGattCharacteristic.getUuid().toString());
+                            String characteristicUuidString = bluetoothGattCharacteristic.getUuid().toString();
+                            Tool.warnOut(TAG, "bluetoothGattCharacteristic UUID = " + characteristicUuidString);
+                            boolean canRead = bleConnector.canRead(serviceUuidString, characteristicUuidString);
+                            boolean canWrite = bleConnector.canWrite(serviceUuidString, characteristicUuidString);
+                            boolean canNotify = bleConnector.canNotify(serviceUuidString, characteristicUuidString);
+                            CharacteristicUuidItem characteristicUuidItem = new CharacteristicUuidItem(characteristicUuidString, canRead, canWrite, canNotify);
+                            serviceUuidItem.addSubItem(characteristicUuidItem);
                         }
+                        adapterData.add(serviceUuidItem);
                     }
+
+                    servicesCharacteristicsListAdapter.notifyDataSetChanged();
                 }
 
                 //提取设备名与设备地址
                 nameTv.setText(bluetoothDevice.getName());
                 addressTv.setText(bluetoothDevice.getAddress());
-                String serviceUUID = "C3E6FEA0-E966-1000-8000-BE99C223DF6A";
-                String chaUUID = "C3E6FEA2-E966-1000-8000-BE99C223DF6A";
-                if (!bleConnector.openNotification(serviceUUID, chaUUID)) {
-                   Tool.warnOut(TAG, "open notification failed");
-                } else {
-                   Tool.warnOut(TAG, "open notification succeed");
-                }
 
+                //请求更改mtu
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     int mtu = 24;
-                    if (bleConnector.requestMtu(mtu)){
-                       Tool.warnOut(TAG, mtu + " 字节MTU请求成功");
-                    }else {
-                       Tool.warnOut(TAG, mtu + " 字节MTU请求失败");
+                    if (bleConnector.requestMtu(mtu)) {
+                        Tool.warnOut(TAG, mtu + " 字节MTU请求成功");
+                    } else {
+                        Tool.warnOut(TAG, mtu + " 字节MTU请求失败");
                     }
-                }else {
-                   Tool.warnOut(TAG, "系统版本过低，无法请求更新MTU");
+                } else {
+                    Tool.warnOut(TAG, "系统版本过低，无法请求更新MTU");
                 }
             }
         };
@@ -318,11 +361,13 @@ public class ConnectActivity extends BaseAppCompatActivity {
         BleInterface.OnCharacteristicReadListener onCharacteristicReadListener = new BleInterface.OnCharacteristicReadListener() {
             @Override
             public void onCharacteristicRead(byte[] values) {
-               Tool.warnOut(TAG, "读取到的数据 = " + Tool.bytesToHexStr(values));
+                String hexStr = Tool.bytesToHexStr(values);
+                Tool.warnOut(TAG, "读取到的数据 = " + hexStr);
+                showReadDataResultDialog(hexStr);
             }
         };
         //正在连接时触发此回调（不过此回调从来没有被触发过，我也不知道为何）
-        BleInterface.OnConnectingListener onConnectingListener =new BleInterface.OnConnectingListener() {
+        BleInterface.OnConnectingListener onConnectingListener = new BleInterface.OnConnectingListener() {
             @Override
             public void onConnecting() {
                 customTextCircleView.setColor(Color.YELLOW);
@@ -332,14 +377,16 @@ public class ConnectActivity extends BaseAppCompatActivity {
         BleInterface.OnReceiveNotificationListener onReceiveNotificationListener = new BleInterface.OnReceiveNotificationListener() {
             @Override
             public void onReceiveNotification(byte[] values) {
-               Tool.warnOut("ConnectActivity", "value = " + Tool.bytesToHexStr(values));
+                String hexStr = Tool.bytesToHexStr(values);
+                Tool.warnOut("ConnectActivity", "value = " + hexStr);
+                showReceiveNotificationDialog(hexStr);
             }
         };
         //读取到远端设备的RSSI值时触发此回调
         BleInterface.OnReadRemoteRssiListener onReadRemoteRssiListener = new BleInterface.OnReadRemoteRssiListener() {
             @Override
             public void onReadRemoteRssi(int rssi) {
-               Tool.warnOut("ConnectActivity", "rssi = " + rssi);
+                Tool.warnOut("ConnectActivity", "rssi = " + rssi);
             }
         };
         /*当连接工具调用Close方法之后，在连接工具彻底关闭时会触发此回调
@@ -382,7 +429,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         BleInterface.OnMtuChangedListener onMtuChangedListener = new BleInterface.OnMtuChangedListener() {
             @Override
             public void onMtuChanged(int mtu) {
-               Tool.warnOut(TAG,"onMtuChanged:mtu = " + mtu);
+                Tool.warnOut(TAG, "onMtuChanged:mtu = " + mtu);
             }
         };
 
@@ -399,6 +446,33 @@ public class ConnectActivity extends BaseAppCompatActivity {
         bleConnector.setOnMtuChangedListener(onMtuChangedListener);
     }
 
+    private void showReceiveNotificationDialog(String hexStr) {
+        EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
+        editText.setText(hexStr);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.notification_data)
+                .setView(editText)
+                .setCancelable(true)
+                .setPositiveButton(R.string.ok, null)
+                .show();
+    }
+
+    /**
+     * 读到数据后显示数据内容
+     *
+     * @param hexStr 读到的数据（十六进制字符串）
+     */
+    private void showReadDataResultDialog(String hexStr) {
+        EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
+        editText.setText(hexStr);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.read_data)
+                .setView(editText)
+                .setCancelable(true)
+                .setPositiveButton(R.string.ok, null)
+                .show();
+    }
+
     /**
      * 发起连接
      */
@@ -407,11 +481,108 @@ public class ConnectActivity extends BaseAppCompatActivity {
         if (bleConnector.checkAndSetAddress(address)) {
             //发起连接
             if (bleConnector.startConnect(true)) {
-               Tool.warnOut("开始连接");
+                Tool.warnOut("开始连接");
                 customTextCircleView.setColor(Color.YELLOW);
             } else {
-               Tool.warnOut("发起连接失败");
+                Tool.warnOut("发起连接失败");
             }
         }
+    }
+
+    /**
+     * 初始化RecyclerView的数据
+     */
+    private void initRecyclerView() {
+        DefaultItemDecoration defaultItemDecoration = new DefaultItemDecoration(Color.GRAY, ViewGroup.LayoutParams.MATCH_PARENT, 2, -1);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.addItemDecoration(defaultItemDecoration);
+        recyclerView.setAdapter(servicesCharacteristicsListAdapter);
+    }
+
+    /**
+     * 显示操作方式的对话框
+     *
+     * @param serviceUUID        服务UUID
+     * @param characteristicUUID 特征UUID
+     */
+    private void showOptionsDialog(final String serviceUUID, final String characteristicUUID) {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.select_options)
+                .setItems(R.array.bleOptions, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            //读
+                            case 0:
+                                if (!bleConnector.canRead(serviceUUID, characteristicUUID)) {
+                                    Tool.toastL(ConnectActivity.this, R.string.read_not_support);
+                                    return;
+                                }
+                                boolean readData = bleConnector.readData(serviceUUID, characteristicUUID);
+                                if (!readData) {
+                                    Tool.toastL(ConnectActivity.this, R.string.read_failed);
+                                }
+                                break;
+                            //写
+                            case 1:
+                                if (!bleConnector.canWrite(serviceUUID, characteristicUUID)) {
+                                    Tool.toastL(ConnectActivity.this, R.string.write_not_support);
+                                    return;
+                                }
+                                showWriteDataDialog(serviceUUID, characteristicUUID);
+                                break;
+                            //打开通知
+                            case 2:
+                                if (!bleConnector.canNotify(serviceUUID, characteristicUUID)) {
+                                    Tool.toastL(ConnectActivity.this, R.string.write_not_notify);
+                                    return;
+                                }
+                                boolean openNotification = bleConnector.openNotification(serviceUUID, characteristicUUID);
+                                if (!openNotification) {
+                                    Tool.toastL(ConnectActivity.this, R.string.open_notification_failed);
+                                } else {
+                                    Tool.toastL(ConnectActivity.this, R.string.open_notification_success);
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                })
+                .setCancelable(false)
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void showWriteDataDialog(final String serviceUUID, final String characteristicUUID) {
+        final EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
+        EditTextWatcherForHexData editTextWatcherForHexData = new EditTextWatcherForHexData(editText);
+        editText.addTextChangedListener(editTextWatcherForHexData);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.input_data)
+                .setView(editText)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String text = editText.getText().toString();
+                        if ("".equals(text)) {
+                            Tool.toastL(ConnectActivity.this, R.string.set_nothing);
+                            showWriteDataDialog(serviceUUID, characteristicUUID);
+                            return;
+                        }
+                        text = text.replace(" ", "");
+                        byte[] bytes = Tool.hexStrToBytes(text);
+                        boolean b = bleConnector.writeData(serviceUUID, characteristicUUID, bytes);
+                        if (b) {
+                            Tool.toastL(ConnectActivity.this, R.string.write_success);
+                        } else {
+                            Tool.toastL(ConnectActivity.this, R.string.write_failed);
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .setCancelable(false)
+                .show();
     }
 }

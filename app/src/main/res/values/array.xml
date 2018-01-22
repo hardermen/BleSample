@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="bleOptions">
+        <item>@string/read</item>
+        <item>@string/write</item>
+        <item>@string/open_notification</item>
+    </string-array>
+</resources>

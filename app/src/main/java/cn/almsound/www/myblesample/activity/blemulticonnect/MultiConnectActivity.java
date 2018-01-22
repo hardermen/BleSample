@@ -1,14 +1,20 @@
 package cn.almsound.www.myblesample.activity.blemulticonnect;
 
+import android.bluetooth.BluetoothAdapter;
+import android.content.DialogInterface;
+import android.support.v7.app.AlertDialog;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.blelibrary.BleDeviceController;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleMultiConnector;
+import com.jackiepenghe.blelibrary.Tool;
 
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.callback.Device1Callback;
@@ -16,6 +22,7 @@ import cn.almsound.www.myblesample.callback.Device2Callback;
 import cn.almsound.www.myblesample.callback.Device3Callback;
 import cn.almsound.www.myblesample.callback.Device4Callback;
 import cn.almsound.www.myblesample.callback.Device5Callback;
+import cn.almsound.www.myblesample.watcher.EditTextWatcherForMacAddress;
 import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 
 /**
@@ -23,6 +30,7 @@ import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
  */
 public class MultiConnectActivity extends BaseAppCompatActivity {
 
+    private static final String TAG = MultiConnectActivity.class.getSimpleName();
 
     private static final byte[] OPEN_SOCKET_BYTE_ARRAY = new byte[]{0x00, 0x00};
     private static final byte[] CLOSE_SOCKET_BYTE_ARRAY = new byte[]{0x00, 0x01};
@@ -40,6 +48,7 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
     private Button openSocket1Btn, openSocket2Btn, openSocket3Btn, openSocket4Btn, openSocket5Btn;
     private Button closeSocket1Btn, closeSocket2Btn, closeSocket3Btn, closeSocket4Btn, closeSocket5Btn;
     private CustomTextCircleView customTextCircleView1, customTextCircleView2, customTextCircleView3, customTextCircleView4, customTextCircleView5;
+    private TextView deviceAaddressTv1, deviceAaddressTv2, deviceAaddressTv3, deviceAaddressTv4, deviceAaddressTv5;
     private boolean first = true;
     private String device1Address = "00:02:5B:00:15:A4";
     private String device2Address = "00:02:5B:00:15:A2";
@@ -91,6 +100,7 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
                     closeSocket5();
                     break;
                 default:
+                    showSetAddressDialog(view.getId());
                     break;
             }
         }
@@ -213,6 +223,12 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
         customTextCircleView3 = findViewById(R.id.circle_device3);
         customTextCircleView4 = findViewById(R.id.circle_device4);
         customTextCircleView5 = findViewById(R.id.circle_device5);
+
+        deviceAaddressTv1 = findViewById(R.id.device1_address_tv);
+        deviceAaddressTv2 = findViewById(R.id.device2_address_tv);
+        deviceAaddressTv3 = findViewById(R.id.device3_address_tv);
+        deviceAaddressTv4 = findViewById(R.id.device4_address_tv);
+        deviceAaddressTv5 = findViewById(R.id.device5_address_tv);
     }
 
     /**
@@ -220,7 +236,11 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void initViewData() {
-
+        deviceAaddressTv1.setText(device1Address);
+        deviceAaddressTv2.setText(device2Address);
+        deviceAaddressTv3.setText(device3Address);
+        deviceAaddressTv4.setText(device4Address);
+        deviceAaddressTv5.setText(device5Address);
     }
 
     /**
@@ -251,6 +271,12 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
         closeSocket4Btn.setOnClickListener(onClickListener);
         openSocket5Btn.setOnClickListener(onClickListener);
         closeSocket5Btn.setOnClickListener(onClickListener);
+
+        customTextCircleView1.setOnClickListener(onClickListener);
+        customTextCircleView2.setOnClickListener(onClickListener);
+        customTextCircleView3.setOnClickListener(onClickListener);
+        customTextCircleView4.setOnClickListener(onClickListener);
+        customTextCircleView5.setOnClickListener(onClickListener);
     }
 
 
@@ -353,5 +379,70 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
     private void closeSocket5() {
         BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device5Address);
         close(bleDeviceController);
+    }
+
+    private void showSetAddressDialog(final int id) {
+        View viewById = findViewById(id);
+        if (!(viewById instanceof CustomTextCircleView)) {
+            return;
+        }
+
+        final EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
+        EditTextWatcherForMacAddress editTextWatcherForMacAddress = new EditTextWatcherForMacAddress(editText);
+        editText.addTextChangedListener(editTextWatcherForMacAddress);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.set_address)
+                .setView(editText)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String text = editText.getText().toString();
+                        if (text.length() != 17) {
+                            Tool.toastL(MultiConnectActivity.this, R.string.address_error);
+                            showSetAddressDialog(id);
+                            return;
+                        }
+                        if (!BluetoothAdapter.checkBluetoothAddress(text)) {
+                            Tool.toastL(MultiConnectActivity.this, R.string.address_error);
+                            showSetAddressDialog(id);
+                            return;
+                        }
+                        setAddress(id, text);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .setCancelable(false)
+                .show();
+    }
+
+    private void setAddress(int id, String text) {
+        View viewById = findViewById(id);
+        if (!(viewById instanceof CustomTextCircleView)) {
+            return;
+        }
+        switch (id) {
+            case R.id.circle_device1:
+                device1Address = text;
+                deviceAaddressTv1.setText(text);
+                break;
+            case R.id.circle_device2:
+                device2Address = text;
+                deviceAaddressTv2.setText(text);
+                break;
+            case R.id.circle_device3:
+                device3Address = text;
+                deviceAaddressTv3.setText(text);
+                break;
+            case R.id.circle_device4:
+                device4Address = text;
+                deviceAaddressTv4.setText(text);
+                break;
+            case R.id.circle_device5:
+                device5Address = text;
+                deviceAaddressTv5.setText(text);
+                break;
+            default:
+                break;
+        }
     }
 }
