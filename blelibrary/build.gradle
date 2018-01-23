@@ -33,7 +33,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 }
 
-version = "0.4.8"
+version = "0.4.9"
 
 def siteUrl = 'https://github.com/JackiePenghe/BleSample'
 def gitUrl = 'git@github.com:JackiePenghe/BleSample.git'

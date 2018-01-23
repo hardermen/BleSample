@@ -53,4 +53,6 @@
     <string name="set_address">设置地址</string>
     <string name="address_error">设备地址不正确</string>
     <string name="input_content">请输入内容</string>
+    <string name="open_broadcast_success">广播开启成功</string>
+    <string name="open_broadcast_failed">广播开启失败</string>
 </resources>

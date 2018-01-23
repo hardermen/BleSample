@@ -207,12 +207,96 @@ public class BleBroadCastor {
     /**
      * 初始化
      *
+     * @return true表示初始化成功
+     */
+    public boolean init(AdvertiseData defaultAdvertiseData) {
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+    }
+
+    /**
+     * 初始化
+     *
+     * @return true表示初始化成功
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    public boolean init(AdvertiseCallback defaultAdvertiseCallback) {
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+    }
+
+    /**
+     * 初始化
+     *
+     * @return true表示初始化成功
+     */
+    public boolean init(AdvertiseSettings defaultAdvertiseSettings) {
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+    }
+
+    /**
+     * 初始化
+     *
+     * @return true表示初始化成功
+     */
+    public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseData defaultAdvertiseData) {
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+    }
+
+    /**
+     * 初始化
+     *
+     * @return true表示初始化成功
+     */
+    public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseCallback defaultAdvertiseCallback) {
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+    }
+
+    /**
+     * 初始化
+     *
+     * @return true表示初始化成功
+     */
+    public boolean init(AdvertiseData defaultAdvertiseData,AdvertiseData defaultScanResponse) {
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+    }
+
+    /**
+     * 初始化
+     *
+     * @return true表示初始化成功
+     */
+    public boolean init(AdvertiseData defaultAdvertiseData,AdvertiseCallback defaultAdvertiseCallback) {
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+    }
+
+    /**
+     * 初始化
+     *
+     * @return true表示初始化成功
+     */
+    public boolean init(AdvertiseSettings defaultAdvertiseSettings,AdvertiseData defaultAdvertiseData,AdvertiseData defaultScanResponse) {
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+    }
+
+    /**
+     * 初始化
+     *
+     * @return true表示初始化成功
+     */
+    public boolean init(AdvertiseSettings defaultAdvertiseSettings,AdvertiseData defaultAdvertiseData,AdvertiseCallback defaultAdvertiseCallback) {
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+    }
+
+
+    /**
+     * 初始化
+     *
      * @param advertiseSettings 广播设置
      * @param advertiseData     广播数据
      * @param scanResponse      扫描回应数据
      * @param advertiseCallback 广播回调
      * @return true表示初始化成功
      */
+    @SuppressWarnings("WeakerAccess")
     public boolean init(@NonNull AdvertiseSettings advertiseSettings, @NonNull AdvertiseData advertiseData, @NonNull AdvertiseData scanResponse, @NonNull AdvertiseCallback advertiseCallback) {
         if (mBluetoothAdapter == null) {
             initSuccess = false;
@@ -271,6 +355,7 @@ public class BleBroadCastor {
      *
      * @return true表示成功
      */
+    @SuppressWarnings("UnusedReturnValue")
     public boolean stopAdvertising() {
         if (mBluetoothAdapter == null) {
             return false;

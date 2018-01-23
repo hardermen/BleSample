@@ -1,10 +1,17 @@
 package cn.almsound.www.myblesample.activity.blebroadcast;
 
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseSettings;
+import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.blelibrary.BleBroadCastor;
+import com.jackiepenghe.blelibrary.BleConnector;
+import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.Tool;
 
@@ -19,7 +26,41 @@ public class BroadcastActivity extends BaseAppCompatActivity {
 
     /*--------------------成员变量--------------------*/
 
+    /**
+     * BLE广播实例
+     */
     private BleBroadCastor bleBroadCastor;
+    /**
+     * 显示广播开启状态的文本
+     */
+    private TextView broadcastStatusTv;
+
+    private AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
+        /**
+         * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
+         * that the advertising has been started successfully.
+         *
+         * @param settingsInEffect The actual settings used for advertising, which may be different from
+         *                         what has been requested.
+         */
+        @Override
+        public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+            super.onStartSuccess(settingsInEffect);
+            broadcastStatusTv.setText(R.string.open_broadcast_success);
+        }
+
+        /**
+         * Callback when advertising could not be started.
+         *
+         * @param errorCode Error code (see ADVERTISE_FAILED_* constants) for advertising start
+         *                  failures.
+         */
+        @Override
+        public void onStartFailure(int errorCode) {
+            super.onStartFailure(errorCode);
+            broadcastStatusTv.setText(R.string.open_broadcast_failed);
+        }
+    };
 
     /**
      * 标题栏的返回按钮被按下的时候回调此函数
@@ -36,16 +77,14 @@ public class BroadcastActivity extends BaseAppCompatActivity {
     protected void doBeforeSetLayout() {
         bleBroadCastor = BleManager.getBleBroadCastor(this);
         Tool.warnOut(TAG, "bleBroadCastor = " + bleBroadCastor);
-        //默认的初始化
-        bleBroadCastor.init();
+
         if (bleBroadCastor != null) {
-            boolean b = bleBroadCastor.startAdvertising();
-            Tool.warnOut(TAG, "startAdvertising = " + b);
-            if (b) {
-                Tool.warnOut(TAG, "广播请求发起成功（是否真的成功，在init的advertiseCallback回调中查看）");
-            }else {
-                Tool.warnOut(TAG, "广播请求发起失败（这是真的失败了，连请求都没有发起成功）");
-            }
+            //默认的初始化
+           if (!bleBroadCastor.init(advertiseCallback)){
+                Tool.warnOut(TAG,"初始化失败");
+           }else {
+                Tool.warnOut(TAG,"初始化成功");
+           }
         }
     }
 
@@ -72,7 +111,7 @@ public class BroadcastActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void initViews() {
-
+        broadcastStatusTv = findViewById(R.id.broad_cast_status_tv);
     }
 
     /**
@@ -104,7 +143,15 @@ public class BroadcastActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doAfterAll() {
-
+        if (bleBroadCastor != null) {
+            boolean b = bleBroadCastor.startAdvertising();
+            Tool.warnOut(TAG, "startAdvertising = " + b);
+            if (b) {
+                Tool.warnOut(TAG, "广播请求发起成功（是否真的成功，在init的advertiseCallback回调中查看）");
+            }else {
+                Tool.warnOut(TAG, "广播请求发起失败（这是真的失败了，连请求都没有发起成功）");
+            }
+        }
     }
 
     /**

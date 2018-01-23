@@ -48,7 +48,7 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
     private Button openSocket1Btn, openSocket2Btn, openSocket3Btn, openSocket4Btn, openSocket5Btn;
     private Button closeSocket1Btn, closeSocket2Btn, closeSocket3Btn, closeSocket4Btn, closeSocket5Btn;
     private CustomTextCircleView customTextCircleView1, customTextCircleView2, customTextCircleView3, customTextCircleView4, customTextCircleView5;
-    private TextView deviceAaddressTv1, deviceAaddressTv2, deviceAaddressTv3, deviceAaddressTv4, deviceAaddressTv5;
+    private TextView deviceAddressTv1, deviceAddressTv2, deviceAddressTv3, deviceAddressTv4, deviceAddressTv5;
     private boolean first = true;
     private String device1Address = "00:02:5B:00:15:A4";
     private String device2Address = "00:02:5B:00:15:A2";
@@ -124,7 +124,7 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
 //        bleMultiConnector.connect(device4Address, device4BleCallback, true);
 //        bleMultiConnector.connect(device5Address, device5BleCallback, true);
 
-        // 使用县城 顺序发起连接
+        // 使用线程 顺序发起连接
         new Thread() {
             @Override
             public void run() {
@@ -224,11 +224,11 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
         customTextCircleView4 = findViewById(R.id.circle_device4);
         customTextCircleView5 = findViewById(R.id.circle_device5);
 
-        deviceAaddressTv1 = findViewById(R.id.device1_address_tv);
-        deviceAaddressTv2 = findViewById(R.id.device2_address_tv);
-        deviceAaddressTv3 = findViewById(R.id.device3_address_tv);
-        deviceAaddressTv4 = findViewById(R.id.device4_address_tv);
-        deviceAaddressTv5 = findViewById(R.id.device5_address_tv);
+        deviceAddressTv1 = findViewById(R.id.device1_address_tv);
+        deviceAddressTv2 = findViewById(R.id.device2_address_tv);
+        deviceAddressTv3 = findViewById(R.id.device3_address_tv);
+        deviceAddressTv4 = findViewById(R.id.device4_address_tv);
+        deviceAddressTv5 = findViewById(R.id.device5_address_tv);
     }
 
     /**
@@ -236,11 +236,11 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void initViewData() {
-        deviceAaddressTv1.setText(device1Address);
-        deviceAaddressTv2.setText(device2Address);
-        deviceAaddressTv3.setText(device3Address);
-        deviceAaddressTv4.setText(device4Address);
-        deviceAaddressTv5.setText(device5Address);
+        deviceAddressTv1.setText(device1Address);
+        deviceAddressTv2.setText(device2Address);
+        deviceAddressTv3.setText(device3Address);
+        deviceAddressTv4.setText(device4Address);
+        deviceAddressTv5.setText(device5Address);
     }
 
     /**
@@ -423,23 +423,23 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
         switch (id) {
             case R.id.circle_device1:
                 device1Address = text;
-                deviceAaddressTv1.setText(text);
+                deviceAddressTv1.setText(text);
                 break;
             case R.id.circle_device2:
                 device2Address = text;
-                deviceAaddressTv2.setText(text);
+                deviceAddressTv2.setText(text);
                 break;
             case R.id.circle_device3:
                 device3Address = text;
-                deviceAaddressTv3.setText(text);
+                deviceAddressTv3.setText(text);
                 break;
             case R.id.circle_device4:
                 device4Address = text;
-                deviceAaddressTv4.setText(text);
+                deviceAddressTv4.setText(text);
                 break;
             case R.id.circle_device5:
                 device5Address = text;
-                deviceAaddressTv5.setText(text);
+                deviceAddressTv5.setText(text);
                 break;
             default:
                 break;
