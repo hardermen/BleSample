@@ -1,4 +1,4 @@
-package cn.almsound.www.myblesample.activity.bleconnect;
+package cn.almsound.www.myblesample.activity.realtimescan;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
@@ -30,21 +30,19 @@ import com.jackiepenghe.blelibrary.Tool;
 import java.util.ArrayList;
 
 import cn.almsound.www.myblesample.R;
+import cn.almsound.www.myblesample.activity.bleconnect.ConnectActivity;
+import cn.almsound.www.myblesample.activity.bleconnect.DeviceListActivity;
 import cn.almsound.www.myblesample.adapter.DeviceListAdapter;
 import cn.almsound.www.myblesample.utils.Constants;
 
 /**
- * 扫描设备列表的界面
- *
- * @author alm
- *         Created by jackie on 2017/1/12 0012.
+ * @author jacke
  */
-public class DeviceListActivity extends BaseAppCompatActivity {
-
+public class RealTimeScanActivity extends BaseAppCompatActivity {
     /**
      * TAG
      */
-    private static final String TAG = "DeviceListActivity";
+    private static final String TAG = "RealTimeScanActivity";
 
     /**
      * 权限请求的requestCode
@@ -68,13 +66,6 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      */
     private BleScanner bleScanner;
     private static final int TWO = 2;
-    private BaseQuickAdapter.OnItemClickListener onItemClickListener = new BaseQuickAdapter.OnItemClickListener() {
-        @Override
-        public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-            doListViewItemClick(position);
-        }
-    };
-
     private View.OnClickListener OnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -144,7 +135,6 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         recyclerView.setLayoutManager(linearLayoutManager);
         DefaultItemDecoration defaultItemDecoration = new DefaultItemDecoration(Color.GRAY, ViewGroup.LayoutParams.MATCH_PARENT, 2, -1);
         recyclerView.addItemDecoration(defaultItemDecoration);
-        adapter.setOnItemClickListener(onItemClickListener);
         recyclerView.setAdapter(adapter);
     }
 
@@ -201,7 +191,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     doButtonClick();
                 } else {
-                    Tool.toastL(DeviceListActivity.this, R.string.no_permission_for_local);
+                    Tool.toastL(RealTimeScanActivity.this, R.string.no_permission_for_local);
                 }
                 break;
             default:
@@ -231,7 +221,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
     private void initBleScan() {
 
         //创建扫描器实例
-        bleScanner = BleManager.newBleScanner(DeviceListActivity.this);
+        bleScanner = BleManager.newBleScanner(RealTimeScanActivity.this);
         //发现一个新设备（在此之前该设备没有被发现过）时触发此回调
         BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
             @Override
@@ -258,6 +248,14 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener = new BleInterface.OnScanFindOneDeviceListener() {
             @Override
             public void scanFindOneDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord) {
+                //只要发现一个设备就会回调此函数
+                BleDevice bleDevice = new BleDevice(bluetoothDevice, rssi, scanRecord, bluetoothDevice.getName());
+                if (!adapterList.contains(bleDevice)) {
+                    adapterList.add(bleDevice);
+                } else {
+                    adapterList.set(adapterList.indexOf(bleDevice), bleDevice);
+                }
+                adapter.notifyDataSetChanged();
             }
         };
 
@@ -284,34 +282,15 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      */
     private void checkAPIVersion() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            int checkAccessCoarseLocationPermission = ContextCompat.checkSelfPermission(DeviceListActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION);
+            int checkAccessCoarseLocationPermission = ContextCompat.checkSelfPermission(RealTimeScanActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION);
             if (checkAccessCoarseLocationPermission != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(DeviceListActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_CODE_ASK_ACCESS_COARSE_LOCATION);
+                ActivityCompat.requestPermissions(RealTimeScanActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_CODE_ASK_ACCESS_COARSE_LOCATION);
             } else {
                 doButtonClick();
             }
         } else {
             doButtonClick();
         }
-    }
-
-    /**
-     * ListView的Item被点击时调用
-     *
-     * @param position ListView被点击的位置
-     */
-    private void doListViewItemClick(int position) {
-        if (bleScanner.isScanning()) {
-            bleScanner.stopScan();
-            button.setText(R.string.start_scan);
-            clickCount--;
-        }
-        BleDevice bleDevice = adapterList.get(position);
-        Intent intent = new Intent(DeviceListActivity.this, ConnectActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putParcelable(Constants.DEVICE, bleDevice);
-        intent.putExtra(Constants.BUNDLE, bundle);
-        startActivity(intent);
     }
 
     /**

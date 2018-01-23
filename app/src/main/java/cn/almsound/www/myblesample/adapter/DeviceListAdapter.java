@@ -1,12 +1,12 @@
 package cn.almsound.www.myblesample.adapter;
 
-import android.content.Context;
+import android.support.annotation.Nullable;
 
-import com.jackiepenghe.baselibrary.BasePurposeAdapter;
-import com.jackiepenghe.baselibrary.ViewHolder;
+import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.BaseViewHolder;
 import com.jackiepenghe.blelibrary.BleDevice;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import cn.almsound.www.myblesample.R;
 
@@ -16,22 +16,27 @@ import cn.almsound.www.myblesample.R;
  *         自定义适配器(显示自定义BLE设备列表)
  *         Created by jackie on 2017/1/6 0006.
  */
-public class DeviceListAdapter extends BasePurposeAdapter<BleDevice> {
+public class DeviceListAdapter extends BaseQuickAdapter<BleDevice, BaseViewHolder> {
+    /**
+     * Same as QuickAdapter#QuickAdapter(Context,int) but with
+     * some initialization data.
+     *
+     * @param data A new list is created out of this one to avoid mutable list
+     */
+    public DeviceListAdapter(@Nullable List<BleDevice> data) {
+        super(R.layout.adapter_device_list, data);
+    }
 
 
     /**
-     * 构造方法
+     * Implement this method and use the helper to adapt the view to the given item.
      *
-     * @param context 上下文
-     * @param mDatas  数据
+     * @param helper A fully initialized helper.
+     * @param item   The item that needs to be displayed.
      */
-    public DeviceListAdapter(Context context, ArrayList<BleDevice> mDatas) {
-        super(context, mDatas, R.layout.adapter_device_list);
-    }
-
     @Override
-    protected void convert(ViewHolder viewHolder, int position, BleDevice item) {
-        viewHolder.setText(android.R.id.text1, item.getBluetoothDevice().getName())
+    protected void convert(BaseViewHolder helper, BleDevice item) {
+        helper.setText(android.R.id.text1, item.getBluetoothDevice().getName())
                 .setText(android.R.id.text2, item.getBluetoothDevice().getAddress())
                 .setText(R.id.rssi, String.valueOf(item.getRssi()));
     }

@@ -7,7 +7,7 @@ package com.jackiepenghe.blelibrary;
  */
 
 @SuppressWarnings("WeakerAccess")
-class BleConstants {
+public class BleConstants {
     /**
      * 打开通知时会使用到的UUID
      */

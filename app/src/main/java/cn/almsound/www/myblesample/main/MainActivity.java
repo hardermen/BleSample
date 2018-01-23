@@ -15,6 +15,7 @@ import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.activity.blebroadcast.BroadcastActivity;
 import cn.almsound.www.myblesample.activity.bleconnect.DeviceListActivity;
 import cn.almsound.www.myblesample.activity.blemulticonnect.MultiConnectActivity;
+import cn.almsound.www.myblesample.activity.realtimescan.RealTimeScanActivity;
 
 /**
  * @author alm
@@ -24,12 +25,16 @@ public class MainActivity extends BaseAppCompatActivity {
     private Button simpleUseBtn;
     private Button multiConnectBtn;
     private Button bleBroadCastBtn;
+    private Button realTimeScanBtn;
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
             switch (view.getId()) {
                 case R.id.simple_use_button:
                     toDeviceListActivity();
+                    break;
+                case R.id.real_time_scan_button:
+                    toRealTimeScanActivity();
                     break;
                 case R.id.multi_connect_button:
                     toMultiConnectActivity();
@@ -85,6 +90,7 @@ public class MainActivity extends BaseAppCompatActivity {
         simpleUseBtn = findViewById(R.id.simple_use_button);
         multiConnectBtn = findViewById(R.id.multi_connect_button);
         bleBroadCastBtn = findViewById(R.id.ble_broadcast_button);
+        realTimeScanBtn = findViewById(R.id.real_time_scan_button);
     }
 
     /**
@@ -111,6 +117,7 @@ public class MainActivity extends BaseAppCompatActivity {
         simpleUseBtn.setOnClickListener(onClickListener);
         multiConnectBtn.setOnClickListener(onClickListener);
         bleBroadCastBtn.setOnClickListener(onClickListener);
+        realTimeScanBtn.setOnClickListener(onClickListener);
     }
 
     /**
@@ -190,6 +197,11 @@ public class MainActivity extends BaseAppCompatActivity {
         }
 
         Intent intent = new Intent(MainActivity.this,BroadcastActivity.class);
+        startActivity(intent);
+    }
+
+    private void toRealTimeScanActivity() {
+        Intent intent = new Intent(this,RealTimeScanActivity.class);
         startActivity(intent);
     }
 }

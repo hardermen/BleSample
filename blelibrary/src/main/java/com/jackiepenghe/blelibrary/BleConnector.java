@@ -202,9 +202,7 @@ public class BleConnector {
         bleServiceConnection.stopService();
         contextWeakReference.get().unbindService(bleServiceConnection);
         contextWeakReference.get().unregisterReceiver(connectBleBroadcastReceiver);
-        if (doBonded) {
-            contextWeakReference.get().unregisterReceiver(boundBleBroadcastReceiver);
-        }
+
         checkCloseStatus();
         return true;
     }

@@ -61,9 +61,11 @@
             android:enabled="true"
             android:exported="false" />
 
-        <activity android:name=".guid.WelcomeActivity"
-            android:theme="@style/AppTheme.NoActionBar.FullScreen"/>
-        <activity android:name=".activity.blebroadcast.BroadcastActivity"/>
+        <activity
+            android:name=".guid.WelcomeActivity"
+            android:theme="@style/AppTheme.NoActionBar.FullScreen" />
+        <activity android:name=".activity.blebroadcast.BroadcastActivity" />
+        <activity android:name=".activity.realtimescan.RealTimeScanActivity"></activity>
     </application>
 
 </manifest>
