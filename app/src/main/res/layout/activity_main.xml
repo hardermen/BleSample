@@ -12,12 +12,6 @@
         android:text="@string/simple_use" />
 
     <Button
-        android:id="@+id/real_time_scan_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/real_time_scan" />
-
-    <Button
         android:id="@+id/multi_connect_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

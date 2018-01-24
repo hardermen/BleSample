@@ -22,6 +22,7 @@ import com.chad.library.adapter.base.entity.MultiItemEntity;
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.baselibrary.DefaultItemDecoration;
 import com.jackiepenghe.blelibrary.BleConnector;
+import com.jackiepenghe.blelibrary.BleConstants;
 import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
@@ -194,40 +195,47 @@ public class ConnectActivity extends BaseAppCompatActivity {
     @Override
     protected void doAfterAll() {
         //发起连接
-        startConnect();
+//        startConnect();
 
-//        /*
-//         * 调用绑定的方法（如果需要绑定)，否则请直接调用连接的方法
-//         * 注意：如果该设备不支持绑定，会直接回调绑定成功的回调，在绑定成功的回调中发起连接即可
-//         * 第一次绑定某一个设备会触发回调，之后再次绑定，可根据绑定时的函数的返回值来判断绑定状态，以进行下一步操作
-//         */
-//        switch (bleConnector.startBound(address)) {
-//            case BleConstants.DEVICE_BOND_START_SUCCESS:
-//               Tool.warnOut(TAG, "开始绑定");
-//                break;
-//            case BleConstants.DEVICE_BOND_START_FAILED:
-//               Tool.warnOut(TAG, "发起绑定失败");
-//                break;
-//            case BleConstants.DEVICE_BOND_BONDED:
-//               Tool.warnOut(TAG, "此设备已经被绑定了");
-//                startConnect();
-//                break;
-//            case BleConstants.DEVICE_BOND_BONDING:
-//               Tool.warnOut(TAG, "此设备正在绑定中");
-//                break;
-//            case BleConstants.BLUETOOTH_ADAPTER_NULL:
-//               Tool.warnOut(TAG, "没有蓝牙适配器存在");
-//                break;
-//            case BleConstants.BLUETOOTH_ADDRESS_INCORRECT:
-//               Tool.warnOut(TAG, "蓝牙地址错误");
-//                break;
-//            case BleConstants.BLUETOOTH_MANAGER_NULL:
-//               Tool.warnOut(TAG, "没有蓝牙管理器存在");
-//                break;
-//            default:
-//               Tool.warnOut(TAG, "default");
-//                break;
-//        }
+        /*
+         * 调用绑定的方法（如果需要绑定)，否则请直接调用连接的方法
+         * 注意：如果该设备不支持绑定，会直接回调绑定成功的回调，在绑定成功的回调中发起连接即可
+         * 第一次绑定某一个设备会触发回调，之后再次绑定，可根据绑定时的函数的返回值来判断绑定状态，以进行下一步操作
+         */
+        switch (bleConnector.startBound(address)) {
+            case BleConstants.DEVICE_BOND_START_SUCCESS:
+               Tool.warnOut(TAG, "开始绑定");
+               Tool.toastL(this, "开始绑定");
+                break;
+            case BleConstants.DEVICE_BOND_START_FAILED:
+               Tool.warnOut(TAG, "发起绑定失败");
+                Tool.toastL(this, "发起绑定失败");
+                break;
+            case BleConstants.DEVICE_BOND_BONDED:
+               Tool.warnOut(TAG, "此设备已经被绑定了");
+                Tool.toastL(this, "此设备已经被绑定了");
+                startConnect();
+                break;
+            case BleConstants.DEVICE_BOND_BONDING:
+               Tool.warnOut(TAG, "此设备正在绑定中");
+                Tool.toastL(this, "此设备正在绑定中");
+                break;
+            case BleConstants.BLUETOOTH_ADAPTER_NULL:
+               Tool.warnOut(TAG, "没有蓝牙适配器存在");
+                Tool.toastL(this, "没有蓝牙适配器存在");
+                break;
+            case BleConstants.BLUETOOTH_ADDRESS_INCORRECT:
+               Tool.warnOut(TAG, "蓝牙地址错误");
+                Tool.toastL(this, "蓝牙地址错误");
+                break;
+            case BleConstants.BLUETOOTH_MANAGER_NULL:
+               Tool.warnOut(TAG, "没有蓝牙管理器存在");
+                Tool.toastL(this, "没有蓝牙管理器存在");
+                break;
+            default:
+               Tool.warnOut(TAG, "default");
+                break;
+        }
     }
 
     /**

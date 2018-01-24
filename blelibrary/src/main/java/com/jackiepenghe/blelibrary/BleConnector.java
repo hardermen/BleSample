@@ -197,6 +197,10 @@ public class BleConnector {
             return false;
         }
 
+        if (doBonded){
+            contextWeakReference.get().unregisterReceiver(boundBleBroadcastReceiver);
+        }
+
         disconnect();
         bleServiceConnection.closeGatt();
         bleServiceConnection.stopService();
@@ -316,7 +320,7 @@ public class BleConnector {
     /**
      * 设置可靠数据写入完成的回调
      *
-     * @param onReliableWriteCompletedListener 可靠数据写入完成的回调
+     * @param onReliableWriteCompletedListener 可靠数据写入完成的回调z
      */
     public void setOnReliableWriteCompletedListener(BleInterface.OnReliableWriteCompletedListener onReliableWriteCompletedListener) {
         connectBleBroadcastReceiver.setOnReliableWriteCompletedListener(onReliableWriteCompletedListener);
