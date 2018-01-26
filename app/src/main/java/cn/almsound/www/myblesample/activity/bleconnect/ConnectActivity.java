@@ -204,36 +204,36 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         switch (bleConnector.startBound(address)) {
             case BleConstants.DEVICE_BOND_START_SUCCESS:
-               Tool.warnOut(TAG, "开始绑定");
-               Tool.toastL(this, "开始绑定");
+                Tool.warnOut(TAG, "开始绑定");
+                Tool.toastL(this, "开始绑定");
                 break;
             case BleConstants.DEVICE_BOND_START_FAILED:
-               Tool.warnOut(TAG, "发起绑定失败");
+                Tool.warnOut(TAG, "发起绑定失败");
                 Tool.toastL(this, "发起绑定失败");
                 break;
             case BleConstants.DEVICE_BOND_BONDED:
-               Tool.warnOut(TAG, "此设备已经被绑定了");
+                Tool.warnOut(TAG, "此设备已经被绑定了");
                 Tool.toastL(this, "此设备已经被绑定了");
                 startConnect();
                 break;
             case BleConstants.DEVICE_BOND_BONDING:
-               Tool.warnOut(TAG, "此设备正在绑定中");
+                Tool.warnOut(TAG, "此设备正在绑定中");
                 Tool.toastL(this, "此设备正在绑定中");
                 break;
             case BleConstants.BLUETOOTH_ADAPTER_NULL:
-               Tool.warnOut(TAG, "没有蓝牙适配器存在");
+                Tool.warnOut(TAG, "没有蓝牙适配器存在");
                 Tool.toastL(this, "没有蓝牙适配器存在");
                 break;
             case BleConstants.BLUETOOTH_ADDRESS_INCORRECT:
-               Tool.warnOut(TAG, "蓝牙地址错误");
+                Tool.warnOut(TAG, "蓝牙地址错误");
                 Tool.toastL(this, "蓝牙地址错误");
                 break;
             case BleConstants.BLUETOOTH_MANAGER_NULL:
-               Tool.warnOut(TAG, "没有蓝牙管理器存在");
+                Tool.warnOut(TAG, "没有蓝牙管理器存在");
                 Tool.toastL(this, "没有蓝牙管理器存在");
                 break;
             default:
-               Tool.warnOut(TAG, "default");
+                Tool.warnOut(TAG, "default");
                 break;
         }
     }
@@ -262,6 +262,12 @@ public class ConnectActivity extends BaseAppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        if (bleConnector.unBound()) {
+            Tool.warnOut(TAG, "解绑成功");
+        } else {
+            Tool.warnOut(TAG, "解绑失败");
+        }
+
         //屏蔽返回键
         /*super.onBackPressed();*/
         //关闭连接工具,如果返回false,直接调用super.onBackPressed()，否则在close的回调中调用返回
@@ -370,8 +376,9 @@ public class ConnectActivity extends BaseAppCompatActivity {
             @Override
             public void onCharacteristicRead(byte[] values) {
                 String hexStr = Tool.bytesToHexStr(values);
+                String str = new String(values);
                 Tool.warnOut(TAG, "读取到的数据 = " + hexStr);
-                showReadDataResultDialog(hexStr);
+                showReadDataResultDialog(hexStr, str);
             }
         };
         //正在连接时触发此回调（不过此回调从来没有被触发过，我也不知道为何）
@@ -386,8 +393,9 @@ public class ConnectActivity extends BaseAppCompatActivity {
             @Override
             public void onReceiveNotification(byte[] values) {
                 String hexStr = Tool.bytesToHexStr(values);
+                String str = new String(values);
                 Tool.warnOut("ConnectActivity", "value = " + hexStr);
-                showReceiveNotificationDialog(hexStr);
+                showReceiveNotificationDialog(hexStr, str);
             }
         };
         //读取到远端设备的RSSI值时触发此回调
@@ -454,9 +462,15 @@ public class ConnectActivity extends BaseAppCompatActivity {
         bleConnector.setOnMtuChangedListener(onMtuChangedListener);
     }
 
-    private void showReceiveNotificationDialog(String hexStr) {
+    /**
+     * 显示收到的通知
+     * @param hexStr 收到的通知（十六进制字符串）
+     * @param str 收到的通知
+     */
+    private void showReceiveNotificationDialog(String hexStr, String str) {
         EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
-        editText.setText(hexStr);
+        String s = hexStr + "(" + str + ")";
+        editText.setText(s);
         new AlertDialog.Builder(this)
                 .setTitle(R.string.notification_data)
                 .setView(editText)
@@ -469,10 +483,12 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * 读到数据后显示数据内容
      *
      * @param hexStr 读到的数据（十六进制字符串）
+     * @param str 读到的数据
      */
-    private void showReadDataResultDialog(String hexStr) {
+    private void showReadDataResultDialog(String hexStr, String str) {
         EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
-        editText.setText(hexStr);
+        String s = hexStr + "(" + str + ")";
+        editText.setText(s);
         new AlertDialog.Builder(this)
                 .setTitle(R.string.read_data)
                 .setView(editText)

@@ -1,17 +1,14 @@
 package cn.almsound.www.myblesample.activity.blebroadcast;
 
-import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
+import com.jackiepenghe.blelibrary.BaseAdvertiseCallback;
 import com.jackiepenghe.blelibrary.BleBroadCastor;
-import com.jackiepenghe.blelibrary.BleConnector;
-import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.Tool;
 
@@ -35,7 +32,9 @@ public class BroadcastActivity extends BaseAppCompatActivity {
      */
     private TextView broadcastStatusTv;
 
-    private AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
+    private BaseAdvertiseCallback advertiseCallback = new BaseAdvertiseCallback() {
+
+
         /**
          * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
          * that the advertising has been started successfully.
@@ -44,8 +43,7 @@ public class BroadcastActivity extends BaseAppCompatActivity {
          *                         what has been requested.
          */
         @Override
-        public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-            super.onStartSuccess(settingsInEffect);
+        protected void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect) {
             broadcastStatusTv.setText(R.string.open_broadcast_success);
         }
 
@@ -56,8 +54,7 @@ public class BroadcastActivity extends BaseAppCompatActivity {
          *                  failures.
          */
         @Override
-        public void onStartFailure(int errorCode) {
-            super.onStartFailure(errorCode);
+        protected void onBroadCastStartFailure(int errorCode) {
             broadcastStatusTv.setText(R.string.open_broadcast_failed);
         }
     };
@@ -80,6 +77,9 @@ public class BroadcastActivity extends BaseAppCompatActivity {
 
         if (bleBroadCastor != null) {
             //默认的初始化
+//            bleBroadCastor.init()
+
+            //带回调的初始化
            if (!bleBroadCastor.init(advertiseCallback)){
                 Tool.warnOut(TAG,"初始化失败");
            }else {

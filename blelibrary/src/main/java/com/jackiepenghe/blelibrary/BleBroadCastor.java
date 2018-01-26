@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
@@ -95,10 +94,8 @@ public class BleBroadCastor {
             .setIncludeTxPowerLevel(true)
             .setIncludeDeviceName(true)
             .build();
-    /**
-     * 默认的广播回调
-     */
-    private AdvertiseCallback defaultAdvertiseCallback = new AdvertiseCallback() {
+
+    private BaseAdvertiseCallback defaultAdvertiseCallback = new BaseAdvertiseCallback() {
         /**
          * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
          * that the advertising has been started successfully.
@@ -107,15 +104,8 @@ public class BleBroadCastor {
          *                         what has been requested.
          */
         @Override
-        public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-            Tool.warnOut(TAG, "onStartSuccess");
-            if (settingsInEffect != null) {
-                Tool.warnOut(TAG, "onStartSuccess TxPowerLv=" + settingsInEffect.getTxPowerLevel() + " mode=" + settingsInEffect.getMode()
-                        + " timeout=" + settingsInEffect.getTimeout());
-            } else {
-                Tool.warnOut(TAG, "onStartSuccess, settingInEffect is null");
-            }
-            Tool.warnOut(TAG, "onStartSuccess settingsInEffect" + settingsInEffect);
+        protected void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect) {
+
         }
 
         /**
@@ -125,21 +115,11 @@ public class BleBroadCastor {
          *                  failures.
          */
         @Override
-        public void onStartFailure(int errorCode) {
-            Tool.warnOut(TAG, "onStartFailure");
-            if (errorCode == ADVERTISE_FAILED_DATA_TOO_LARGE) {
-                Tool.errorOut(TAG, "Failed to start advertising as the advertise data to be broadcasted is larger than 31 bytes.");
-            } else if (errorCode == ADVERTISE_FAILED_TOO_MANY_ADVERTISERS) {
-                Tool.errorOut(TAG, "Failed to start advertising because no advertising instance is available.");
-            } else if (errorCode == ADVERTISE_FAILED_ALREADY_STARTED) {
-                Tool.errorOut(TAG, "Failed to start advertising as the advertising is already started");
-            } else if (errorCode == ADVERTISE_FAILED_INTERNAL_ERROR) {
-                Tool.errorOut(TAG, "Operation failed due to an internal error");
-            } else if (errorCode == ADVERTISE_FAILED_FEATURE_UNSUPPORTED) {
-                Tool.errorOut(TAG, "This feature is not supported on this platform");
-            }
+        protected void onBroadCastStartFailure(int errorCode) {
+
         }
     };
+
     /**
      * 蓝牙管理器
      */
@@ -219,7 +199,7 @@ public class BleBroadCastor {
      * @return true表示初始化成功
      */
     @SuppressWarnings("UnusedReturnValue")
-    public boolean init(AdvertiseCallback defaultAdvertiseCallback) {
+    public boolean init(BaseAdvertiseCallback defaultAdvertiseCallback) {
         return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
     }
 
@@ -246,7 +226,7 @@ public class BleBroadCastor {
      *
      * @return true表示初始化成功
      */
-    public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseCallback defaultAdvertiseCallback) {
+    public boolean init(AdvertiseSettings defaultAdvertiseSettings, BaseAdvertiseCallback defaultAdvertiseCallback) {
         return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
     }
 
@@ -255,7 +235,7 @@ public class BleBroadCastor {
      *
      * @return true表示初始化成功
      */
-    public boolean init(AdvertiseData defaultAdvertiseData,AdvertiseData defaultScanResponse) {
+    public boolean init(AdvertiseData defaultAdvertiseData, AdvertiseData defaultScanResponse) {
         return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
     }
 
@@ -264,7 +244,7 @@ public class BleBroadCastor {
      *
      * @return true表示初始化成功
      */
-    public boolean init(AdvertiseData defaultAdvertiseData,AdvertiseCallback defaultAdvertiseCallback) {
+    public boolean init(AdvertiseData defaultAdvertiseData, BaseAdvertiseCallback defaultAdvertiseCallback) {
         return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
     }
 
@@ -273,7 +253,7 @@ public class BleBroadCastor {
      *
      * @return true表示初始化成功
      */
-    public boolean init(AdvertiseSettings defaultAdvertiseSettings,AdvertiseData defaultAdvertiseData,AdvertiseData defaultScanResponse) {
+    public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseData defaultAdvertiseData, AdvertiseData defaultScanResponse) {
         return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
     }
 
@@ -282,7 +262,7 @@ public class BleBroadCastor {
      *
      * @return true表示初始化成功
      */
-    public boolean init(AdvertiseSettings defaultAdvertiseSettings,AdvertiseData defaultAdvertiseData,AdvertiseCallback defaultAdvertiseCallback) {
+    public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseData defaultAdvertiseData, BaseAdvertiseCallback defaultAdvertiseCallback) {
         return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
     }
 
@@ -297,7 +277,7 @@ public class BleBroadCastor {
      * @return true表示初始化成功
      */
     @SuppressWarnings("WeakerAccess")
-    public boolean init(@NonNull AdvertiseSettings advertiseSettings, @NonNull AdvertiseData advertiseData, @NonNull AdvertiseData scanResponse, @NonNull AdvertiseCallback advertiseCallback) {
+    public boolean init(@NonNull AdvertiseSettings advertiseSettings, @NonNull AdvertiseData advertiseData, @NonNull AdvertiseData scanResponse, @NonNull BaseAdvertiseCallback advertiseCallback) {
         if (mBluetoothAdapter == null) {
             initSuccess = false;
             return false;
@@ -322,7 +302,7 @@ public class BleBroadCastor {
         defaultAdvertiseCallback = advertiseCallback;
         boolean connectable = defaultAdvertiseSettings.isConnectable();
         if (connectable) {
-            if (defaultBluetoothGattServerCallback == null){
+            if (defaultBluetoothGattServerCallback == null) {
                 defaultBluetoothGattServerCallback = new DefaultBluetoothGattServerCallback();
             }
             bluetoothGattServer = bluetoothManager.openGattServer(context, defaultBluetoothGattServerCallback);
@@ -394,8 +374,13 @@ public class BleBroadCastor {
         BleManager.resetBleBroadCastor();
     }
 
+    public BluetoothGattServer getBluetoothGattServer() {
+        return bluetoothGattServer;
+    }
+
     /**
-     *设置连接回调
+     * 设置连接回调
+     *
      * @param onBluetoothGattServerCallbackListener 连接回调
      */
     public void setOnBluetoothGattServerCallbackListener(BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallbackListener) {

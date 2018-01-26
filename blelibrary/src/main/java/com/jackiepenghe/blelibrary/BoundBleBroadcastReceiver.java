@@ -20,6 +20,10 @@ import android.os.Handler;
 public class BoundBleBroadcastReceiver extends BroadcastReceiver {
 
     private static final String TAG = "BoundBLEBroadcastReceiv";
+    /**
+     * The user will be prompted to enter a passkey
+     */
+    public static final int PAIRING_VARIANT_PASSKEY = 1;
 
     private BleInterface.OnDeviceBondStateChangedListener mOnDeviceBondStateChangedListener;
 
@@ -62,7 +66,7 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        if (action == null){
+        if (action == null) {
             return;
         }
         switch (action) {
@@ -70,6 +74,16 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
                 Tool.warnOut(TAG, "ACTION_PAIRING_REQUEST");
                 int mType = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT, BluetoothDevice.ERROR);
                 Tool.warnOut(TAG, "mType = " + mType);
+                switch (mType) {
+                    case BluetoothDevice.PAIRING_VARIANT_PASSKEY_CONFIRMATION:
+                        Tool.warnOut(TAG, "让用户确认PIN是否正确");
+                        break;
+                    case PAIRING_VARIANT_PASSKEY:
+                        Tool.warnOut(TAG, "提示用户输入PIN或者自动输入PIN");
+                        break;
+                    default:
+                        break;
+                }
                 break;
             case BluetoothDevice.ACTION_BOND_STATE_CHANGED:
                 Tool.warnOut("BoundBleBroadcastReceiver", "ACTION_BOND_STATE_CHANGED");

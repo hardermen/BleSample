@@ -361,6 +361,11 @@ public class Tool {
      */
     @SuppressWarnings("WeakerAccess")
     public static String bytesToHexStr(byte[] bytes) {
+
+        if (bytes == null){
+            return "";
+        }
+
         String stmp;
         StringBuilder sb = new StringBuilder("");
         for (byte aByte : bytes) {
