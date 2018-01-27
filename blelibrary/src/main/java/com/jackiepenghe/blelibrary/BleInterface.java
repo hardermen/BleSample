@@ -14,7 +14,6 @@ import android.bluetooth.BluetoothProfile;
  *         接口定义区
  */
 
-@SuppressWarnings("ALL")
 public class BleInterface {
 
     /**
@@ -38,7 +37,7 @@ public class BleInterface {
          * @param rssi            RSSI(信号强度)
          * @param scanRecord      广播包内容
          */
-        void scanFindOneDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord);
+        void onScanFindOneDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord);
     }
 
     /**
@@ -50,7 +49,7 @@ public class BleInterface {
          *
          * @param bleDevice 自定义Ble设备Been类
          */
-        void scanFindOneNewDevice(BleDevice bleDevice);
+        void onScanFindOneNewDevice(BleDevice bleDevice);
     }
 
     /**
@@ -60,7 +59,7 @@ public class BleInterface {
         /**
          * 扫描完成时回调此函数
          */
-        void scanComplete();
+        void onScanComplete();
     }
 
     /**
@@ -70,17 +69,29 @@ public class BleInterface {
         /**
          * 设备正在绑定
          */
-        void deviceBinding();
+        void onDeviceBinding();
 
         /**
          * 设备已经绑定过了
          */
-        void deviceBonded();
+        void onDeviceBonded();
 
         /**
          * 取消绑定或者绑定失败
          */
-        void deviceBindNone();
+        void onDeviceBindNone();
+    }
+
+    /**
+     * BluetoothGatt客户端配置失败的回调接口
+     */
+    public interface OnBluetoothGattOptionsNotSuccessListener{
+        /**
+         * BluetoothGatt客户端配置失败
+         * @param methodName 执行失败的函数名
+         * @param errorStatus 执行失败的错误状态码
+         */
+        void onBluetoothGattOptionsNotSuccess(String methodName, int errorStatus);
     }
 
 
@@ -229,25 +240,19 @@ public class BleInterface {
     }
 
     /**
-     * 蓝牙被打开的回调
+     * 蓝牙开关状态改变时的回调
      */
-    public interface OnBluetoothOpenListener{
+    public interface OnBluetoothSwitchChangedListener {
         /**
-         *  蓝牙被打开
+         *  蓝牙开关状态改变
+         * @param switchStatus true表示开关打开，false表示开关关闭
          */
-        void onBluetoothOpen();
+        void onBluetoothSwitchChanged(boolean switchStatus);
     }
 
     /**
-     * 蓝牙被关闭的回调
+     * 蓝牙广播时，作为服务端的相关回调
      */
-    public interface OnBluetoothCloseListener{
-        /**
-         *  蓝牙被关闭
-         */
-        void onBluetoothClose();
-    }
-    
     public interface OnBluetoothGattServerCallbackListener{
 
         /**

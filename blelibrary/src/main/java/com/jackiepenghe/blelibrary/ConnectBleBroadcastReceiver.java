@@ -13,10 +13,12 @@ import android.os.Handler;
 /**
  * @author alm
  *         Created by alm on 17-6-5.
- *         BLE相关事件的广播接收者
+ *         监听BLE连接相关的广播接收者
  */
 
 public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
+
+    /*------------------------成员变量----------------------------*/
 
     /**
      * 连接成功的回调
@@ -30,6 +32,10 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * 服务发现完成的回调
      */
     private BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener;
+    /**
+     * BluetoothGatt客户端配置失败的回调
+     */
+    private BleInterface.OnBluetoothGattOptionsNotSuccessListener onBluetoothGattOptionsNotSuccessListener;
     /**
      * 正在连接的回调
      */
@@ -72,16 +78,15 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     private BleInterface.OnMtuChangedListener onMtuChangedListener;
 
     /**
-     * 蓝牙被打开的回调
+     * 蓝牙开关状态被改变时的回调
      */
-    private BleInterface.OnBluetoothOpenListener onBluetoothOpenListener;
-
+    private BleInterface.OnBluetoothSwitchChangedListener onBluetoothSwitchChangedListener;
     /**
-     * 蓝牙被关闭的回调
+     * Handler
      */
-    private BleInterface.OnBluetoothCloseListener onBluetoothCloseListener;
     private Handler handler = new Handler();
 
+    /*------------------------实现父类函数----------------------------*/
 
     /**
      * This method is called when the BroadcastReceiver is receiving an Intent
@@ -119,7 +124,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     @SuppressWarnings({"JavadocReference", "JavaDoc"})
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(Context context, final Intent intent) {
         final byte[] values = intent.getByteArrayExtra(LibraryConstants.VALUE);
         String action = intent.getAction();
         if (action == null){
@@ -131,11 +136,11 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                 //如果蓝牙被关闭
                 if (state == BluetoothAdapter.STATE_OFF) {
                     Tool.toastL(context, R.string.bluetooth_off);
-                    if (onBluetoothCloseListener != null) {
+                    if (onBluetoothSwitchChangedListener != null) {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                onBluetoothCloseListener.onBluetoothClose();
+                                onBluetoothSwitchChangedListener.onBluetoothSwitchChanged(false);
                             }
                         });
                     }
@@ -143,11 +148,11 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                 //如果蓝牙被打开
                 else if (state == BluetoothAdapter.STATE_ON) {
                     Tool.toastL(context, R.string.bluetooth_on);
-                    if (onBluetoothOpenListener != null) {
+                    if (onBluetoothSwitchChangedListener != null) {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                onBluetoothOpenListener.onBluetoothOpen();
+                                onBluetoothSwitchChangedListener.onBluetoothSwitchChanged(true);
                             }
                         });
                     }
@@ -182,6 +187,18 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                         @Override
                         public void run() {
                             onServicesDiscoveredListener.onServicesDiscovered();
+                        }
+                    });
+                }
+                break;
+            case BleConstants.ACTION_GATT_NOT_SUCCESS:
+                final String methodName = intent.getStringExtra(LibraryConstants.METHOD);
+                final int errorStatus = intent.getIntExtra(LibraryConstants.STATUS, LibraryConstants.DEFAULT_STATUS);
+                if (onBluetoothGattOptionsNotSuccessListener != null){
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onBluetoothGattOptionsNotSuccessListener.onBluetoothGattOptionsNotSuccess(methodName,errorStatus);
                         }
                     });
                 }
@@ -297,63 +314,121 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    public void setOnConnectedListener(BleInterface.OnConnectedListener onConnectedListener) {
+    /*------------------------库内函数----------------------------*/
+
+    /**
+     * 设置设备已连接连接的回调
+     * @param onConnectedListener 设备已连接连接的回调
+     */
+    void setOnConnectedListener(BleInterface.OnConnectedListener onConnectedListener) {
         this.onConnectedListener = onConnectedListener;
     }
 
-    public void setOnDisconnectedListener(BleInterface.OnDisconnectedListener onDisconnectedListener) {
+    /**
+     * 设置设备断开连接的回调
+     * @param onDisconnectedListener 设备断开连接的回调
+     */
+    void setOnDisconnectedListener(BleInterface.OnDisconnectedListener onDisconnectedListener) {
         this.onDisconnectedListener = onDisconnectedListener;
     }
 
-    public void setOnServicesDiscoveredListener(BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener) {
+    /**
+     * 设置服务扫描完成的回调
+     * @param onServicesDiscoveredListener 服务扫描完成的回调
+     */
+    void setOnServicesDiscoveredListener(BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener) {
         this.onServicesDiscoveredListener = onServicesDiscoveredListener;
     }
 
-    public void setOnConnectingListener(BleInterface.OnConnectingListener onConnectingListener) {
+    /**
+     * 设置正在连接的回调
+     * @param onConnectingListener 正在连接的回调
+     */
+    void setOnConnectingListener(BleInterface.OnConnectingListener onConnectingListener) {
         this.onConnectingListener = onConnectingListener;
     }
 
-    public void setOnDisconnectingListener(BleInterface.OnDisconnectingListener onDisconnectingListener) {
+    void setOnDisconnectingListener(BleInterface.OnDisconnectingListener onDisconnectingListener) {
         this.onDisconnectingListener = onDisconnectingListener;
     }
 
-    public void setOnCharacteristicReadListener(BleInterface.OnCharacteristicReadListener onCharacteristicReadListener) {
+    /**
+     * 设置读取到远端设备数据的回调
+     * @param onCharacteristicReadListener 读取到远端设备数据的回调
+     */
+    void setOnCharacteristicReadListener(BleInterface.OnCharacteristicReadListener onCharacteristicReadListener) {
         this.onCharacteristicReadListener = onCharacteristicReadListener;
     }
 
-    public void setOnReceiveNotificationListener(BleInterface.OnReceiveNotificationListener onReceiveNotificationListener) {
+    /**
+     * 设置收到远端设备通知数据的回调
+     * @param onReceiveNotificationListener 收到远端设备通知数据的回调
+     */
+    void setOnReceiveNotificationListener(BleInterface.OnReceiveNotificationListener onReceiveNotificationListener) {
         this.onReceiveNotificationListener = onReceiveNotificationListener;
     }
 
-    public void setOnCharacteristicWriteListener(BleInterface.OnCharacteristicWriteListener onCharacteristicWriteListener) {
+    /**
+     * 设置数据写入的回调
+     * @param onCharacteristicWriteListener 数据写入到远端数据的回调
+     */
+    void setOnCharacteristicWriteListener(BleInterface.OnCharacteristicWriteListener onCharacteristicWriteListener) {
         this.onCharacteristicWriteListener = onCharacteristicWriteListener;
     }
 
-    public void setOnDescriptorReadListener(BleInterface.OnDescriptorReadListener onDescriptorReadListener) {
+    /**
+     * 设置读取到远端设备描述符的回调
+     * @param onDescriptorReadListener 读取到远端设备描述符的回调
+     */
+    void setOnDescriptorReadListener(BleInterface.OnDescriptorReadListener onDescriptorReadListener) {
         this.onDescriptorReadListener = onDescriptorReadListener;
     }
 
-    public void setOnDescriptorWriteListener(BleInterface.OnDescriptorWriteListener onDescriptorWriteListener) {
+    /**
+     * 设置描述符数据写入的回调
+     * @param onDescriptorWriteListener 描述符数据写入的回调
+     */
+    void setOnDescriptorWriteListener(BleInterface.OnDescriptorWriteListener onDescriptorWriteListener) {
         this.onDescriptorWriteListener = onDescriptorWriteListener;
     }
 
-    public void setOnReliableWriteCompletedListener(BleInterface.OnReliableWriteCompletedListener onReliableWriteCompletedListener) {
+    /**
+     * 设置可靠数据写入的回调
+     * @param onReliableWriteCompletedListener 可靠数据写入的回调
+     */
+    void setOnReliableWriteCompletedListener(BleInterface.OnReliableWriteCompletedListener onReliableWriteCompletedListener) {
         this.onReliableWriteCompletedListener = onReliableWriteCompletedListener;
     }
 
-    public void setOnReadRemoteRssiListener(BleInterface.OnReadRemoteRssiListener onReadRemoteRssiListener) {
+    /**
+     * 设置获取到远端设备RSSI的回调
+     * @param onReadRemoteRssiListener 获取到远端设备RSSI的回调
+     */
+    void setOnReadRemoteRssiListener(BleInterface.OnReadRemoteRssiListener onReadRemoteRssiListener) {
         this.onReadRemoteRssiListener = onReadRemoteRssiListener;
     }
 
-    public void setOnMtuChangedListener(BleInterface.OnMtuChangedListener onMtuChangedListener) {
+    /**
+     * 设置mtu被改变时的回调
+     * @param onMtuChangedListener mtu被改变时的回调
+     */
+    void setOnMtuChangedListener(BleInterface.OnMtuChangedListener onMtuChangedListener) {
         this.onMtuChangedListener = onMtuChangedListener;
     }
 
-    public void setOnBluetoothOpenListener(BleInterface.OnBluetoothOpenListener onBluetoothOpenListener) {
-        this.onBluetoothOpenListener = onBluetoothOpenListener;
+    /**
+     * 设置蓝牙开关状态改变时的回调
+     * @param onBluetoothSwitchChangedListener 蓝牙开关状态改变时的回调
+     */
+    void setOnBluetoothSwitchChangedListener(BleInterface.OnBluetoothSwitchChangedListener onBluetoothSwitchChangedListener) {
+        this.onBluetoothSwitchChangedListener = onBluetoothSwitchChangedListener;
     }
 
-    public void setOnBluetoothCloseListener(BleInterface.OnBluetoothCloseListener onBluetoothCloseListener) {
-        this.onBluetoothCloseListener = onBluetoothCloseListener;
+    /**
+     * 设置蓝牙配置未成功的回调
+     * @param onBluetoothGattOptionsNotSuccessListener 蓝牙配置未成功的回调
+     */
+    void setOnBluetoothGattOptionsNotSuccessListener(BleInterface.OnBluetoothGattOptionsNotSuccessListener onBluetoothGattOptionsNotSuccessListener) {
+        this.onBluetoothGattOptionsNotSuccessListener = onBluetoothGattOptionsNotSuccessListener;
     }
 }

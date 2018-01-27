@@ -235,7 +235,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         //发现一个新设备（在此之前该设备没有被发现过）时触发此回调
         BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
             @Override
-            public void scanFindOneNewDevice(BleDevice bleDevice) {
+            public void onScanFindOneNewDevice(BleDevice bleDevice) {
                 //可以在此处过滤一些不需要的设备
             /*if(bleDevice.getBluetoothDevice().getAddress().equalsIgnoreCase("00:00:00:AA:SS:BB")){
                 return;
@@ -249,7 +249,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         //扫描结束后会触发此回调
         BleInterface.OnScanCompleteListener onScanCompleteListener = new BleInterface.OnScanCompleteListener() {
             @Override
-            public void scanComplete() {
+            public void onScanComplete() {
                 button.setText(R.string.start_scan);
                 clickCount--;
             }
@@ -257,7 +257,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         //在扫描过程中发现一个设备就会触发一次此回调，不论该设备是否被发现过。在安卓5.0之前此回调效果完全等同于BleInterface.OnScanFindOneNewDeviceListener
         BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener = new BleInterface.OnScanFindOneDeviceListener() {
             @Override
-            public void scanFindOneDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord) {
+            public void onScanFindOneDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord) {
                 //只要发现一个设备就会回调此函数
                 BleDevice bleDevice = new BleDevice(bluetoothDevice, rssi, scanRecord, bluetoothDevice.getName());
                 if (!adapterList.contains(bleDevice)) {
@@ -282,7 +282,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
          * @param onScanCompleteListener       扫描完成的回调
          * @return true表示打开成功
          */
-        bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, true, onScanCompleteListener);
+        bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, false, onScanCompleteListener);
 
         //设置回调
         bleScanner.setOnScanFindOneDeviceListener(onScanFindOneDeviceListener);

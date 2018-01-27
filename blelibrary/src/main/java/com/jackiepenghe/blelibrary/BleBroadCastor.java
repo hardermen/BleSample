@@ -1,6 +1,5 @@
 package com.jackiepenghe.blelibrary;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattServer;
@@ -14,6 +13,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 
 import java.lang.ref.WeakReference;
 import java.util.UUID;
@@ -21,13 +21,18 @@ import java.util.UUID;
 /**
  * @author jacke
  * @date 2018/1/18 0018
+ * <p>
+ * BLE广播实例
  */
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 public class BleBroadCastor {
 
-    /*---------------------常量---------------------*/
+    /*-------------------------静态常量-------------------------*/
 
+    /**
+     * TAG
+     */
     private static final String TAG = "BleBroadCastor";
 
     /*---------------------成员变量---------------------*/
@@ -95,6 +100,9 @@ public class BleBroadCastor {
             .setIncludeDeviceName(true)
             .build();
 
+    /**
+     * 默认的广播回调
+     */
     private BaseAdvertiseCallback defaultAdvertiseCallback = new BaseAdvertiseCallback() {
         /**
          * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
@@ -129,10 +137,18 @@ public class BleBroadCastor {
      * 蓝牙服务连接的回调
      */
     private DefaultBluetoothGattServerCallback defaultBluetoothGattServerCallback;
+
+    /**
+     * BluetoothGattServer
+     */
     private BluetoothGattServer bluetoothGattServer;
 
     /*---------------------构造函数---------------------*/
 
+    /**
+     * 构造函数
+     * @param context 上下文
+     */
     BleBroadCastor(Context context) {
         contextWeakReference = new WeakReference<>(context);
 
@@ -187,6 +203,7 @@ public class BleBroadCastor {
     /**
      * 初始化
      *
+     * @param defaultAdvertiseData 广播内容
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseData defaultAdvertiseData) {
@@ -196,9 +213,9 @@ public class BleBroadCastor {
     /**
      * 初始化
      *
+     * @param defaultAdvertiseCallback 广播回调
      * @return true表示初始化成功
      */
-    @SuppressWarnings("UnusedReturnValue")
     public boolean init(BaseAdvertiseCallback defaultAdvertiseCallback) {
         return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
     }
@@ -206,6 +223,7 @@ public class BleBroadCastor {
     /**
      * 初始化
      *
+     * @param defaultAdvertiseSettings 广播设置
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseSettings defaultAdvertiseSettings) {
@@ -215,6 +233,8 @@ public class BleBroadCastor {
     /**
      * 初始化
      *
+     * @param defaultAdvertiseSettings 广播设置
+     * @param defaultAdvertiseData     广播内容
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseData defaultAdvertiseData) {
@@ -224,6 +244,8 @@ public class BleBroadCastor {
     /**
      * 初始化
      *
+     * @param defaultAdvertiseSettings 广播设置
+     * @param defaultAdvertiseCallback 广播回调
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseSettings defaultAdvertiseSettings, BaseAdvertiseCallback defaultAdvertiseCallback) {
@@ -233,6 +255,8 @@ public class BleBroadCastor {
     /**
      * 初始化
      *
+     * @param defaultAdvertiseData 广播内容
+     * @param defaultScanResponse  广播相应内容
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseData defaultAdvertiseData, AdvertiseData defaultScanResponse) {
@@ -242,6 +266,8 @@ public class BleBroadCastor {
     /**
      * 初始化
      *
+     * @param defaultAdvertiseData     广播内容
+     * @param defaultAdvertiseCallback 广播回调
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseData defaultAdvertiseData, BaseAdvertiseCallback defaultAdvertiseCallback) {
@@ -251,6 +277,9 @@ public class BleBroadCastor {
     /**
      * 初始化
      *
+     * @param defaultAdvertiseSettings 广播设置
+     * @param defaultAdvertiseData     广播内容
+     * @param defaultScanResponse      广播相应内容
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseData defaultAdvertiseData, AdvertiseData defaultScanResponse) {
@@ -260,6 +289,9 @@ public class BleBroadCastor {
     /**
      * 初始化
      *
+     * @param defaultAdvertiseSettings 广播设置
+     * @param defaultAdvertiseData     广播内容
+     * @param defaultAdvertiseCallback 广播回调
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseData defaultAdvertiseData, BaseAdvertiseCallback defaultAdvertiseCallback) {
@@ -365,8 +397,8 @@ public class BleBroadCastor {
         }
         initSuccess = false;
         contextWeakReference = null;
-        mBluetoothAdapter = null;
         mBluetoothAdvertiser = null;
+        mBluetoothAdapter = null;
         defaultAdvertiseSettings = null;
         defaultAdvertiseData = null;
         defaultScanResponse = null;
@@ -374,14 +406,19 @@ public class BleBroadCastor {
         BleManager.resetBleBroadCastor();
     }
 
+    /**
+     * 获取BluetoothGattServer实例
+     *
+     * @return BluetoothGattServer
+     */
     public BluetoothGattServer getBluetoothGattServer() {
         return bluetoothGattServer;
     }
 
     /**
-     * 设置连接回调
+     * 设置作为服务端的相关回调
      *
-     * @param onBluetoothGattServerCallbackListener 连接回调
+     * @param onBluetoothGattServerCallbackListener 作为服务端的相关回调
      */
     public void setOnBluetoothGattServerCallbackListener(BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallbackListener) {
         if (defaultBluetoothGattServerCallback != null) {

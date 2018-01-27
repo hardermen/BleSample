@@ -2,7 +2,6 @@ package com.jackiepenghe.blelibrary;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanRecord;
-import android.bluetooth.le.ScanResult;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -17,13 +16,15 @@ import java.util.HashMap;
  *         自定义BLE设备been类
  */
 
-@SuppressWarnings("ALL")
 public class BleDevice implements Serializable, Parcelable {
 
+    /**
+     * 设备名
+     */
     private String mDeviceName;
 
     /**
-     * 蓝牙设备
+     * 蓝牙设备对象
      */
     private BluetoothDevice mBluetoothDevice;
 
@@ -33,7 +34,7 @@ public class BleDevice implements Serializable, Parcelable {
     private int mRssi;
 
     /**
-     * 广播包(字节数组)
+     * 广播包内容(字节数组)
      */
     private byte[] scanRecordBytes;
 
@@ -63,50 +64,68 @@ public class BleDevice implements Serializable, Parcelable {
      *
      * @param bluetoothDevice 蓝牙设备
      * @param rssi            rssi值
-     * @param scanRecord      广播包
+     * @param scanRecordBytes 广播包内容（字节数组）
+     * @param deviceName      如果获取到的设备名为空，默认的设备名
      */
     public BleDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecordBytes, String deviceName) {
         mBluetoothDevice = bluetoothDevice;
         mRssi = rssi;
         this.scanRecordBytes = scanRecordBytes;
-        if (bluetoothDevice.getName() == null || bluetoothDevice.getName().isEmpty()) {
+        if (bluetoothDevice.getName() == null || "".equals(bluetoothDevice.getName())) {
             setDeviceName(deviceName);
         }
     }
 
+    /**
+     * 获取蓝牙设备对象
+     *
+     * @return BluetoothDevice
+     */
     public BluetoothDevice getBluetoothDevice() {
         return mBluetoothDevice;
     }
 
-    public void setBluetoothDevice(BluetoothDevice mBluetoothDevice) {
-        this.mBluetoothDevice = mBluetoothDevice;
-    }
-
+    /**
+     * 获取设备信号强度
+     *
+     * @return RSSI值
+     */
     public int getRssi() {
         return mRssi;
     }
 
-    public void setRssi(int mRssi) {
-        this.mRssi = mRssi;
-    }
-
+    /**
+     * 获取广播包内容
+     *
+     * @return 广播包内容
+     */
     public byte[] getScanRecordBytes() {
         return scanRecordBytes;
     }
 
-    void setScanRecordBytes(byte[] scanRecordBytes) {
-        this.scanRecordBytes = scanRecordBytes;
-    }
-
+    /**
+     * 获取广播包（API21以上才有内容）
+     *
+     * @return ScanRecord对象
+     */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     public ScanRecord getScanRecord() {
         return scanRecord;
     }
 
+    /**
+     * 设置广播包内容
+     * @param scanRecord ScanRecord对象
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     void setScanRecord(ScanRecord scanRecord) {
         this.scanRecord = scanRecord;
     }
 
+    /**
+     * 获取设备名称
+     * @return 设备名称
+     */
     public String getDeviceName() {
         if (mDeviceName == null) {
             return mBluetoothDevice.getName();
@@ -115,10 +134,18 @@ public class BleDevice implements Serializable, Parcelable {
         }
     }
 
-    private void setDeviceName(String deviceName) {
+    /**
+     * 设置设备名
+     * @param deviceName 设备名
+     */
+   private void setDeviceName(String deviceName) {
         mDeviceName = deviceName;
     }
 
+    /**
+     * 获取设备地址
+     * @return 设备地址
+     */
     public String getDeviceAddress() {
         return mBluetoothDevice.getAddress();
     }
@@ -168,6 +195,8 @@ public class BleDevice implements Serializable, Parcelable {
      * argument; {@code false} otherwise.
      * @see #hashCode()
      * @see HashMap
+     *
+     * 重写equals方法
      */
     @Override
     public boolean equals(Object obj) {
@@ -179,6 +208,7 @@ public class BleDevice implements Serializable, Parcelable {
         return bleDevice.getBluetoothDevice().equals(getBluetoothDevice());
     }
 
+    /*------------------------Parcelable接口----------------------------*/
 
     @Override
     public int describeContents() {

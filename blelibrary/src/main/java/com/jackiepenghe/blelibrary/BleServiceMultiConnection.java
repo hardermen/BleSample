@@ -9,16 +9,36 @@ import android.os.IBinder;
  *
  * @author alm
  * @date 2017/11/15
+ * BLE多连接服务的连接工具
  */
 
 public class BleServiceMultiConnection implements ServiceConnection {
+
+    /*------------------------静态常量----------------------------*/
+
+    /**
+     * TAG
+     */
     private static final String TAG = "BleServiceMultiConnecti";
 
+    /*------------------------成员变量----------------------------*/
+
+    /**
+     * BLE多连接工具
+     */
     private BleMultiConnector bleMultiConnector;
 
+    /*------------------------构造函数----------------------------*/
+
+    /**
+     * 构造函数
+     * @param bleMultiConnector BLE多连接工具
+     */
     BleServiceMultiConnection(BleMultiConnector bleMultiConnector) {
         this.bleMultiConnector = bleMultiConnector;
     }
+
+    /*------------------------实现接口函数----------------------------*/
 
     /**
      * Called when a connection to the Service has been established, with
@@ -42,7 +62,7 @@ public class BleServiceMultiConnection implements ServiceConnection {
             bleMultiConnector.setBluetoothMultiService(((BluetoothMultiServiceBinder) iBinder).getBluetoothMultiService());
             if (bleMultiConnector.getBluetoothMultiService().initialize()){
                 Tool.warnOut(TAG,"蓝牙多连接初始化完成");
-                bleMultiConnector.getBluetoothMultiService().setInitializeFinished(true);
+                bleMultiConnector.getBluetoothMultiService().setInitializeFinished();
             }else {
                 Tool.warnOut(TAG,"蓝牙多连接初始化失败");
             }

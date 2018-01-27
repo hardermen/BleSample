@@ -15,7 +15,6 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -29,7 +28,14 @@ import java.util.UUID;
 
 public class BluetoothLeService extends Service {
 
+    /*------------------------静态常量----------------------------*/
+
+    /**
+     * TAG
+     */
     private static final String TAG = "BluetoothLeService";
+
+    /*------------------------成员变量----------------------------*/
 
     /**
      * Binder对象
@@ -56,6 +62,8 @@ public class BluetoothLeService extends Service {
      */
     private BluetoothGatt bluetoothGatt;
 
+    /*------------------------重写父类函数----------------------------*/
+
     /**
      * Called by the system when the service is first created.  Do not call this method directly.
      */
@@ -65,6 +73,24 @@ public class BluetoothLeService extends Service {
         bleBluetoothGattCallback = new BleBluetoothGattCallback(BluetoothLeService.this);
         bluetoothLeServiceBinder = new BluetoothLeServiceBinder(BluetoothLeService.this);
     }
+
+    /**
+     * Called by the system to notify a Service that it is no longer used and is being removed.  The
+     * service should clean up any resources it holds (threads, registered
+     * receivers, etc) at this point.  Upon return, there will be no more calls
+     * in to this Service object and it is effectively dead.  Do not call this method directly.
+     */
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        bluetoothLeServiceBinder = null;
+        bleBluetoothGattCallback = null;
+        bluetoothManager = null;
+        bluetoothAdapter = null;
+        bluetoothGatt = null;
+    }
+
+    /*------------------------实现父类函数----------------------------*/
 
     /**
      * Return the communication channel to the service.  May return null if
@@ -93,28 +119,14 @@ public class BluetoothLeService extends Service {
         return bluetoothLeServiceBinder;
     }
 
-    /**
-     * Called by the system to notify a Service that it is no longer used and is being removed.  The
-     * service should clean up any resources it holds (threads, registered
-     * receivers, etc) at this point.  Upon return, there will be no more calls
-     * in to this Service object and it is effectively dead.  Do not call this method directly.
-     */
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        bluetoothLeServiceBinder = null;
-        bleBluetoothGattCallback = null;
-        bluetoothManager = null;
-        bluetoothAdapter = null;
-        bluetoothGatt = null;
-    }
+    /*------------------------库内函数----------------------------*/
 
     /**
      * 初始化蓝牙相关的对象
      *
      * @return true表示成功
      */
-    public boolean initialize() {
+    boolean initialize() {
         //使用单例模式获取蓝牙管理器
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
 
@@ -134,7 +146,7 @@ public class BluetoothLeService extends Service {
     /**
      * 发起连接远端设备的请求
      *
-     * @param address 远端设备地址
+     * @param address       远端设备地址
      * @param autoReconnect 自动重连标志
      * @return true表示成功
      */
@@ -240,15 +252,14 @@ public class BluetoothLeService extends Service {
     }
 
     /**
-     * 打开通知
+     * 打开或者关闭通知
      *
      * @param serviceUUID        服务UUID
-     *                           *
      * @param characteristicUUID 特征UUID
-     *                           *
-     * @return true表示成功
+     * @param enable             是否打开通知
+     * @return true表示执行成功
      */
-    boolean openNotification(String serviceUUID, String characteristicUUID) {
+    boolean enableNotification(String serviceUUID, String characteristicUUID, boolean enable) {
         if (serviceUUID == null || characteristicUUID == null) {
             return false;
         }
@@ -257,7 +268,7 @@ public class BluetoothLeService extends Service {
             return false;
         }
         BluetoothGattCharacteristic bluetoothGattCharacteristic = bluetoothGattService.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (!bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)) {
+        if (!bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, enable)) {
             return false;
         }
         BluetoothGattDescriptor bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(UUID.fromString(BleConstants.CLIENT_CHARACTERISTIC_CONFIG));
@@ -265,36 +276,6 @@ public class BluetoothLeService extends Service {
             return false;
         } else {
             bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        }
-        return bluetoothGatt.writeDescriptor(bluetoothGattDescriptor);
-    }
-
-    /**
-     * 关闭通知
-     *
-     * @param serviceUUID        服务UUID
-     *                           *
-     * @param characteristicUUID 特征UUID
-     *                           *
-     * @return true表示成功
-     */
-    boolean closeNotification(String serviceUUID, String characteristicUUID) {
-        if (serviceUUID == null || characteristicUUID == null) {
-            return false;
-        }
-        BluetoothGattService bluetoothGattService = bluetoothGatt.getService(UUID.fromString(serviceUUID));
-        if (bluetoothGattService == null) {
-            return false;
-        }
-        BluetoothGattCharacteristic bluetoothGattCharacteristic = bluetoothGattService.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (!bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)) {
-            return false;
-        }
-        BluetoothGattDescriptor bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(UUID.fromString(BleConstants.CLIENT_CHARACTERISTIC_CONFIG));
-        if (bluetoothGattDescriptor == null) {
-            return false;
-        } else {
-            bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
         }
         return bluetoothGatt.writeDescriptor(bluetoothGattDescriptor);
     }
@@ -344,8 +325,14 @@ public class BluetoothLeService extends Service {
         return bleBluetoothGattCallback.getServices();
     }
 
+    /**
+     * 根据指定的UUID获取服务
+     *
+     * @param uuid 服务的UUID
+     * @return BluetoothGattService
+     */
     BluetoothGattService getService(UUID uuid) {
-        if (bleBluetoothGattCallback == null){
+        if (bleBluetoothGattCallback == null) {
             return null;
         }
         return bleBluetoothGattCallback.getService(uuid);
@@ -356,4 +343,12 @@ public class BluetoothLeService extends Service {
         return bluetoothGatt != null && bluetoothGatt.requestMtu(mtu);
     }
 
+    /**
+     * 获取当前连接的GATT
+     *
+     * @return BluetoothGatt
+     */
+    BluetoothGatt getBluetoothGatt() {
+        return bluetoothGatt;
+    }
 }

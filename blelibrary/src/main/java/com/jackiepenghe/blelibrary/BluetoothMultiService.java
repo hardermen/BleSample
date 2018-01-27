@@ -4,21 +4,15 @@ import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import com.jackiepenghe.blelibrary.BaseConnectCallback;
-
-import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -30,367 +24,40 @@ import java.util.UUID;
 /**
  * @author alm
  * @date 2017/11/15
+ * BLE多连接服务
  */
 
-@SuppressWarnings("SameParameterValue")
 public class BluetoothMultiService extends Service {
+
+    /*------------------------静态常量----------------------------*/
+
     private static final String TAG = "BluetoothMultiService";
 
-    private HashMap<String, BaseConnectCallback> callbackHashMap = new HashMap<>();
-    private HashMap<String, BluetoothGatt> gattCallbackHashMap = new HashMap<>();
+    /*------------------------成员变量----------------------------*/
+
+    /**
+     * BLE多连接的Binder对象
+     */
     private BluetoothMultiServiceBinder bluetoothMultiServiceBinder;
+    /**
+     * 蓝牙适配器
+     */
     private BluetoothAdapter bluetoothAdapter;
+    /**
+     * 多连接服务是否初始化的标志
+     */
     private boolean initializeFinished;
-    private Handler handler = new Handler();
 
-    private BluetoothGattCallback bleBluetoothMultiGattCallback = new BluetoothGattCallback() {
+    /**
+     * 先设置一个默认的连接回调，通过这个回调再触发对应的设备的回调
+     */
+    private BleBluetoothMultiGattCallback bleBluetoothMultiGattCallback;
+    /**
+     * 存储GATT的集合
+     */
+    private HashMap<String, BluetoothGatt> gattCallbackHashMap = new HashMap<>();
 
-
-        /**
-         * Callback triggered as result of {@link BluetoothGatt#setPreferredPhy}, or as a result of
-         * remote device changing the PHY.
-         *
-         * @param gatt   GATT client
-         * @param txPhy  the transmitter PHY in use. One of {@link BluetoothDevice#PHY_LE_1M},
-         *               {@link BluetoothDevice#PHY_LE_2M}, and {@link BluetoothDevice#PHY_LE_CODED}.
-         * @param rxPhy  the receiver PHY in use. One of {@link BluetoothDevice#PHY_LE_1M},
-         *               {@link BluetoothDevice#PHY_LE_2M}, and {@link BluetoothDevice#PHY_LE_CODED}.
-         * @param status Status of the PHY update operation.
-         *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-         */
-        @Override
-        public void onPhyUpdate(final BluetoothGatt gatt, final int txPhy, final int rxPhy, int status) {
-            final String gattAddress = gatt.getDevice().getAddress();
-            if (callbackHashMap.containsKey(gattAddress)) {
-                final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        baseConnectCallback.onPhyUpdate(gatt, txPhy, rxPhy);
-                    }
-                });
-            }
-
-        }
-
-        /**
-         * Callback triggered as result of {@link BluetoothGatt#readPhy}
-         *
-         * @param gatt   GATT client
-         * @param txPhy  the transmitter PHY in use. One of {@link BluetoothDevice#PHY_LE_1M},
-         *               {@link BluetoothDevice#PHY_LE_2M}, and {@link BluetoothDevice#PHY_LE_CODED}.
-         * @param rxPhy  the receiver PHY in use. One of {@link BluetoothDevice#PHY_LE_1M},
-         *               {@link BluetoothDevice#PHY_LE_2M}, and {@link BluetoothDevice#PHY_LE_CODED}.
-         * @param status Status of the PHY read operation.
-         *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-         */
-        @Override
-        public void onPhyRead(final BluetoothGatt gatt, final int txPhy, final int rxPhy, int status) {
-            String gattAddress = gatt.getDevice().getAddress();
-            if (callbackHashMap.containsKey(gattAddress)) {
-                final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        baseConnectCallback.onPhyRead(gatt, txPhy, rxPhy);
-                    }
-                });
-            }
-        }
-
-        /**
-         * BaseConnectCallback indicating when GATT client has connected/disconnected to/from a remote
-         * GATT server.
-         *
-         * @param gatt     GATT client
-         * @param status   Status of the connect or disconnect operation.
-         *                 {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-         * @param newState Returns the new connection state. Can be one of
-         *                 {@link BluetoothProfile#STATE_DISCONNECTED} or
-         *                 {@link BluetoothProfile#STATE_CONNECTED}
-         */
-        @Override
-        public void onConnectionStateChange(final BluetoothGatt gatt, int status, int newState) {
-
-            String gattAddress;
-            final BaseConnectCallback baseConnectCallback;
-
-
-            switch (newState) {
-                case BluetoothGatt.STATE_DISCONNECTED:
-                    gattAddress = gatt.getDevice().getAddress();
-                    if (callbackHashMap.containsKey(gattAddress)) {
-                        baseConnectCallback = callbackHashMap.get(gattAddress);
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                baseConnectCallback.onDisConnected(gatt);
-                            }
-                        });
-                    }
-                    break;
-                case BluetoothGatt.STATE_CONNECTING:
-                    gattAddress = gatt.getDevice().getAddress();
-                    if (callbackHashMap.containsKey(gattAddress)) {
-                        baseConnectCallback = callbackHashMap.get(gattAddress);
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                baseConnectCallback.onConnecting(gatt);
-                            }
-                        });
-                    }
-                    break;
-                case BluetoothGatt.STATE_CONNECTED:
-                    gattAddress = gatt.getDevice().getAddress();
-                    if (callbackHashMap.containsKey(gattAddress)) {
-                        baseConnectCallback = callbackHashMap.get(gattAddress);
-                        if (!gatt.discoverServices()) {
-                            handler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    baseConnectCallback.onDiscoverServicesFailed(gatt);
-                                }
-                            });
-                            return;
-                        }
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                baseConnectCallback.onConnected(gatt);
-                            }
-                        });
-                    }
-                    break;
-                case BluetoothGatt.STATE_DISCONNECTING:
-                    gattAddress = gatt.getDevice().getAddress();
-                    if (callbackHashMap.containsKey(gattAddress)) {
-                        baseConnectCallback = callbackHashMap.get(gattAddress);
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                baseConnectCallback.onDisconnecting(gatt);
-                            }
-                        });
-                    }
-                    break;
-                default:
-                    Tool.warnOut(TAG, gatt.getDevice().getAddress() + "other state");
-                    break;
-            }
-        }
-
-        /**
-         * Callback invoked when the list of remote services, characteristics and descriptors
-         * for the remote device have been updated, ie new services have been discovered.
-         *
-         * @param gatt   GATT client invoked {@link BluetoothGatt#discoverServices}
-         * @param status {@link BluetoothGatt#GATT_SUCCESS} if the remote device
-         */
-        @Override
-        public void onServicesDiscovered(final BluetoothGatt gatt, int status) {
-            String gattAddress = gatt.getDevice().getAddress();
-            if (callbackHashMap.containsKey(gattAddress)) {
-                final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        baseConnectCallback.onServicesDiscovered(gatt);
-                    }
-                });
-            }
-        }
-
-        /**
-         * Callback reporting the result of a characteristic read operation.
-         *
-         * @param gatt           GATT client invoked {@link BluetoothGatt#readCharacteristic}
-         * @param characteristic Characteristic that was read from the associated
-         *                       remote device.
-         * @param status         {@link BluetoothGatt#GATT_SUCCESS} if the read operation
-         */
-        @Override
-        public void onCharacteristicRead(final BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            String gattAddress = gatt.getDevice().getAddress();
-            if (callbackHashMap.containsKey(gattAddress)) {
-                final byte[] values = characteristic.getValue();
-                final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        baseConnectCallback.onCharacteristicRead(gatt, values);
-                    }
-                });
-            }
-        }
-
-        /**
-         * Callback indicating the result of a characteristic write operation.
-         * <p>
-         * <p>If this callback is invoked while a reliable write transaction is
-         * in progress, the value of the characteristic represents the value
-         * reported by the remote device. An application should compare this
-         * value to the desired value to be written. If the values don't match,
-         * the application must abort the reliable write transaction.
-         *
-         * @param gatt           GATT client invoked {@link BluetoothGatt#writeCharacteristic}
-         * @param characteristic Characteristic that was written to the associated
-         *                       remote device.
-         * @param status         The result of the write operation
-         *                       {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-         */
-        @Override
-        public void onCharacteristicWrite(final BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            String gattAddress = gatt.getDevice().getAddress() + gatt.getDevice().getAddress();
-            if (callbackHashMap.containsKey(gattAddress)) {
-                final byte[] values = characteristic.getValue();
-                final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        baseConnectCallback.onCharacteristicWrite(gatt, values);
-                    }
-                });
-            }
-        }
-
-        /**
-         * Callback triggered as a result of a remote characteristic notification.
-         *
-         * @param gatt           GATT client the characteristic is associated with
-         * @param characteristic Characteristic that has been updated as a result
-         */
-        @Override
-        public void onCharacteristicChanged(final BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-            String gattAddress = gatt.getDevice().getAddress();
-            if (callbackHashMap.containsKey(gattAddress)) {
-                final byte[] values = characteristic.getValue();
-                final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        baseConnectCallback.onReceivedNotification(gatt, values);
-                    }
-                });
-            }
-        }
-
-        /**
-         * Callback reporting the result of a descriptor read operation.
-         *
-         * @param gatt       GATT client invoked {@link BluetoothGatt#readDescriptor}
-         * @param descriptor Descriptor that was read from the associated
-         *                   remote device.
-         * @param status     {@link BluetoothGatt#GATT_SUCCESS} if the read operation
-         */
-        @Override
-        public void onDescriptorRead(final BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-            String gattAddress = gatt.getDevice().getAddress();
-            if (callbackHashMap.containsKey(gattAddress)) {
-                final byte[] values = descriptor.getValue();
-                final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        baseConnectCallback.onDescriptorRead(gatt, values);
-                    }
-                });
-            }
-        }
-
-        /**
-         * Callback indicating the result of a descriptor write operation.
-         *
-         * @param gatt       GATT client invoked {@link BluetoothGatt#writeDescriptor}
-         * @param descriptor Descriptor that was writte to the associated
-         *                   remote device.
-         * @param status     The result of the write operation
-         *                   {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-         */
-        @Override
-        public void onDescriptorWrite(final BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-            String gattAddress = gatt.getDevice().getAddress();
-            if (callbackHashMap.containsKey(gattAddress)) {
-                final byte[] values = descriptor.getValue();
-                final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        baseConnectCallback.onDescriptorWrite(gatt, values);
-                    }
-                });
-            }
-        }
-
-        /**
-         * Callback invoked when a reliable write transaction has been completed.
-         *
-         * @param gatt   GATT client invoked {@link BluetoothGatt#executeReliableWrite}
-         * @param status {@link BluetoothGatt#GATT_SUCCESS} if the reliable write
-         */
-        @Override
-        public void onReliableWriteCompleted(final BluetoothGatt gatt, int status) {
-            String gattAddress = gatt.getDevice().getAddress();
-            if (callbackHashMap.containsKey(gattAddress)) {
-                final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        baseConnectCallback.onReliableWriteCompleted(gatt);
-                    }
-                });
-            }
-        }
-
-        /**
-         * Callback reporting the RSSI for a remote device connection.
-         * <p>
-         * This callback is triggered in response to the
-         * {@link BluetoothGatt#readRemoteRssi} function.
-         *
-         * @param gatt   GATT client invoked {@link BluetoothGatt#readRemoteRssi}
-         * @param rssi   The RSSI value for the remote device
-         * @param status {@link BluetoothGatt#GATT_SUCCESS} if the RSSI was read successfully
-         */
-        @Override
-        public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, int status) {
-            String gattAddress = gatt.getDevice().getAddress();
-            if (callbackHashMap.containsKey(gattAddress)) {
-                final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        baseConnectCallback.onReadRemoteRssi(gatt, rssi);
-                    }
-                });
-            }
-        }
-
-        /**
-         * Callback indicating the MTU for a given device connection has changed.
-         * <p>
-         * This callback is triggered in response to the
-         * {@link BluetoothGatt#requestMtu} function, or in response to a connection
-         * event.
-         *
-         * @param gatt   GATT client invoked {@link BluetoothGatt#requestMtu}
-         * @param mtu    The new MTU size
-         * @param status {@link BluetoothGatt#GATT_SUCCESS} if the MTU has been changed successfully
-         */
-        @Override
-        public void onMtuChanged(final BluetoothGatt gatt, final int mtu, int status) {
-            String gattAddress = gatt.getDevice().getAddress();
-            if (callbackHashMap.containsKey(gattAddress)) {
-                final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        baseConnectCallback.onMtuChanged(gatt, mtu);
-                    }
-                });
-            }
-        }
-    };
+    /*------------------------重写父类函数----------------------------*/
 
     /**
      * Called by the system when the service is first created.  Do not call this method directly.
@@ -398,6 +65,7 @@ public class BluetoothMultiService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        bleBluetoothMultiGattCallback = new BleBluetoothMultiGattCallback();
         this.bluetoothMultiServiceBinder = new BluetoothMultiServiceBinder(this);
     }
 
@@ -410,14 +78,13 @@ public class BluetoothMultiService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        gattCallbackHashMap.clear();
-        gattCallbackHashMap = null;
-        callbackHashMap.clear();
-        callbackHashMap = null;
+        bleBluetoothMultiGattCallback.close();
         bluetoothMultiServiceBinder = null;
         bluetoothAdapter = null;
         initializeFinished = false;
     }
+
+    /*------------------------实现父类函数----------------------------*/
 
     /**
      * Return the communication channel to the service.  May return null if
@@ -445,7 +112,14 @@ public class BluetoothMultiService extends Service {
         return bluetoothMultiServiceBinder;
     }
 
-    public boolean initialize() {
+    /*------------------------库内函数----------------------------*/
+
+    /**
+     * 初始化
+     *
+     * @return true表示初始化成功
+     */
+    boolean initialize() {
         //使用单例模式获取蓝牙管理器
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
 
@@ -461,7 +135,15 @@ public class BluetoothMultiService extends Service {
         return true;
     }
 
-    public boolean connectDevice(String address, BaseConnectCallback baseConnectCallback, boolean autoConnect) {
+    /**
+     * 发起一个连接
+     *
+     * @param address             设备地址
+     * @param baseConnectCallback 连接回调
+     * @param autoConnect         自动连接标志
+     * @return true表示成功发起连接
+     */
+    boolean connectDevice(String address, BaseConnectCallback baseConnectCallback, boolean autoConnect) {
         if (bluetoothAdapter == null) {
             return false;
         }
@@ -479,8 +161,8 @@ public class BluetoothMultiService extends Service {
 
         BluetoothGatt bluetoothGatt = remoteDevice.connectGatt(this, autoConnect, bleBluetoothMultiGattCallback);
         if (autoConnect) {
-            if (!callbackHashMap.containsKey(address)) {
-                callbackHashMap.put(address, baseConnectCallback);
+            if (!bleBluetoothMultiGattCallback.callbackHashMap.containsKey(address)) {
+                bleBluetoothMultiGattCallback.callbackHashMap.put(address, baseConnectCallback);
             }
             if (!gattCallbackHashMap.containsKey(address)) {
                 gattCallbackHashMap.put(address, bluetoothGatt);
@@ -492,8 +174,8 @@ public class BluetoothMultiService extends Service {
             return false;
         }
 
-        if (!callbackHashMap.containsKey(address)) {
-            callbackHashMap.put(address, baseConnectCallback);
+        if (!bleBluetoothMultiGattCallback.callbackHashMap.containsKey(address)) {
+            bleBluetoothMultiGattCallback.callbackHashMap.put(address, baseConnectCallback);
         }
         if (!gattCallbackHashMap.containsKey(address)) {
             gattCallbackHashMap.put(address, bluetoothGatt);
@@ -501,7 +183,13 @@ public class BluetoothMultiService extends Service {
         return bluetoothGatt.connect();
     }
 
-    public boolean close(String address) {
+    /**
+     * 根据指定的设备地址关闭GATT
+     *
+     * @param address 设备地址
+     * @return true表示执行成功
+     */
+    boolean close(String address) {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
         }
@@ -511,25 +199,34 @@ public class BluetoothMultiService extends Service {
         BluetoothGatt gatt = gattCallbackHashMap.get(address);
         gatt.close();
         gattCallbackHashMap.remove(address);
-        callbackHashMap.remove(address);
+        bleBluetoothMultiGattCallback.callbackHashMap.remove(address);
         return true;
     }
 
-    public void closeAll() {
+    /**
+     * 关闭所有的GATT
+     */
+    void closeAll() {
         for (Map.Entry<String, BluetoothGatt> entry : gattCallbackHashMap.entrySet()) {
             BluetoothGatt gatt = entry.getValue();
             gatt.disconnect();
             gatt.close();
         }
-        for (Map.Entry<String, BaseConnectCallback> entry : callbackHashMap.entrySet()) {
+        for (Map.Entry<String, BaseConnectCallback> entry : bleBluetoothMultiGattCallback.callbackHashMap.entrySet()) {
             BaseConnectCallback baseConnectCallback = entry.getValue();
             baseConnectCallback.onGattClosed(entry.getKey());
         }
-        callbackHashMap.clear();
+        bleBluetoothMultiGattCallback.callbackHashMap.clear();
         gattCallbackHashMap.clear();
     }
 
-    public boolean disconnect(String address) {
+    /**
+     * 根据设备地址断开指定的设备
+     *
+     * @param address 设备地址
+     * @return true表示发起请求成功
+     */
+    boolean disconnect(String address) {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
         }
@@ -541,23 +238,38 @@ public class BluetoothMultiService extends Service {
         return true;
     }
 
-    public boolean disconnectAll() {
+    /**
+     * 断开所有设备
+     */
+    void disconnectAll() {
         for (Map.Entry<String, BluetoothGatt> entry : gattCallbackHashMap.entrySet()) {
             BluetoothGatt gatt = entry.getValue();
             gatt.disconnect();
         }
-        return true;
     }
 
-    public boolean reConnect(String address) {
+    /**
+     * 根据地址重新连接某个被断开的设备
+     *
+     * @param address 设备地址
+     * @return true表示成功发起请求
+     */
+    boolean reConnect(String address) {
         return reConnect(address, false);
     }
 
-    public boolean reConnect(String address, boolean autoConnect) {
+    /**
+     * 根据设备地址重新连接某个被断开的设备
+     *
+     * @param address     设备地址
+     * @param autoConnect 是否自动连接
+     * @return true表示成功发起请求
+     */
+    boolean reConnect(String address, @SuppressWarnings("SameParameterValue") boolean autoConnect) {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
         }
-        if (!callbackHashMap.containsKey(address)) {
+        if (!bleBluetoothMultiGattCallback.callbackHashMap.containsKey(address)) {
             return false;
         }
         if (gattCallbackHashMap.containsKey(address)) {
@@ -587,7 +299,13 @@ public class BluetoothMultiService extends Service {
         return bluetoothGatt.connect();
     }
 
-    public List<BluetoothGattService> getServices(String address) {
+    /**
+     * 根据地址获取指定设备的服务
+     *
+     * @param address 设备地址
+     * @return List<BluetoothGattService>
+     */
+    List<BluetoothGattService> getServices(String address) {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return null;
         }
@@ -598,7 +316,14 @@ public class BluetoothMultiService extends Service {
         return null;
     }
 
-    public BluetoothGattService getService(String address, UUID uuid) {
+    /**
+     * 根据地址和UUID获取指定设备的指定服务
+     *
+     * @param address 设备地址
+     * @param uuid    UUID
+     * @return BluetoothGattService
+     */
+    BluetoothGattService getService(String address, UUID uuid) {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return null;
         }
@@ -612,7 +337,13 @@ public class BluetoothMultiService extends Service {
         return null;
     }
 
-    public boolean refreshGattCache(String address) {
+    /**
+     * 根据设备地址清除GATT的缓存
+     *
+     * @param address 设备地址
+     * @return true表示执行成功
+     */
+    boolean refreshGattCache(String address) {
 
         if (BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
@@ -644,14 +375,26 @@ public class BluetoothMultiService extends Service {
         return false;
     }
 
-    public void refreshAllGattCache() {
+    /**
+     * 清除所有GATT的缓存
+     */
+    void refreshAllGattCache() {
         for (Map.Entry<String, BluetoothGatt> entries : gattCallbackHashMap.entrySet()) {
             String key = entries.getKey();
             refreshGattCache(key);
         }
     }
 
-    public boolean writeData(String address, String serviceUUID, String characteristicUUID, byte[] values) {
+    /**
+     * 根据设备地址来给对应的设备写入数据
+     *
+     * @param address            设备地址
+     * @param serviceUUID        服务UUID
+     * @param characteristicUUID 特征UUID
+     * @param values             数据内容
+     * @return true表示成功发起请求
+     */
+    boolean writeData(String address, String serviceUUID, String characteristicUUID, byte[] values) {
 
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
@@ -676,7 +419,15 @@ public class BluetoothMultiService extends Service {
 
     }
 
-    public boolean readData(String address, String serviceUUID, String characteristicUUID) {
+    /**
+     * 根据设备地址来读取对应的设备的数据
+     *
+     * @param address            设备地址
+     * @param serviceUUID        服务UUID
+     * @param characteristicUUID 特征UUID
+     * @return true表示成功发起请求
+     */
+    boolean readData(String address, String serviceUUID, String characteristicUUID) {
 
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
@@ -701,7 +452,16 @@ public class BluetoothMultiService extends Service {
         return characteristic != null && bluetoothGatt.readCharacteristic(characteristic);
     }
 
-    public boolean openNotification(String address, String serviceUUID, String characteristicUUID) {
+    /**
+     * 打开或关闭设备的通知
+     *
+     * @param address            设备地址
+     * @param serviceUUID        服务UUID
+     * @param characteristicUUID 特征UUID
+     * @param enable             true表示开启通知，false表示关闭通知
+     * @return true表示成功发起请求
+     */
+    boolean enableNotification(String address, String serviceUUID, String characteristicUUID, boolean enable) {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
         }
@@ -719,7 +479,7 @@ public class BluetoothMultiService extends Service {
             return false;
         }
         BluetoothGattCharacteristic bluetoothGattCharacteristic = bluetoothGattService.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (!bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)) {
+        if (!bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, enable)) {
             return false;
         }
         BluetoothGattDescriptor bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(UUID.fromString(BleConstants.CLIENT_CHARACTERISTIC_CONFIG));
@@ -731,45 +491,35 @@ public class BluetoothMultiService extends Service {
         return bluetoothGatt.writeDescriptor(bluetoothGattDescriptor);
     }
 
-    public boolean closeNotification(String address, String serviceUUID, String characteristicUUID) {
+    /**
+     * 查看设备是否已经连接
+     *
+     * @param address 设备地址
+     * @return true表示已经连接
+     */
+    boolean isConnected(String address) {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
         }
-
         if (!gattCallbackHashMap.containsKey(address)) {
             return false;
         }
-
-        BluetoothGatt bluetoothGatt = gattCallbackHashMap.get(address);
-        if (serviceUUID == null || characteristicUUID == null) {
-            return false;
-        }
-        BluetoothGattService bluetoothGattService = bluetoothGatt.getService(UUID.fromString(serviceUUID));
-        if (bluetoothGattService == null) {
-            return false;
-        }
-        BluetoothGattCharacteristic bluetoothGattCharacteristic = bluetoothGattService.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (!bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, true)) {
-            return false;
-        }
-        BluetoothGattDescriptor bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(UUID.fromString(BleConstants.CLIENT_CHARACTERISTIC_CONFIG));
-        if (bluetoothGattDescriptor == null) {
-            return false;
-        } else {
-            bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-        }
-        return bluetoothGatt.writeDescriptor(bluetoothGattDescriptor);
+        BaseConnectCallback baseConnectCallback = bleBluetoothMultiGattCallback.callbackHashMap.get(address);
+        return baseConnectCallback.isConnected();
     }
 
-    boolean isConnected(String address) {
-        return BluetoothAdapter.checkBluetoothAddress(address) && gattCallbackHashMap.containsKey(address);
-
+    /**
+     * 设置初始化状态为初始化完成
+     */
+    void setInitializeFinished() {
+        this.initializeFinished = true;
     }
 
-    void setInitializeFinished(boolean initializeFinished) {
-        this.initializeFinished = initializeFinished;
-    }
-
+    /**
+     * 获取初始化状态
+     *
+     * @return 初始化状态
+     */
     boolean isInitializeFinished() {
         return initializeFinished;
     }

@@ -4,6 +4,8 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 
 /**
  * @author alm
@@ -11,8 +13,9 @@ import android.content.pm.PackageManager;
  * BlE管理类
  */
 
-@SuppressWarnings({"WeakerAccess", "unused"})
 public class BleManager {
+
+    /*------------------------静态变量----------------------------*/
 
     /**
      * Ble连接实例
@@ -30,6 +33,41 @@ public class BleManager {
      * Ble广播实例
      */
     private static BleBroadCastor bleBroadCastor;
+    /**
+     * 重置Ble广播实例的标志（避免无限循环调用）
+     */
+    private static boolean resetBleBroadCastorFlag;
+
+    /*------------------------库内静态函数----------------------------*/
+
+    /**
+     * 重置bleMultiConnector避免内存泄漏
+     */
+    static void resetBleMultiConnector() {
+        if (bleMultiConnector != null) {
+            bleMultiConnector.closeAll();
+        }
+        bleMultiConnector = null;
+    }
+
+    /**
+     * 重置Ble广播实例
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    static void resetBleBroadCastor() {
+        if (resetBleBroadCastorFlag) {
+            return;
+        }
+        resetBleBroadCastorFlag = true;
+
+        if (bleBroadCastor != null) {
+            bleBroadCastor.close();
+        }
+        bleBroadCastor = null;
+        resetBleBroadCastorFlag = false;
+    }
+
+    /*------------------------公开静态函数----------------------------*/
 
     /**
      * 判断手机是否支持BLE
@@ -114,6 +152,7 @@ public class BleManager {
      * @param context 上下文
      * @return BleBroadCastor
      */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public static BleBroadCastor getBleBroadCastor(Context context) {
         if (!isSupportBle(context)) {
             return null;
@@ -134,6 +173,7 @@ public class BleManager {
      * @param context 上下文
      * @return 广播实例
      */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public static BleBroadCastor newBleBroadCastor(Context context) {
         if (!isSupportBle(context)) {
             return null;
@@ -159,22 +199,6 @@ public class BleManager {
             }
         }
         return bleMultiConnector;
-    }
-
-    /**
-     * 重置bleMultiConnector避免内存泄漏
-     */
-    static void resetBleMultiConnector() {
-        if (bleMultiConnector != null) {
-            bleMultiConnector.closeAll();
-        }
-        bleMultiConnector = null;
-    }
-
-    static void resetBleBroadCastor() {
-        if (bleBroadCastor != null) {
-            bleBroadCastor = null;
-        }
     }
 
     /**

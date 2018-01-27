@@ -1,12 +1,12 @@
 package com.jackiepenghe.blelibrary;
 
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattService;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.RequiresApi;
-
 
 import java.util.List;
 import java.util.UUID;
@@ -18,11 +18,29 @@ import java.util.UUID;
 
 class BleServiceConnection implements ServiceConnection {
 
+ /*------------------------静态常量----------------------------*/
+
+    /**
+     * TAG
+     */
     private static final String TAG = "BleServiceConnection";
 
+     /*------------------------成员变量----------------------------*/
+
+    /**
+     * 设备地址
+     */
     private String mAddress;
+    /**
+     * BLE连接服务
+     */
     private BluetoothLeService bluetoothLeService;
-    private boolean autoReconnect;
+    /**
+     * 是否自动连接的标识
+     */
+    private boolean autoConnect;
+
+     /*------------------------构造函数----------------------------*/
 
     /**
      * 构造器
@@ -32,6 +50,8 @@ class BleServiceConnection implements ServiceConnection {
     BleServiceConnection(String address) {
         mAddress = address;
     }
+
+     /*------------------------实现接口函数----------------------------*/
 
     /**
      * Called when a connection to the Service has been established, with
@@ -58,7 +78,7 @@ class BleServiceConnection implements ServiceConnection {
             Tool.warnOut(TAG, "address is null!");
             return;
         }
-        boolean connect = bluetoothLeService.connect(mAddress,autoReconnect);
+        boolean connect = bluetoothLeService.connect(mAddress, autoConnect);
         Tool.warnOut(TAG, "connect " + connect);
     }
 
@@ -77,6 +97,7 @@ class BleServiceConnection implements ServiceConnection {
 
     }
 
+    /*------------------------库内函数----------------------------*/
 
     /**
      * 与远端设备断开连接
@@ -123,29 +144,14 @@ class BleServiceConnection implements ServiceConnection {
     }
 
     /**
-     * 打开通知
-     *
-     * @param serviceUUID        服务UUID
-     *                           *
+     * 打开或关闭通知
+     * @param serviceUUID 服务UUID
      * @param characteristicUUID 特征UUID
-     *                           *
-     * @return true表示成功
+     * @param enable true表示打开通知，false表示关闭通知
+     * @return true表示执行成功
      */
-    boolean openNotification(String serviceUUID, String characteristicUUID) {
-        return bluetoothLeService.openNotification(serviceUUID, characteristicUUID);
-    }
-
-    /**
-     * 关闭通知
-     *
-     * @param serviceUUID        服务UUID
-     *                           *
-     * @param characteristicUUID 特征UUID
-     *                           *
-     * @return true表示成功
-     */
-    boolean closeNotification(String serviceUUID, String characteristicUUID) {
-        return bluetoothLeService.closeNotification(serviceUUID, characteristicUUID);
+    boolean enableNotification(String serviceUUID, String characteristicUUID, boolean enable) {
+        return bluetoothLeService.enableNotification(serviceUUID, characteristicUUID, enable);
     }
 
     /**
@@ -185,12 +191,23 @@ class BleServiceConnection implements ServiceConnection {
         return bluetoothLeService.getServices();
     }
 
-    void setAutoReconnect(boolean autoReconnect) {
-        this.autoReconnect = autoReconnect;
+    /**
+     * 设置自动连接标识
+     *
+     * @param autoConnect 自动连接标识
+     */
+    void setAutoConnect(boolean autoConnect) {
+        this.autoConnect = autoConnect;
     }
 
+    /**
+     * 根据UUID获取设备的服务
+     *
+     * @param uuid UUID
+     * @return BluetoothGattService
+     */
     BluetoothGattService getService(UUID uuid) {
-        if (bluetoothLeService == null){
+        if (bluetoothLeService == null) {
             return null;
         }
         return bluetoothLeService.getService(uuid);
@@ -198,11 +215,21 @@ class BleServiceConnection implements ServiceConnection {
 
     /**
      * 请求改变最大传输字节限制
+     *
      * @param mtu 最大传输字节数
      * @return true表示成功
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     boolean requestMtu(int mtu) {
         return bluetoothLeService != null && bluetoothLeService.requestMtu(mtu);
+    }
+
+    /**
+     * 获取GATT对象
+     *
+     * @return BluetoothGatt
+     */
+    BluetoothGatt getBluetoothGatt() {
+        return bluetoothLeService.getBluetoothGatt();
     }
 }

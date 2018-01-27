@@ -18,11 +18,24 @@ import java.lang.ref.WeakReference;
 
 class BluetoothStateReceiver extends BroadcastReceiver {
 
+    /*------------------------成员变量----------------------------*/
+
+    /**
+     * 蓝牙扫描器弱引用
+     */
     private WeakReference<BleScanner> bleScannerWeakReference;
 
+    /*------------------------构造函数----------------------------*/
+
+    /**
+     * 构造函数
+     * @param bleScanner BLE扫描器
+     */
     public BluetoothStateReceiver(BleScanner bleScanner) {
         bleScannerWeakReference = new WeakReference<>(bleScanner);
     }
+
+    /*------------------------实现父类函数----------------------------*/
 
     /**
      * This method is called when the BroadcastReceiver is receiving an Intent

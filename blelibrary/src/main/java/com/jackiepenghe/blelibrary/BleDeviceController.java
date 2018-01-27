@@ -11,21 +11,35 @@ import java.util.UUID;
 /**
  * @author alm
  * @date 2017/11/15
+ * 在多连接中，对某一个设备进行操作的工具类
  */
-@SuppressWarnings({"UnusedReturnValue", "unused"})
 public class BleDeviceController {
+
+    /*------------------------成员变量----------------------------*/
+
+    /**
+     * BleMultiConnector弱引用
+     */
     private WeakReference<BleMultiConnector> bleMultiConnectorWeakReference;
+    /**
+     * 设备地址
+     */
     private String address;
+
+    /*------------------------构造函数----------------------------*/
 
     /**
      * 构造器
+     *
      * @param bleMultiConnector BleMultiConnector
-     * @param address 设备地址
+     * @param address           设备地址
      */
     BleDeviceController(BleMultiConnector bleMultiConnector, String address) {
         this.bleMultiConnectorWeakReference = new WeakReference<>(bleMultiConnector);
         this.address = address;
     }
+
+    /*------------------------公开函数----------------------------*/
 
     /**
      * 刷新蓝牙缓存
@@ -70,25 +84,14 @@ public class BleDeviceController {
      * @param characteristicUUID 特征UUID
      * @return true表示成功
      */
-    public boolean openNotification(String serviceUUID, String characteristicUUID) {
+    public boolean enableNotification(String serviceUUID, String characteristicUUID, boolean enable) {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
-        return bleMultiConnector != null && address != null && bleMultiConnector.openNotification(address, serviceUUID, characteristicUUID);
-    }
-
-    /**
-     * 关闭通知
-     *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @return true表示成功
-     */
-    public boolean closeNotification(String serviceUUID, String characteristicUUID) {
-        BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
-        return bleMultiConnector != null && address != null && bleMultiConnector.closeNotification(address, serviceUUID, characteristicUUID);
+        return bleMultiConnector != null && address != null && bleMultiConnector.enableNotification(address, serviceUUID, characteristicUUID, enable);
     }
 
     /**
      * 重连之前连接过的设备
+     *
      * @return true表示发起连接成功
      */
     public boolean reConnect() {
@@ -98,6 +101,7 @@ public class BleDeviceController {
 
     /**
      * 关闭当前连接
+     *
      * @return true表示关闭成功
      */
     public boolean close() {
@@ -107,6 +111,7 @@ public class BleDeviceController {
 
     /**
      * 获取服务列表
+     *
      * @return 服务列表
      */
     public List<BluetoothGattService> getServices() {
@@ -122,6 +127,7 @@ public class BleDeviceController {
 
     /**
      * 断开连接
+     *
      * @return true表示断开成功
      */
     public boolean disconnect() {
@@ -131,6 +137,7 @@ public class BleDeviceController {
 
     /**
      * 获取上下文
+     *
      * @return 上下文
      */
     public Context getContext() {
@@ -143,6 +150,7 @@ public class BleDeviceController {
 
     /**
      * 根据指定UUID获取服务
+     *
      * @param uuid UUID
      * @return 服务
      */
@@ -159,17 +167,18 @@ public class BleDeviceController {
 
     /**
      * 检查特征是否支持通知
-     * @param serviceUUID 服务UUID
+     *
+     * @param serviceUUID        服务UUID
      * @param characteristicUUID 特征UUID
      * @return true表示支持通知
      */
-    public boolean canNotify(String serviceUUID,String characteristicUUID){
+    public boolean canNotify(String serviceUUID, String characteristicUUID) {
         BluetoothGattService service = getService(UUID.fromString(serviceUUID));
-        if (service == null){
+        if (service == null) {
             return false;
         }
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (characteristic == null){
+        if (characteristic == null) {
             return false;
         }
 
@@ -179,17 +188,18 @@ public class BleDeviceController {
 
     /**
      * 检查特征是否支持读取
-     * @param serviceUUID 服务UUID
+     *
+     * @param serviceUUID        服务UUID
      * @param characteristicUUID 特征UUID
      * @return true表示支持读取
      */
-    public boolean canRead(String serviceUUID,String characteristicUUID){
+    public boolean canRead(String serviceUUID, String characteristicUUID) {
         BluetoothGattService service = getService(UUID.fromString(serviceUUID));
-        if (service == null){
+        if (service == null) {
             return false;
         }
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (characteristic == null){
+        if (characteristic == null) {
             return false;
         }
 
@@ -199,17 +209,18 @@ public class BleDeviceController {
 
     /**
      * 检查特征是否支持写入（带符号）
-     * @param serviceUUID 服务UUID
+     *
+     * @param serviceUUID        服务UUID
      * @param characteristicUUID 特征UUID
      * @return true表示支持写入（带符号）
      */
-    public boolean canSignedWrite(String serviceUUID,String characteristicUUID){
+    public boolean canSignedWrite(String serviceUUID, String characteristicUUID) {
         BluetoothGattService service = getService(UUID.fromString(serviceUUID));
-        if (service == null){
+        if (service == null) {
             return false;
         }
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (characteristic == null){
+        if (characteristic == null) {
             return false;
         }
 
@@ -219,17 +230,18 @@ public class BleDeviceController {
 
     /**
      * 检查特征是否支持写入
-     * @param serviceUUID 服务UUID
+     *
+     * @param serviceUUID        服务UUID
      * @param characteristicUUID 特征UUID
      * @return true表示支持写入
      */
-    public boolean canWrite(String serviceUUID,String characteristicUUID){
+    public boolean canWrite(String serviceUUID, String characteristicUUID) {
         BluetoothGattService service = getService(UUID.fromString(serviceUUID));
-        if (service == null){
+        if (service == null) {
             return false;
         }
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (characteristic == null){
+        if (characteristic == null) {
             return false;
         }
 
@@ -239,17 +251,18 @@ public class BleDeviceController {
 
     /**
      * 检查特征是否支持写入（无回复方式）
-     * @param serviceUUID 服务UUID
+     *
+     * @param serviceUUID        服务UUID
      * @param characteristicUUID 特征UUID
      * @return true表示支持写入（无回复方式）
      */
-    public boolean canWriteNoResponse(String serviceUUID,String characteristicUUID){
+    public boolean canWriteNoResponse(String serviceUUID, String characteristicUUID) {
         BluetoothGattService service = getService(UUID.fromString(serviceUUID));
-        if (service == null){
+        if (service == null) {
             return false;
         }
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (characteristic == null){
+        if (characteristic == null) {
             return false;
         }
 

@@ -42,6 +42,18 @@ public class Device2Callback extends BaseConnectCallback {
         Tool.warnOut(TAG,"onGattClosed");
     }
 
+    /**
+     * 当蓝牙客户端配置失败时调用此函式
+     *
+     * @param gatt        蓝牙客户端
+     * @param methodName  方法名
+     * @param errorStatus 错误状态码
+     */
+    @Override
+    public void onBluetoothGattOptionsNotSuccess(BluetoothGatt gatt, String methodName, int errorStatus) {
+        Tool.warnOut(TAG,"onBluetoothGattOptionsNotSuccess");
+    }
+
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt) {
         Tool.warnOut(TAG,"设备2 onServicesDiscovered");

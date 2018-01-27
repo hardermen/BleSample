@@ -13,11 +13,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * Created by alm on 17-6-5.
+ *
+ * @author alm
+ * @date 17-6-5
  * 工具类
  */
 
-@SuppressWarnings({"WeakerAccess", "unused", "SameParameterValue"})
 public class Tool {
     //log部分
 
@@ -45,7 +46,7 @@ public class Tool {
      *
      * @param debug 日志打印标志
      */
-    public static void setDebugFlag(boolean debug) {
+    public static void setDebugFlag(@SuppressWarnings("SameParameterValue") boolean debug) {
         mDebug = debug;
     }
 
@@ -54,7 +55,7 @@ public class Tool {
      *
      * @param tag 默认的tag
      */
-    public static void setDefaultTAG(String tag) {
+    public static void setDefaultTAG(@SuppressWarnings("SameParameterValue") String tag) {
         TAG = tag;
     }
 

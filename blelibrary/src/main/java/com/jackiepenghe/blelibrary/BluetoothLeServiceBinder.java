@@ -11,10 +11,14 @@ import java.lang.ref.WeakReference;
 
 class BluetoothLeServiceBinder extends Binder {
 
+    /*------------------------成员变量----------------------------*/
+
     /**
      * BLE连接服务的弱引用
      */
     private WeakReference<BluetoothLeService> bluetoothLeServiceWeakReference;
+
+    /*------------------------构造函数----------------------------*/
 
     /**
      * 构造器
@@ -24,6 +28,8 @@ class BluetoothLeServiceBinder extends Binder {
     BluetoothLeServiceBinder(BluetoothLeService bluetoothLeService) {
         bluetoothLeServiceWeakReference = new WeakReference<>(bluetoothLeService);
     }
+
+    /*------------------------库内函数----------------------------*/
 
     /**
      * 获取BLE连接服务

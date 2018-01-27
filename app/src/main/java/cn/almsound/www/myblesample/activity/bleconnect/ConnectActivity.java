@@ -421,15 +421,18 @@ public class ConnectActivity extends BaseAppCompatActivity {
              * 正在绑定设备
              */
             @Override
-            public void deviceBinding() {
-
+            public void onDeviceBinding() {
+                Tool.warnOut(TAG,"绑定中");
+                Tool.toastL(ConnectActivity.this,"绑定中");
             }
 
             /**
              * 绑定完成
              */
             @Override
-            public void deviceBonded() {
+            public void onDeviceBonded() {
+                Tool.warnOut(TAG,"绑定成功");
+                Tool.toastL(ConnectActivity.this,"绑定成功");
                 //发起连接
                 startConnect();
             }
@@ -438,8 +441,9 @@ public class ConnectActivity extends BaseAppCompatActivity {
              * 取消绑定或者绑定失败
              */
             @Override
-            public void deviceBindNone() {
-
+            public void onDeviceBindNone() {
+                Tool.warnOut(TAG,"绑定失败");
+                Tool.toastL(ConnectActivity.this,"绑定失败");
             }
         };
         BleInterface.OnMtuChangedListener onMtuChangedListener = new BleInterface.OnMtuChangedListener() {
@@ -562,7 +566,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                                     Tool.toastL(ConnectActivity.this, R.string.write_not_notify);
                                     return;
                                 }
-                                boolean openNotification = bleConnector.openNotification(serviceUUID, characteristicUUID);
+                                boolean openNotification = bleConnector.enableNotification(serviceUUID, characteristicUUID,true);
                                 if (!openNotification) {
                                     Tool.toastL(ConnectActivity.this, R.string.open_notification_failed);
                                 } else {

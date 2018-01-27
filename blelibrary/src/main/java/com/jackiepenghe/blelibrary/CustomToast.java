@@ -15,14 +15,9 @@ import java.lang.reflect.Method;
  * 自定义Toast，可实现自定义显示时间
  */
 
-@SuppressWarnings({"WeakerAccess", "unused"})
 class CustomToast {
-    private Toast mToast;
-    private static int mDuration;
-    private Object mTN;
-    private Method show;
-    private Method hide;
-    private Handler mHandler = new Handler();
+
+    /*------------------------静态常量----------------------------*/
 
     /**
      * 短时间
@@ -41,6 +36,35 @@ class CustomToast {
      */
     public static final int LENGTH_ALWAYS = 0;
 
+    /*------------------------成员变量----------------------------*/
+
+    /**
+     * 系统吐司类
+     */
+    private Toast mToast;
+    /**
+     * 吐司持续时间
+     */
+    private static int mDuration;
+    /**
+     * 系统吐司的mTN对象（反射获取）
+     */
+    private Object mTN;
+    /**
+     * 系统吐司的show方法（反射获取）
+     */
+    private Method showMethod;
+    /**
+     * 系统吐司的hide方法（反射获取）
+     */
+    private Method hideMethod;
+    /**
+     * Handler
+     */
+    private Handler mHandler = new Handler();
+    /**
+     * 隐藏吐司
+     */
     private Runnable mHide = new Runnable() {
         @Override
         public void run() {
@@ -48,64 +72,55 @@ class CustomToast {
         }
     };
 
+    /*------------------------构造函数----------------------------*/
+
+    /**
+     * 构造函数
+     * @param toast 系统吐司
+     */
     private CustomToast(Toast toast) {
         mToast = toast;
 
     }
 
-    public static CustomToast makeText(Context context, String message, int duration) {
+    /*------------------------公开静态函数----------------------------*/
+
+    /**
+     * 生成一个自定义吐司本类
+     * @param context 上下文
+     * @param message 吐司信息文本
+     * @param duration 吐司持续时间
+     * @return 自定义吐司本类
+     */
+    static CustomToast makeText(Context context, String message, int duration) {
         @SuppressLint("ShowToast") Toast toast = Toast.makeText(context, message, duration);
         mDuration = duration;
         return new CustomToast(toast);
     }
 
-
-
-    public static CustomToast makeText(Context context, @StringRes int messageRes, int duration) {
+    /**
+     * 生成一个自定义吐司本类
+     * @param context 上下文
+     * @param messageRes 吐司信息资源id
+     * @param duration 吐司持续时间
+     * @return 自定义吐司本类
+     */
+    static CustomToast makeText(Context context, @StringRes int messageRes, int duration) {
         @SuppressLint("ShowToast") Toast toast = Toast.makeText(context, messageRes, duration);
         mDuration = duration;
         return new CustomToast(toast);
     }
 
+    /*------------------------私有函数----------------------------*/
 
-    @SuppressWarnings("TryWithIdenticalCatches")
-    private void hide() {
-        try {
-            hide.invoke(mTN);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @SuppressWarnings("TryWithIdenticalCatches")
-    public void show(){
-        initTN();
-        try {
-            show.invoke(mTN);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-
-        if (mDuration > 0){
-            mHandler.postDelayed(mHide,mDuration);
-        }else if(mDuration < 0){
-            mHandler.postDelayed(mHide,LENGTH_LONG);
-        }
-    }
-
-    @SuppressWarnings("TryWithIdenticalCatches")
     private void initTN() {
         try {
             Field tnField= mToast.getClass().getDeclaredField("mTN");
             tnField.setAccessible(true);
             mTN = tnField.get(mToast);
 
-            show = mTN.getClass().getDeclaredMethod("show");
-            hide = mTN.getClass().getDeclaredMethod("hide");
+            showMethod = mTN.getClass().getDeclaredMethod("show");
+            hideMethod = mTN.getClass().getDeclaredMethod("hide");
 
             Field tnTextViewField = mTN.getClass().getDeclaredField("mNextView");
             tnTextViewField.setAccessible(true);
@@ -117,6 +132,39 @@ class CustomToast {
             e.printStackTrace();
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * 隐藏吐司
+     */
+    private void hide() {
+        try {
+            hideMethod.invoke(mTN);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 显示吐司
+     */
+    void show(){
+        initTN();
+        try {
+            showMethod.invoke(mTN);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        if (mDuration > 0){
+            mHandler.postDelayed(mHide,mDuration);
+        }else if(mDuration < 0){
+            mHandler.postDelayed(mHide,LENGTH_LONG);
         }
     }
 }

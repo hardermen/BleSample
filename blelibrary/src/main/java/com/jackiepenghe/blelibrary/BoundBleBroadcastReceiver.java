@@ -13,11 +13,12 @@ import android.os.Handler;
 /**
  * @author alm
  *         Created by alm on 17-6-5.
- *         <p>
- *         BLE绑定事件的广播接收者
+ *         BLE绑定设备时，监听绑定状态的广播接收者
  */
 
 public class BoundBleBroadcastReceiver extends BroadcastReceiver {
+
+    /*------------------------静态常量----------------------------*/
 
     private static final String TAG = "BoundBLEBroadcastReceiv";
     /**
@@ -25,7 +26,11 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
      */
     public static final int PAIRING_VARIANT_PASSKEY = 1;
 
+    /*------------------------成员变量----------------------------*/
+
     private BleInterface.OnDeviceBondStateChangedListener mOnDeviceBondStateChangedListener;
+
+    /*------------------------实现父类函数----------------------------*/
 
     /**
      * This method is called when the BroadcastReceiver is receiving an Intent
@@ -93,19 +98,19 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
                     case BluetoothDevice.BOND_BONDING:
                         Tool.warnOut("BoundBleBroadcastReceiver", "BOND_BONDING");
                         if (mOnDeviceBondStateChangedListener != null) {
-                            mOnDeviceBondStateChangedListener.deviceBinding();
+                            mOnDeviceBondStateChangedListener.onDeviceBinding();
                         }
                         break;
                     case BluetoothDevice.BOND_BONDED:
                         Tool.warnOut("BoundBleBroadcastReceiver", "BOND_BONDED");
                         if (mOnDeviceBondStateChangedListener != null) {
-                            mOnDeviceBondStateChangedListener.deviceBonded();
+                            mOnDeviceBondStateChangedListener.onDeviceBonded();
                         }
                         break;
                     case BluetoothDevice.BOND_NONE:
                         Tool.warnOut("BoundBleBroadcastReceiver", "BOND_NONE");
                         if (mOnDeviceBondStateChangedListener != null) {
-                            mOnDeviceBondStateChangedListener.deviceBindNone();
+                            mOnDeviceBondStateChangedListener.onDeviceBindNone();
                         }
                         break;
                     default:
@@ -117,7 +122,13 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    public void setOnDeviceBondStateChangedListener(BleInterface.OnDeviceBondStateChangedListener onDeviceBondStateChangedListener) {
+    /*------------------------库内函数------------------------*/
+
+    /**
+     * 设置绑定状态改变时的回调
+     * @param onDeviceBondStateChangedListener 绑定状态改变时的回调
+     */
+    void setOnDeviceBondStateChangedListener(BleInterface.OnDeviceBondStateChangedListener onDeviceBondStateChangedListener) {
         mOnDeviceBondStateChangedListener = onDeviceBondStateChangedListener;
     }
 }

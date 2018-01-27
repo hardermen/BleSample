@@ -3,6 +3,7 @@ package com.jackiepenghe.blelibrary;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
@@ -25,26 +26,23 @@ import java.util.UUID;
  *         BLE连接器
  */
 
-@SuppressWarnings("unused")
 public class BleConnector {
 
+    /*-------------------------静态常量-------------------------*/
+
+    /**
+     * TAG
+     */
     private static final String TAG = BleConnector.class.getSimpleName();
-
-    /**
-     * 地址长度
-     */
-    private static final int ADDRESS_LENGTH = 17;
-
-    /**
-     * 记录是否执行过绑定操作的标志
-     */
-    private boolean doBonded;
 
     /**
      * 上下文弱引用
      */
     private WeakReference<Context> contextWeakReference;
 
+    /**
+     * 关闭完成时执行的回调
+     */
     private BleInterface.OnCloseCompleteListener onCloseCompleteListener;
 
     /**
@@ -52,6 +50,9 @@ public class BleConnector {
      */
     private BleServiceConnection bleServiceConnection;
 
+    /**
+     * Handler
+     */
     private Handler handler = new Handler();
 
     /**
@@ -68,13 +69,25 @@ public class BleConnector {
      * 记录BLE连接工具是否关闭的标志
      */
     private boolean mClosed;
-    private String address;
+    /**
+     * 如果发起绑定，会记录下绑定设备的地址
+     */
+    private String bondAddress;
 
+    /*-------------------------构造函数-------------------------*/
+
+    /**
+     * 构造函数
+     *
+     * @param context 上下文
+     */
     BleConnector(Context context) {
         contextWeakReference = new WeakReference<>(context);
         connectBleBroadcastReceiver = new ConnectBleBroadcastReceiver();
         boundBleBroadcastReceiver = new BoundBleBroadcastReceiver();
     }
+
+    /*-------------------------私有函数-------------------------*/
 
     /**
      * 设置连接地址
@@ -82,9 +95,65 @@ public class BleConnector {
      * @param address 连接地址
      */
     private void setAddress(String address) {
-        //初始化服务连接工具
+        //将地址传入服务连接工具并初始化
         bleServiceConnection = new BleServiceConnection(address);
     }
+
+    /**
+     * 检查关闭状况（用于调用回调）
+     */
+    private void checkCloseStatus() {
+        mClosed = true;
+        if (onCloseCompleteListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onCloseCompleteListener.onCloseComplete();
+                }
+            });
+        }
+    }
+
+    /**
+     * 广播接收者Action过滤器
+     *
+     * @return 接收者Action过滤器
+     */
+    private IntentFilter makeConnectBLEIntentFilter() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTING);
+        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTING);
+        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_READ);
+        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_CHANGED);
+        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_WRITE);
+        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_READ);
+        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_WRITE);
+        intentFilter.addAction(BleConstants.ACTION_RELIABLE_WRITE_COMPLETED);
+        intentFilter.addAction(BleConstants.ACTION_READ_REMOTE_RSSI);
+        intentFilter.addAction(BleConstants.ACTION_MTU_CHANGED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_NOT_SUCCESS);
+        intentFilter.setPriority(Integer.MAX_VALUE);
+        return intentFilter;
+    }
+
+    /**
+     * 广播接收者Action过滤器
+     *
+     * @return 接收者Action过滤器
+     */
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private IntentFilter makeBoundBLEIntentFilter() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
+        intentFilter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        intentFilter.setPriority(Integer.MAX_VALUE);
+        return intentFilter;
+    }
+
+    /*-------------------------公开函数-------------------------*/
 
     /**
      * 检查设备地址并设置地址
@@ -100,6 +169,12 @@ public class BleConnector {
         return true;
     }
 
+    /**
+     * 请求更改mtu
+     *
+     * @param mtu mtu值
+     * @return true代表请求发起成功，执行结果在回调 onMtuChanged 中对比mtu值，来判断mtu是否真的被更改
+     */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public boolean requestMtu(int mtu) {
         return bleServiceConnection != null && bleServiceConnection.requestMtu(mtu);
@@ -108,7 +183,7 @@ public class BleConnector {
     /**
      * 发起连接
      *
-     * @return true表示开始连接
+     * @return true表示成功发起连接
      */
     public boolean startConnect() {
         return startConnect(false);
@@ -117,17 +192,17 @@ public class BleConnector {
     /**
      * 发起连接
      *
-     * @return true表示开始连接
+     * @param autoConnect 自动连接（当连接被断开后，自动尝试重连，这是系统中蓝牙的API中自带的参数）
+     * @return true表示成功发起连接
      */
-    @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
-    public boolean startConnect(boolean autoReconnect) {
+    public boolean startConnect(boolean autoConnect) {
         if (bleServiceConnection == null) {
             return false;
         }
 
         mClosed = false;
 
-        bleServiceConnection.setAutoReconnect(autoReconnect);
+        bleServiceConnection.setAutoConnect(autoConnect);
 
         //注册广播接收者
         contextWeakReference.get().registerReceiver(connectBleBroadcastReceiver, makeConnectBLEIntentFilter());
@@ -136,6 +211,19 @@ public class BleConnector {
         return contextWeakReference.get().bindService(intent, bleServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
+    /**
+     * 发起设备绑定
+     *
+     * @param address 设备地址
+     * @return BleConstants中定义的常量
+     * {@link BleConstants#BLUETOOTH_ADDRESS_INCORRECT} 设备地址错误
+     * {@link BleConstants#BLUETOOTH_MANAGER_NULL} 没有蓝牙管理器
+     * {@link BleConstants#BLUETOOTH_ADAPTER_NULL} 没有蓝牙适配器
+     * {@link BleConstants#DEVICE_BOND_BONDED} 该设备已被绑定
+     * {@link BleConstants#DEVICE_BOND_BONDING} 该设备正在进行绑定（或正在向该设备发起绑定）
+     * {@link BleConstants#DEVICE_BOND_START_SUCCESS} 成功发起绑定请求
+     * {@link BleConstants#DEVICE_BOND_START_FAILED} 发起绑定请求失败
+     */
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public int startBound(String address) {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
@@ -154,7 +242,7 @@ public class BleConnector {
             return BleConstants.BLUETOOTH_ADAPTER_NULL;
         }
 
-        this.address = address;
+        bondAddress = address;
         this.mClosed = false;
 
         BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(address);
@@ -167,7 +255,6 @@ public class BleConnector {
                 break;
         }
 
-        doBonded = true;
         //注册绑定BLE的广播接收者
         contextWeakReference.get().registerReceiver(boundBleBroadcastReceiver, makeBoundBLEIntentFilter());
 
@@ -184,12 +271,19 @@ public class BleConnector {
      *
      * @return true表示成功断开
      */
-    @SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
     public boolean disconnect() {
         return bleServiceConnection != null && bleServiceConnection.disconnect();
     }
 
+    /**
+     * 通过设备地址直接解绑某个设备
+     *
+     * @param context 上下文
+     * @param address 设备地址
+     * @return true表示成功解绑
+     */
     public static boolean unBound(Context context, String address) {
+
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
         }
@@ -235,7 +329,7 @@ public class BleConnector {
     }
 
     /**
-     * 解除绑定
+     * 解除之前前发起绑定的设备之间的配对
      *
      * @return true代表成功
      */
@@ -256,7 +350,7 @@ public class BleConnector {
         if (bluetoothAdapter == null) {
             return false;
         }
-        BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(address);
+        BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(bondAddress);
         if (remoteDevice.getBondState() != BluetoothDevice.BOND_BONDED) {
             return false;
         }
@@ -278,8 +372,11 @@ public class BleConnector {
         } else {
             Tool.warnOut(TAG, "解除配对失败");
         }
-
         return result;
+    }
+
+    public BluetoothGatt getBluetoothGatt() {
+        return bleServiceConnection.getBluetoothGatt();
     }
 
     /**
@@ -296,8 +393,11 @@ public class BleConnector {
             return false;
         }
 
-        if (doBonded) {
+        try {
+            bondAddress = null;
             contextWeakReference.get().unregisterReceiver(boundBleBroadcastReceiver);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         disconnect();
@@ -308,18 +408,6 @@ public class BleConnector {
 
         checkCloseStatus();
         return true;
-    }
-
-    private void checkCloseStatus() {
-        setClosed(true);
-        if (onCloseCompleteListener != null) {
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    onCloseCompleteListener.onCloseComplete();
-                }
-            });
-        }
     }
 
     /**
@@ -377,9 +465,9 @@ public class BleConnector {
     }
 
     /**
-     * 设置特征被改变的回调
+     * 设置收到远端设备通知数据的回调
      *
-     * @param onReceiveNotificationListener 特征被改变的回调
+     * @param onReceiveNotificationListener 收到远端设备通知数据的回调
      */
     public void setOnReceiveNotificationListener(BleInterface.OnReceiveNotificationListener onReceiveNotificationListener) {
         connectBleBroadcastReceiver.setOnReceiveNotificationListener(onReceiveNotificationListener);
@@ -412,6 +500,11 @@ public class BleConnector {
         connectBleBroadcastReceiver.setOnDescriptorWriteListener(onDescriptorWriteListener);
     }
 
+    /**
+     * 设置绑定状态改变时的回调
+     *
+     * @param onDeviceBondStateChangedListener 绑定状态改变时的回调
+     */
     public void setOnBondStateChangedListener(BleInterface.OnDeviceBondStateChangedListener onDeviceBondStateChangedListener) {
         boundBleBroadcastReceiver.setOnDeviceBondStateChangedListener(onDeviceBondStateChangedListener);
     }
@@ -443,9 +536,13 @@ public class BleConnector {
         connectBleBroadcastReceiver.setOnMtuChangedListener(onMtuChangedListener);
     }
 
+    /**
+     * 设置close的回调
+     *
+     * @param onCloseCompleteListener close的回调
+     */
     public void setOnCloseCompleteListener(BleInterface.OnCloseCompleteListener onCloseCompleteListener) {
         this.onCloseCompleteListener = onCloseCompleteListener;
-//        closeTask.setOnCloseCompleteListener(onCloseCompleteListener);
     }
 
     /**
@@ -481,76 +578,33 @@ public class BleConnector {
     }
 
     /**
-     * 打开通知
+     * 打开或关闭通知
      *
      * @param serviceUUID        服务UUID
      * @param characteristicUUID 特征UUID
+     * @param enable             true表示开启，false表示关闭
      * @return true表示成功
      */
-    public boolean openNotification(String serviceUUID, String characteristicUUID) {
-        return bleServiceConnection != null && bleServiceConnection.openNotification(serviceUUID, characteristicUUID);
+    public boolean enableNotification(String serviceUUID, String characteristicUUID, @SuppressWarnings("SameParameterValue") boolean enable) {
+        return bleServiceConnection != null && bleServiceConnection.enableNotification(serviceUUID, characteristicUUID, enable);
     }
 
     /**
-     * 关闭通知
+     * 设置蓝牙开关状态被改变时的回调
      *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @return true表示成功
+     * @param onBluetoothSwitchChangedListener 蓝牙开启时的回调
      */
-    public boolean closeNotification(String serviceUUID, String characteristicUUID) {
-        return bleServiceConnection != null && bleServiceConnection.closeNotification(serviceUUID, characteristicUUID);
-    }
-
-    public void setOnBluetoothOpenListener(BleInterface.OnBluetoothOpenListener onBluetoothOpenListener) {
-        connectBleBroadcastReceiver.setOnBluetoothOpenListener(onBluetoothOpenListener);
-    }
-
-    public void setOnBluetoothCloseListener(BleInterface.OnBluetoothCloseListener onBluetoothCloseListener) {
-        connectBleBroadcastReceiver.setOnBluetoothCloseListener(onBluetoothCloseListener);
+    public void setOnBluetoothSwitchChangedListener(BleInterface.OnBluetoothSwitchChangedListener onBluetoothSwitchChangedListener) {
+        connectBleBroadcastReceiver.setOnBluetoothSwitchChangedListener(onBluetoothSwitchChangedListener);
     }
 
     /**
-     * 广播接收者Action过滤器
+     * 设置蓝牙GATT客户端配置出错时的回调
      *
-     * @return 接收者Action过滤器
+     * @param onBluetoothGattOptionsNotSuccessListener 蓝牙GATT客户端配置出错时的回调
      */
-    private IntentFilter makeConnectBLEIntentFilter() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTING);
-        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTING);
-        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_READ);
-        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_CHANGED);
-        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_WRITE);
-        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_READ);
-        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_WRITE);
-        intentFilter.addAction(BleConstants.ACTION_RELIABLE_WRITE_COMPLETED);
-        intentFilter.addAction(BleConstants.ACTION_READ_REMOTE_RSSI);
-        intentFilter.addAction(BleConstants.ACTION_MTU_CHANGED);
-        intentFilter.setPriority(Integer.MAX_VALUE);
-        return intentFilter;
-    }
-
-    /**
-     * 广播接收者Action过滤器
-     *
-     * @return 接收者Action过滤器
-     */
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    private IntentFilter makeBoundBLEIntentFilter() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
-        intentFilter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-        intentFilter.setPriority(Integer.MAX_VALUE);
-        return intentFilter;
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    void setClosed(boolean closed) {
-        mClosed = closed;
+    public void setOnBluetoothGattOptionsNotSuccessListener(BleInterface.OnBluetoothGattOptionsNotSuccessListener onBluetoothGattOptionsNotSuccessListener) {
+        connectBleBroadcastReceiver.setOnBluetoothGattOptionsNotSuccessListener(onBluetoothGattOptionsNotSuccessListener);
     }
 
     /**

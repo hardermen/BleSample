@@ -6,16 +6,14 @@ package com.jackiepenghe.blelibrary;
  *         BLE常量
  */
 
-@SuppressWarnings("WeakerAccess")
 public class BleConstants {
     /**
      * 打开通知时会使用到的UUID
      */
     static final String CLIENT_CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb";
 
-    /**
-     * ACTION定义区域
-     */
+    /*库内ACTION定义区域*/
+
     static final String ACTION_GATT_CONNECTED = "ACTION_GATT_CONNECTED";
     static final String ACTION_GATT_DISCONNECTED = "ACTION_GATT_DISCONNECTED";
     static final String ACTION_GATT_SERVICES_DISCOVERED = "ACTION_GATT_SERVICES_DISCOVERED";
@@ -29,6 +27,9 @@ public class BleConstants {
     static final String ACTION_RELIABLE_WRITE_COMPLETED = "ACTION_RELIABLE_WRITE_COMPLETED";
     static final String ACTION_READ_REMOTE_RSSI = "ACTION_READ_REMOTE_RSSI";
     static final String ACTION_MTU_CHANGED = "ACTION_MTU_CHANGED";
+    static final String ACTION_GATT_NOT_SUCCESS = "ACTION_GATT_NOT_SUCCESS";
+
+    /*开放常量定义区*/
 
     public static final int DEVICE_BOND_START_SUCCESS = 0;
     public static final int DEVICE_BOND_START_FAILED = 1;

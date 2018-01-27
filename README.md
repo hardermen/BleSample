@@ -256,7 +256,7 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
              * 正在绑定设备
              */
             @Override
-            public void deviceBinding() {
+            public void onDeviceBinding() {
 
             }
 
@@ -264,7 +264,7 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
              * 绑定完成
              */
             @Override
-            public void deviceBonded() {
+            public void onDeviceBonded() {
                 //发起连接
                 startConnect();
             }
@@ -273,7 +273,7 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
              * 取消绑定或者绑定失败
              */
             @Override
-            public void deviceBindNone() {
+            public void onDeviceBindNone() {
 
             }
         };

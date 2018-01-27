@@ -9,12 +9,20 @@ import android.os.Build;
 /**
  * @author jacke
  * @date 2018/1/26 0026
+ * BLE广播回调
  */
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public abstract class BaseAdvertiseCallback extends AdvertiseCallback {
 
+    /*-------------------------静态常量-------------------------*/
+
+    /**
+     * TAG
+     */
     private static final String TAG = "BaseAdvertiseCallback";
+
+    /*-------------------------重写父类函数-------------------------*/
 
     /**
      * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
@@ -68,6 +76,8 @@ public abstract class BaseAdvertiseCallback extends AdvertiseCallback {
         }
         onBroadCastStartFailure(errorCode);
     }
+
+    /*-------------------------抽象函数-------------------------*/
 
     /**
      * Callback when advertising could not be started.

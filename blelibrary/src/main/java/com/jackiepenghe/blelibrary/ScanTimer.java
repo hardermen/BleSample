@@ -3,12 +3,8 @@ package com.jackiepenghe.blelibrary;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
-import com.jackiepenghe.blelibrary.BleInterface;
-import com.jackiepenghe.blelibrary.BleScanner;
-
 import java.lang.ref.WeakReference;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -20,64 +16,36 @@ import java.util.concurrent.TimeUnit;
 
 class ScanTimer {
 
-    private Timer timer = new Timer();
-
-    private ScanTask scanTask;
-    private WeakReference<BleScanner> bleScannerWeakReference;
-    private BleInterface.OnScanCompleteListener mOnScanCompleteListener;
-    private Handler handler;
+    /*------------------------成员变量----------------------------*/
 
     /**
-     * 构造器
-     *
-     * @param bleScanner BLE扫描器
+     * 线程池工厂类
      */
-    ScanTimer(BleScanner bleScanner) {
-        bleScannerWeakReference = new WeakReference<>(bleScanner);
-        handler = new Handler();
-    }
-
-    /**
-     * 开启定时器
-     *
-     * @param delayTime 延迟的时间
-     */
-    void startTimer(long delayTime) {
-        scanTask = new ScanTask(ScanTimer.this);
-        timer.schedule(scanTask, delayTime);
-    }
-
-    /**
-     * 停止定时器
-     */
-    void stopTimer() {
-        scanTask.cancel();
-        BleScanner bleScanner = bleScannerWeakReference.get();
-        bleScanner.setScanning(false);
-    }
-
-    void setOnScanCompleteListener(@NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
-        mOnScanCompleteListener = onScanCompleteListener;
-    }
-
-    private static class ScanTask extends TimerTask {
-
-        private WeakReference<ScanTimer> scanTimerWeakReference;
-
-        ScanTask(ScanTimer scanTimer) {
-            this.scanTimerWeakReference = new WeakReference<>(scanTimer);
-        }
-
+    private ThreadFactory threadFactory = new ThreadFactory() {
         /**
-         * The action to be performed by this timer task.
+         * Constructs a new {@code Thread}.  Implementations may also initialize
+         * priority, name, daemon status, {@code ThreadGroup}, etc.
+         *
+         * @param r a runnable to be executed by new thread instance
+         * @return constructed thread, or {@code null} if the request to
+         * create a thread is rejected
          */
         @Override
+        public Thread newThread(@NonNull Runnable r) {
+            return new Thread(r);
+        }
+    };
+    /**
+     * 定时或延迟执行任务
+     */
+    private ScheduledExecutorService scheduledExecutorService;
+    /**
+     * 要执行的任务
+     */
+    private Runnable runnable = new Runnable() {
+        @Override
         public void run() {
-            final ScanTimer scanTimer = scanTimerWeakReference.get();
-            if (scanTimer == null) {
-                return;
-            }
-            BleScanner bleScanner = scanTimer.bleScannerWeakReference.get();
+            BleScanner bleScanner = bleScannerWeakReference.get();
             if (bleScanner == null) {
                 return;
             }
@@ -86,15 +54,69 @@ class ScanTimer {
             if (bleScanner.isScanContinue()) {
                 bleScanner.startScan();
             } else {
-                if (scanTimer.mOnScanCompleteListener != null) {
-                    scanTimer.handler.post(new Runnable() {
+                if (mOnScanCompleteListener != null) {
+                    handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            scanTimer.mOnScanCompleteListener.scanComplete();
+                            mOnScanCompleteListener.onScanComplete();
                         }
                     });
                 }
             }
         }
+    };
+    /**
+     * BleScanner弱引用
+     */
+    private WeakReference<BleScanner> bleScannerWeakReference;
+    /**
+     * 扫描完成时执行的回调
+     */
+    private BleInterface.OnScanCompleteListener mOnScanCompleteListener;
+    /**
+     * Handler
+     */
+    private Handler handler = new Handler();
+
+    /*------------------------构造函数----------------------------*/
+
+    /**
+     * 构造器
+     *
+     * @param bleScanner BLE扫描器
+     */
+    ScanTimer(BleScanner bleScanner) {
+        bleScannerWeakReference = new WeakReference<>(bleScanner);
+    }
+
+    /*------------------------库内函数----------------------------*/
+
+    /**
+     * 开启定时器
+     *
+     * @param delayTime 延迟的时间
+     */
+    void startTimer(long delayTime) {
+        scheduledExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory);
+        scheduledExecutorService.schedule(runnable, delayTime, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * 停止定时器
+     */
+    void stopTimer() {
+        scheduledExecutorService.shutdownNow();
+        scheduledExecutorService = null;
+        BleScanner bleScanner = bleScannerWeakReference.get();
+        bleScanner.setScanningFalse();
+    }
+
+    /**
+     * 设置扫描完成的回调
+     *
+     * @param onScanCompleteListener 扫描完成的回调
+     */
+    void setOnScanCompleteListener(@NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
+        mOnScanCompleteListener = onScanCompleteListener;
     }
 }

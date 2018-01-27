@@ -13,15 +13,31 @@ import android.os.Handler;
 /**
  * @author jacke
  * @date 2018/1/19 0019
+ * 默认的蓝牙服务端回调
  */
 
 class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
 
+    /*------------------------静态常量----------------------------*/
+
+    /**
+     * TAG
+     */
     private static final String TAG = "DefaultBluetoothGattSer";
 
+    /*------------------------成员变量----------------------------*/
+
+    /**
+     * 蓝牙服务端回调
+     */
     private BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallbackListener;
 
+    /**
+     * Handler
+     */
     private Handler handler = new Handler();
+
+    /*------------------------重写父类函数----------------------------*/
 
     /**
      * Callback indicating when a remote device has been connected or disconnected.
@@ -334,6 +350,8 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     txPhy + ",rxPhy = " + rxPhy + ",status = " + status);
         }
     }
+
+    /*------------------------公开函数----------------------------*/
 
     /**
      * 设置连接回调
