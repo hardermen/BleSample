@@ -1,3 +1,5 @@
+[API文档](http://47.52.138.198/)请使用UTF-8编码查看。
+
 配置：(Configure)
 
 1.直接将library依赖到项目中（Download and copy library "blelibrary" to your project）
