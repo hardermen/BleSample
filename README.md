@@ -1,115 +1,137 @@
-配置：
+配置：(Configure)
 
-1.直接将library依赖到项目中
+1.直接将library依赖到项目中（Download and copy library "blelibrary" to your project）
 
-2.gradle配置依赖
+2.gradle配置依赖(gradle dependency)
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.5.1'
+compile 'com.jackiepenghe:blelibrary:0.5.4'
 ```
-3.maven配置依赖
+3.maven配置依赖(maven dependency)
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.5.1</version>
+  <version>0.5.4</version>
   <type>pom</type>
 </dependency
 ```
-4.vy配置依赖
+4.vy配置依赖(vy dependency)
 ```xml
 <dependency org='com.jackiepenghe' name='blelibrary' rev='0.5.1'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
 
-###  权限配置：
+###  权限配置：(Configuration permissions)
 ```xml
-<!--蓝牙权限-->
+<!--蓝牙权限(Declare the Bluetooth permission(s) in your application manifest file)-->
    <uses-permission android:name="android.permission.BLUETOOTH" />
    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-<!--BLE权限-->
+<!--BLE权限(If you want to declare that your app is available to BLE-capable devices only, include the following in your app's manifest)-->
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
-<!-- 5.0以上的手机可能会需要这个权限 -->
+<!-- 5.0以上的手机可能会需要这个权限(If your Android version is above 21 (including 21(Android 5.0)),maybe need declare this permission) -->
 <uses-feature android:name="android.hardware.location.gps" />
-<!-- 6.0的手机需要定位权限权限 -->
+<!-- 6.0的手机需要定位权限权限 (If your Android version is above 23 (including 23(Android 6.0)),must declare this permission) -->
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 ```
-### 判断设备本身是否支持BLE：
+### 判断设备本身是否支持BLE：(Determine whether the device itself supports Bluetooth Low Energy)
 ```java
 if(!BleManager.isSupportBle()){
-  Log.w(TAG,"设备不支持BLE");
+  Log.w(TAG,"device not supprot BLE");
   return;
 }
-//设备支持BLE，继续执行代码
+//TODO continue
 ```
-### BLE扫描：
+### BLE扫描：(Search for BLE devices)
 ```java
-//创建化扫描器
+//创建化扫描器（Create a BLE scanner）
 BleScanner bleScanner = BleManager.newBleScanner(context);
-//调用open方法，传入相关的回调，并打开扫描器功能
+  /*
+   * 打开扫描器，并设置相关参数(Open the scanner,and setting parameters)
+   * @param scanResults                  扫描到的设备结果存放列表(The scanned devices will be saved to the scanResults)
+   * @param onScanFindOneNewDeviceListener 发现一个新设备的回调(Callback triggered if a new device is found)
+   * @param scanPeriod                   扫描持续时间(Scanning time)
+   * @param scanContinueFlag             是否在扫描完成后立即进行下一次扫描的标志
+   *                                     为true表示一直扫描，永远不会调用BleInterface.OnScanCompleteListener，
+   *                                     为false，在时间到了之后回调BleInterface.OnScanCompleteListener，然后结束
+   *                                     (Whether the next scan starts when the scanning time arrives.
+   *                                     If true,scanner will start a new scan without  trigger callback                                    *                                     BleInterface.onScanCompleteListener.
+   *                                     If false,scanner stop san and trigger callback BleInterface.onScanCompleteListener)
+   * @param onScanCompleteListener       扫描完成的回调(Callback triggered if the scanning time arrives and scanContinueFlag is false)
+   * @return true表示打开成功(true means open scanner succeed)
+   */
 bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, false, onScanCompleteListener);
 //开始扫描，扫描的结果在回调中，扫描的设备列表会自动添加到上方open函数中的scanList中
 bleScanner.startScan();
 ```
-### BLE扫描进阶设置(需要API21支持)
-#### 设置过滤条件
+
+### BLE扫描进阶设置(需要API21支持)(BLE scanner advanced settings(API 21 supported))
+#### 设置过滤条件(Configure filters)
 ```java
  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            ArrayList<ScanFilter> scanFilters = new ArrayList<>();
-            String serviceUUID = "C3E6FEA0-E966-1000-8000-BE99C223DF6A";
+            //声明过滤集合,可同时设置多组过滤条件(Declaring a filter list to set multiple set of filtering conditions at the same time)
+            ArrayList<ScanFilter> scanFilters = new ArrayList<>();
+            //声明服务UUID(Declaring service uuid)
+            String serviceUUID = "C3E6FEA0-E966-1000-8000-BE99C223DF6A";
             ScanFilter scanFilter = new ScanFilter.Builder()
-                    //设置过滤设备地址
+                    //设置过滤设备地址(Device address filtering setting)
                     .setDeviceAddress("00:02:5B:00:15:AA")
-                    //设置过滤设备名称
+                    //设置过滤设备名称(Device name filtering setting)
                     .setDeviceName("Y11-")
-                    //根据厂商自定义的广播id和广播内容过滤
+                    //根据厂商自定义的广播id和广播内容过滤(Device manufacturer data filtering setting)
                     .setManufacturerData(2, new byte[]{0, 2})
-                    //根据服务数据进行过滤
+                    //根据服务数据进行过滤(Device service uuid filtering setting)
                     .setServiceUuid(new ParcelUuid(UUID.fromString(serviceUUID)))
-                    //构建
+                    //构建(build filter)
                     .build();
-            scanFilters.add(scanFilter);
-            //设置过滤条件
+             //添加一个过滤到过滤集合中(add a filter to filter list)
+            scanFilters.add(scanFilter);
+            //设置过滤条件(set scanner filters)
             bleScanner.setScanFilters(scanFilters);
         }
 ```
-#### 设置扫描参数
+#### 设置扫描参数(Configure scan paramters)
 ```java
  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             ScanSettings scanSettings = new ScanSettings.Builder()
-                    //设置回调触发方式（需要API23及以上）
+                    //设置回调触发方式（需要API23及以上）(set callback type(API 23 supported))
 //                    .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
                     //如果只有传统（我猜测是经典蓝牙，并不确定）的广播，是否回调callback函数(需要API26及以上)
+                    // Set whether only legacy advertisments should be returned in scan results.
+                    //Legacy advertisements include advertisements as specified by the
+                    //Bluetooth core specification 4.2 and below. This is true by default
+                    //for compatibility with older apps.
+                    //true if only legacy advertisements will be returned
 //                    .setLegacy(false)
-                    //设置扫描匹配方式（需要API23及以上）
+                    //设置扫描匹配方式（需要API23及以上）(set match mode(API 23 supported))
 //                    .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-                    //设置扫描匹配次数（需要API23及以上）
+                    //设置扫描匹配次数（需要API23及以上）(set num of matches(API 23 supported))
 //                    .setNumOfMatches(2)
-                    //在扫描过程中设置物理层(需要API23及以上)
+                    //在扫描过程中设置物理层(需要API23及以上)(set phy(API 23 supported))
 //                    .setPhy(BluetoothDevice.PHY_LE_1M)
-                    //设置报告延迟时间
+                    //设置报告延迟时间(set report delay)
                     .setReportDelay(100)
-                    //设置扫描模式
+                    //设置扫描模式(set scan mode(default mode:ScanSettings.SCAN_MODE_LOW_LATENCY))
                     .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
                     //构建
                     .build();
-            //设置扫描参数
+            //设置扫描参数(set scan settings)
           bleScanner.setScanSettings(scanSettings);
         }
 ```
-注销：
-一定要记得在activity被销毁之前，注销扫描器
+注销：(close)
+一定要记得在activity被销毁之前，注销扫描器(You must close the scanner before the activity is destroyed)
 
 ```java
 bleScanner.close();
 ```
 
-### BLE设备的连接：
+### BLE设备的连接：（BLE Connection）
 
-在进行连接之前，一定要检查是否在AndroidManifest中配置已一个必须的服务！
+在进行连接之前，一定要检查是否在AndroidManifest中配置已一个必须的服务！(Connections depend on this service)
 
 ```xml 
 <service
@@ -118,80 +140,81 @@ bleScanner.close();
     android:exported="false" />
 
 ``` 
-接下来就是Java代码了
+接下来就是Java代码了（The next is the Java code）
 
 ```java
-//创建连接器
+//创建连接器(create a ble connector)
  BleConnector bleConnector = BleManager.newBleConnector(context);
-//设置回调，在这个回调中判断连接成功最为保险
+//设置回调，在这个回调中判断连接成功最为保险(set callback triggered while discovered remote device services finished)
  bleConnector.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
-//设置要连接的设备的地址，并发起连接
+//设置要连接的设备的地址，并发起连接(set remote device's address,and start connect)
 private void startConnect() {
         if (bleConnector.checkAndSetAddress(address)) {
             if (bleConnector.startConnect()) {
-                LogUtil.w("开始连接");    
+                LogUtil.w("开始连接(connecting)");    
             } else {
-                LogUtil.w("连接失败");              
+                LogUtil.w("连接失败(connect failed)");              
             }
         }
         
      /*if (bleConnector.checkAndSetAddress(address)) {
-            //发起连接时传入true代表断链后自动重连
+            //发起连接时传入true代表断链后自动重连(If you set true here,system will be reconnect while remote device unexpected disconnected)
             if (bleConnector.startConnect(true)) {
-                LogUtil.w("开始连接");    
+                LogUtil.w("开始连接(connecting)");    
             } else {
-                LogUtil.w("连接失败");              
+                LogUtil.w("连接失败(connect failed)");              
             }
         }*/
     }
 ```
 
-在连接成功之后，就可以获取设备的服务列表
+在连接成功之后，可以获取远端设备的服务列表(If Callback BleInterface.OnServicesDiscoveredListener was triggered,you can get remote device services now)
 ```java
 List<BluetoothGattService> deviceServices = bleConnector.getServices();
 ```
 
-对目标进行数据的传输
+对目标进行数据的传输(Data sending and reading)
 
-发送数据
+发送数据(send data)
 ```java
-bleConnector.writeData(serviceUUID,characteristicUUID,value);
+boolean succeed = bleConnector.writeData(serviceUUID,characteristicUUID,value);
 ```
 
-获取数据
+获取数据(read data)
 ```java
-bleConnector.readData(serviceUUID,characteristicUUID);
+boolean succeed = bleConnector.readData(serviceUUID,characteristicUUID);
 ```
 
-上面的发送与获取数据的方法返回的都是boolean类型，代表成功与失败(其实bleConnector的函数基本上都是返回boolean类型的)
+上面的发送与获取数据的方法返回的都是boolean类型，代表命令执行成功或失败(其实bleConnector的函数基本上都是返回boolean类型的)
+(The above method of sending and reading data is returned by the boolean type.And the returned value mean whether the execution of the command is successful or not)
 
-获取到的数据在回调中查看
+获取到的数据在回调中查看(When the data is read, this callback will be triggered)
 ```java
 bleConnector.setOnCharacteristicReadListener(onCharacteristicReadListener);
 ```
 
-还有通知
+还有通知(Notification)
 
-打开通知：
+打开通知：(open notification)
 ```java
-bleConnector.openNotification(serviceUUID,characteristicUUID);
+bleConnector.enableNotification(serviceUUID,characteristicUUID,true);
 ```
 
-关闭通知
+关闭通知(close notification)
 ```java
-bleConnector.closeNotification(serviceUUID,characteristicUUID);
+bleConnector.enableNotification(serviceUUID,characteristicUUID,false);
 ```
 
-通知的回调
+接收到远端设备通知的回调(After receiving the notification from the remote device, this callback is triggered)
 ```java
 bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
 ```
 
-还有其他的很多回调，可以自己下载源码，根据实际需求使用
+还有一些其他的回调，可以自己下载源码或者查看API文档，根据实际需求使用（There are some other callbacks that you can download by yourself or look at API documents ,and use them.）
 
-销毁
+销毁(close)
 
-在准备销毁activity的时候，调用close方法。推荐在此处屏蔽super.onBackpressed()方法。
+在准备销毁activity的时候，调用close方法。推荐在此处屏蔽super.onBackpressed()方法。(If you want to destroy Activity, please remember to close the connector before the destruction.It is recommended to close the connection in the onBackPressed or onPause method and shielded super.onBackpressed() method)
 ```java
     @Override
     public void onBackPressed() {
@@ -199,7 +222,7 @@ bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
     }
 ```
 
-然后在回调中销毁activity
+然后在回调中销毁activity(Then destroy activity in this callback)
 ```java
 BleConnector.OnCloseCompleteListener onCloseCompleteListener;
 onCloseCompleteListener = new BleConnector.OnCloseCompleteListener() {
@@ -212,48 +235,51 @@ onCloseCompleteListener = new BleConnector.OnCloseCompleteListener() {
 bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
 ```
 
-### BLE设备的绑定(也可以说是配对)：
+### BLE设备的绑定(也可以说是配对)：(Bluetooth pairing)
 
 ```java
         /*
          * 调用绑定的方法（如果需要绑定)，否则请直接调用连接的方法
          * 注意：如果该设备不支持绑定，会直接回调绑定成功的回调，在绑定成功的回调中发起连接即可
          * 第一次绑定某一个设备会触发回调，之后再次绑定，可根据绑定时的函数的返回值来判断绑定状态，以进行下一步操作
-         */
+         * (Start bindings
+         * notice:If remote device not supoort pairing,BleConstants.DEVICE_BOND_BONDED will be returned.
+         * The first binding of a device triggers a callback(BleInteface.OnDeviceBondStateChangedListener).Please look down. )
+         */
         switch (bleConnector.startBound(address)) {
             case BleConstants.DEVICE_BOND_START_SUCCESS:
-                LogUtil.w(TAG, "开始绑定");
+                LogUtil.w(TAG, "开始绑定(Start binding)");
                 break;
             case BleConstants.DEVICE_BOND_START_FAILED:
-                LogUtil.w(TAG, "发起绑定失败");
+                LogUtil.w(TAG, "发起绑定失败(Failed to initiate binding)");
                 break;
             case BleConstants.DEVICE_BOND_BONDED:
-                LogUtil.w(TAG, "此设备已经被绑定了");
+                LogUtil.w(TAG, "此设备已经被绑定了(This device is already bound)");
                 startConnect();
                 break;
             case BleConstants.DEVICE_BOND_BONDING:
-                LogUtil.w(TAG, "此设备正在绑定中");
+                LogUtil.w(TAG, "此设备正在绑定中(This device is binding)");
                 break;
             case BleConstants.BLUETOOTH_ADAPTER_NULL:
-                LogUtil.w(TAG, "没有蓝牙适配器存在");
+                LogUtil.w(TAG, "没有蓝牙适配器存在(No Bluetooth adapter exists)");
                 break;
             case BleConstants.BLUETOOTH_ADDRESS_INCORRECT:
-                LogUtil.w(TAG, "蓝牙地址错误");
+                LogUtil.w(TAG, "蓝牙地址错误(Bluetooth address is wrong)");
                 break;
             case BleConstants.BLUETOOTH_MANAGER_NULL:
-                LogUtil.w(TAG, "没有蓝牙管理器存在");
+                LogUtil.w(TAG, "没有蓝牙管理器存在(No Bluetooth manager exists)");
                 break;
             default:
                 LogUtil.w(TAG, "default");
                 break;
         }
 ```
-相关的回调是：
+相关的回调是：(Related callback)
 ```java
-  //设备的绑定(也可以说配对)状态改变后触发此回调
+  //设备的绑定(也可以说配对)状态改变后触发此回调(This callback is triggered after the binding status of the device changes)
         BleInterface.OnDeviceBondStateChangedListener onBondStateChangedListener = new BleInterface.OnDeviceBondStateChangedListener() {
             /**
-             * 正在绑定设备
+             * 正在绑定设备( device is binding)
              */
             @Override
             public void onDeviceBinding() {
@@ -261,7 +287,7 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
             }
 
             /**
-             * 绑定完成
+             * 绑定完成(device is already bound(Bind success))
              */
             @Override
             public void onDeviceBonded() {
@@ -270,89 +296,103 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
             }
 
             /**
-             * 取消绑定或者绑定失败
+             * 取消绑定或者绑定失败(Unbinding or binding failed)
              */
             @Override
             public void onDeviceBindNone() {
 
             }
         };
-        //设置绑定的回调
+        //设置绑定的回调(set callback)
          bleConnector.setOnBondStateChangedListener(onBondStateChangedListener);
 ```
-### 多连接
+### 多连接(Multi-connection)
 
-首先要在AndroidManifest.xml添加一个服务
+首先要在AndroidManifest.xml添加一个服务(Multi-connection depend on this service)
 ```xml
 <service android:name="com.jackiepenghe.blelibrary.BluetoothMultiService"
   android:enabled="true"
   android:exported="false"/>
 ```
-获取多连接的连接器
+获取多连接的连接器(Get multiple connectors)
 ```java
 BleMultiConnector bleMultiConnectorWeakReference = BleManager.getBleMultiConnector(context);
 ```
-连接多个设备
+连接多个设备(Connect multiple devices)
 ```java
     String device1Address = "00:02:5B:00:15:A4";
     String device2Address = "00:02:5B:00:15:A2";
 
-    //使用默认的回调连接
+    //使用默认的回调连接(Use the default callback to connect)
 //  bleMultiConnector.connect(device1Address);
 //  bleMultiConnector.connect(device2Address);
 
-    //断开后自动连接（此函数调用的是系统的API，由系统自动连接设备）
+    //发起连接，并在意外断开后尝试自动重连
+    //(Start the connection and automatically try to reconnect after the accidental disconnection.true indicates that you want to automatically try to reconnect after an unexpected connection failure.)
     bleMultiConnector.connect(device1Address,true);
     bleMultiConnector.connect(device2Address,true);
 
-    //连接时传入对应的回调，方便进行操作,通常使用这个就行了
+    //连接时传入对应的回调，方便对设备进行操作,通常使用这个方法(The corresponding callbacks are passed in to facilitate the operation of the device, usually using this method)
 //  bleMultiConnector.connect(device1Address, device1BleCallback);
 //  bleMultiConnector.connect(device2Address, device2BleCallback);
 
 
-    //连接时传入对应的回调，方便进行操作,并且在连接断开之后自动尝试连接（系统会默认自动去连接该设备，这是系统自身的重连参数，推荐用这个参数进行重连）
+    //连接时传入对应的回调，方便进行操作,并且在连接断开之后自动尝试连接（系统会默认自动去连接该设备，这是系统自身的重连参数，推荐用这个参数进行重连）(The corresponding callback is passed in when the connection is made, and the connection is automatically tried after the accidental disconnection)
 //  bleMultiConnector.connect(device1Address,device1BleCallback,true);
 //  bleMultiConnector.connect(device2Address,device2BleCallback,true);
 ```
-上方的callback是继承自BaseConnectCallback
+上方的callback是继承自BaseConnectCallback(The callback above is inherited from BaseConnectCallback)
 ```
 
 public class Device1BleCallback extends BaseConnectCallback {
-    private static final String TAG = "Device1BleCallback";
-
     /**
-     * 蓝牙连接后无法正常进行服务发现时回调
+     * 蓝牙连接后无法正常进行服务发现调用此函数(This function is called when service discovery fails after Bluetooth connection)
      *
      * @param gatt BluetoothGatt
      */
     @Override
     public void onDiscoverServicesFailed(BluetoothGatt gatt) {
-        Tool.warnOut(TAG,"onDiscoverServicesFailed");
+        
     }
 
     /**
-     * 蓝牙GATT被关闭时回调
+     * 蓝牙GATT被关闭时调用此函数(This function is called when BluetoothGATT is closed)
+     *
+     * @param address 关闭GATT时，对应的设备地址
      */
     @Override
-    public void onGattClosed() {
-        Tool.warnOut(TAG,"onGattClosed");
+    public void onGattClosed(String address) {
+
+    }
+
+    /**
+     * 当蓝牙客户端配置失败时调用此函式(This function is called when Bluetooth client configuration fails)
+     *
+     * @param gatt        蓝牙客户端(BluetoothGATT)
+     * @param methodName  方法名(method name)
+     * @param errorStatus 错误状态码(error status code )
+     */
+    @Override
+    public void onBluetoothGattOptionsNotSuccess(BluetoothGatt gatt, String methodName, int errorStatus) {
+
     }
 }
+
 ```
-同时连接多个设备后，如果想要对单独某一个设备进行操作
+同时连接多个设备后，如果想要对单独某一个设备进行操作(After connecting multiple devices, if you want to operate on a single device)
 ```java
 BleDeviceController bleDeviceController =  bleMultiConnectorWeakReference.getBleDeviceController(address);
 bleDeviceController.writData(serviceUUID,characteristicUUID,data);
 ...
 ```
-在程序退出时或者当前Activity销毁前close
+在程序退出时或者当前Activity销毁前close(Close the multi-connector before exiting or before the current activity is destroyed)
 ```java
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        //最好是先清空一下缓存
+        //最好是先清空一下缓存(It is best to empty the cache first)
         bleMultiConnectorWeakReference.refreshAllGattCache();
-        //关闭所有gatt
+        //关闭所有gatt(Close all gatt)
         bleMultiConnectorWeakReference.closeAll();
     }
  
@@ -360,37 +400,39 @@ bleDeviceController.writData(serviceUUID,characteristicUUID,data);
 
 ### 蓝牙广播（Android Bluetooth LE Peripheral）
 这是在安卓5.0（API21）之后加入的库，用于蓝牙BLE广播，较常用与iBeacon数据广播。以下的用法都是在API21及以上的时候使用。（iBeacon此处我就不详细去说了，请看下方的用法即可）
+(This is a library added after Android 5.0 (API 21) for Bluetooth BLE broadcasts.)
 
-获取蓝牙广播实例
+
+获取蓝牙广播实例(Get the Bluetooth broadCast instance)
 ```java
  private BleBroadCastor bleBroadCastor;
- //获取一个新的广播实例
+ //获取一个新的广播实例(get a new Bluetooth broadCast instance)
  //bleBroadCastor = BleManager.newBleBroadCastor(this);
- //获取单例
+ //获取单例(Get a singleton)
  bleBroadCastor = BleManager.getBleBroadCastor(this);
 ```
-初始化
+初始化(initialization)
 ```java
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-//默认的初始化
+//默认的初始化(default initialization)
 //        bleBroadCastor.init();
-            //服务UUID 
+            //服务UUID (service uuid)
             String serviceUUID = "C3E6FEA0-E966-1000-8000-BE99C223DF6A";
-            //广播设置
+            //广播设置(broadcast settings)
             AdvertiseSettings advertiseSettings = new AdvertiseSettings.Builder()
-                    //设置广播的模式
+                    //设置广播的模式(broadcast mode)
                     .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-                    //设置是否可连接
+                    //设置是否可连接(set connectable)
                     .setConnectable(true)
-                    //设置广播时间（0为永不停止，直到回调stopAdvertising()）
+                    //设置广播时间（0为永不停止，直到回调stopAdvertising()）(set broadcast timeout)
                     .setTimeout(0)
-                    //设置广播功率等级（等级越高，信号越强，也更加耗电）
+                    //设置广播功率等级（等级越高，信号越强，也更加耗电）(set Tx power level)
                     .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-                    //构建
+                    //构建(build settings)
                     .build();
             //ParcelUuid
             ParcelUuid parcelUuid = new ParcelUuid(UUID.fromString(serviceUUID));
-            //广播数据
+            //广播数据(advertise data )
             AdvertiseData advertiseData = new AdvertiseData.Builder()
                     //设置广播内容是否包含信号发送等级
                     .setIncludeTxPowerLevel(true)
@@ -403,7 +445,7 @@ bleDeviceController.writData(serviceUUID,characteristicUUID,data);
                     //添加服务UUD与数据
                     .addServiceData(parcelUuid, new byte[]{2, 2, 5})
                     .build();
-            //广播回调
+            //广播回调(callback for  advertise)
             AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
                 /**
                  * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
@@ -448,12 +490,13 @@ bleDeviceController.writData(serviceUUID,characteristicUUID,data);
                     }
                 }
             };
-            //初始化
+            //初始化(initialization)
             bleBroadCastor.init(advertiseSettings, advertiseData, advertiseData, advertiseCallback);
         }
  
 ```
-当设置手机广播可被连接时，需要设置此回调来配合与外部设备的通讯，设置不可连接时，可不必设置词汇掉。（即便是可连接时，不设置此回调也不会有问题，但是这样会导致无法进行任何操作）
+当设置手机广播可被连接时，需要设置此回调来处理远端设备的通讯，设置不可连接时，可以不设置回调。（即便是可连接时，不设置此回调也不会有问题，但是这样会导致无法进行任何操作）
+(This callback needs to be set to handle the communication of the remote device when setting up the cellphone broadcast. When the setting is not connectable, the callback may not be set.)
 ```java
 BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallbackListener = new BleInterface.OnBluetoothGattServerCallbackListener() {
             /**
@@ -634,7 +677,7 @@ BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallback
         };
         bleBroadCastor.setOnBluetoothGattServerCallbackListener(onBluetoothGattServerCallbackListener);
 ```
-开始广播
+开始广播(start advertising)
 ```java
   if (bleBroadCastor != null) {
             boolean b = bleBroadCastor.startAdvertising();
@@ -646,7 +689,7 @@ BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallback
             }
         }
 ```
-停止广播并关闭实例
+停止广播并关闭实例(stop advertising and close broadcast instance)
 ```java
  /**
      * Take care of popping the fragment back stack or finishing the activity
@@ -656,9 +699,9 @@ BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallback
     public void onBackPressed() {
         super.onBackPressed();
         if (bleBroadCastor != null) {
-            //停止广播
+            //停止广播(stop advertising )
             bleBroadCastor.stopAdvertising();
-            //关闭广播实例
+            //关闭广播实例(close broadcast instance)
             bleBroadCastor.close();
         }
     }
