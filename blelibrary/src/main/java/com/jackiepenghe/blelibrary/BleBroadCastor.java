@@ -1,5 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattServer;
@@ -26,6 +27,7 @@ import java.util.UUID;
  */
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class BleBroadCastor {
 
     /*-------------------------静态常量-------------------------*/

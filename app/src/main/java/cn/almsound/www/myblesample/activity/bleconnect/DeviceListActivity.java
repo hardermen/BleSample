@@ -104,7 +104,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         scanList = new ArrayList<>();
         adapterList = new ArrayList<>();
         //初始化BLE扫描器
-        initBleScan();
+        initBleScanner();
         adapter = new DeviceListAdapter(adapterList);
     }
 
@@ -228,7 +228,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
     /**
      * 初始化扫描器
      */
-    private void initBleScan() {
+    private void initBleScanner() {
 
         //创建扫描器实例
         bleScanner = BleManager.newBleScanner(DeviceListActivity.this);
@@ -273,7 +273,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
 
         /*
          * 打开扫描器，并设置相关回调
-         * @param scanResults                  扫描设备结果存放列表
+         * @param scanResults                  扫描到的设备结果存放列表
          * @param onScanFindOneNewDeviceListener 发现一个新设备的回调
          * @param scanPeriod                   扫描持续时间
          * @param scanContinueFlag             是否在扫描完成后立即进行下一次扫描的标志

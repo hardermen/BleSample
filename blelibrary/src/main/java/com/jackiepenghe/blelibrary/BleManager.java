@@ -1,5 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
@@ -152,7 +153,8 @@ public class BleManager {
      * @param context 上下文
      * @return BleBroadCastor
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static BleBroadCastor getBleBroadCastor(Context context) {
         if (!isSupportBle(context)) {
             return null;
@@ -173,7 +175,8 @@ public class BleManager {
      * @param context 上下文
      * @return 广播实例
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static BleBroadCastor newBleBroadCastor(Context context) {
         if (!isSupportBle(context)) {
             return null;

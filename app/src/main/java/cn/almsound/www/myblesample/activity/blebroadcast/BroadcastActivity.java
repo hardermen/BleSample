@@ -2,6 +2,7 @@ package cn.almsound.www.myblesample.activity.blebroadcast;
 
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.os.Build;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -72,20 +73,23 @@ public class BroadcastActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doBeforeSetLayout() {
-        bleBroadCastor = BleManager.getBleBroadCastor(this);
-        Tool.warnOut(TAG, "bleBroadCastor = " + bleBroadCastor);
-
-        if (bleBroadCastor != null) {
-            //默认的初始化
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            bleBroadCastor = BleManager.getBleBroadCastor(this);
+            if (bleBroadCastor != null) {
+                //默认的初始化
 //            bleBroadCastor.init()
 
-            //带回调的初始化
-           if (!bleBroadCastor.init(advertiseCallback)){
-                Tool.warnOut(TAG,"初始化失败");
-           }else {
-                Tool.warnOut(TAG,"初始化成功");
-           }
+                //带回调的初始化
+                if (!bleBroadCastor.init(advertiseCallback)) {
+                    Tool.warnOut(TAG, "初始化失败");
+                } else {
+                    Tool.warnOut(TAG, "初始化成功");
+                }
+            }
         }
+        Tool.warnOut(TAG, "bleBroadCastor = " + bleBroadCastor);
+
+
     }
 
     /**
@@ -144,13 +148,17 @@ public class BroadcastActivity extends BaseAppCompatActivity {
     @Override
     protected void doAfterAll() {
         if (bleBroadCastor != null) {
-            boolean b = bleBroadCastor.startAdvertising();
-            Tool.warnOut(TAG, "startAdvertising = " + b);
+            boolean b = false;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                b = bleBroadCastor.startAdvertising();
+            }
             if (b) {
                 Tool.warnOut(TAG, "广播请求发起成功（是否真的成功，在init的advertiseCallback回调中查看）");
-            }else {
+            } else {
                 Tool.warnOut(TAG, "广播请求发起失败（这是真的失败了，连请求都没有发起成功）");
             }
+            Tool.warnOut(TAG, "startAdvertising = " + b);
+
         }
     }
 
@@ -184,8 +192,10 @@ public class BroadcastActivity extends BaseAppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         if (bleBroadCastor != null) {
-            bleBroadCastor.stopAdvertising();
-            bleBroadCastor.close();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                bleBroadCastor.stopAdvertising();
+                bleBroadCastor.close();
+            }
         }
     }
 }
