@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * @author alm
- * @date 2017/11/15
  * 在多连接中，对某一个设备进行操作的工具类
+ *
+ * @author alm
  */
 public class BleDeviceController {
 
