@@ -11,9 +11,8 @@ import android.bluetooth.BluetoothProfile;
 import android.os.Handler;
 
 /**
- * @author jacke
- * @date 2018/1/19 0019
  * 默认的蓝牙服务端回调
+ * @author jacke
  */
 
 class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {

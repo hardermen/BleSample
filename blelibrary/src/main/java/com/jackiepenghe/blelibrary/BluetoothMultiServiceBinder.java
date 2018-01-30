@@ -4,10 +4,9 @@ import android.os.Binder;
 
 
 /**
+ * BLE多连接服务的Binder
  *
  * @author alm
- * @date 2017/11/15
- * BLE多连接服务的Binder
  */
 
 class BluetoothMultiServiceBinder extends Binder {
@@ -24,6 +23,7 @@ class BluetoothMultiServiceBinder extends Binder {
 
     /**
      * 构造函数
+     *
      * @param bluetoothMultiService BLE多连接服务
      */
     BluetoothMultiServiceBinder(BluetoothMultiService bluetoothMultiService) {
@@ -34,6 +34,7 @@ class BluetoothMultiServiceBinder extends Binder {
 
     /**
      * 获取多连接服务
+     *
      * @return BluetoothMultiService
      */
     BluetoothMultiService getBluetoothMultiService() {

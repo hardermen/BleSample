@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.UUID;
 
 /**
+ * BLE连接器
+ *
  * @author alm
- *         Created by alm on 17-6-5.
- *         BLE连接器
  */
 
 public class BleConnector {

@@ -9,11 +9,10 @@ import android.content.ServiceConnection;
 import android.os.Handler;
 
 
-
 /**
+ * 监听BLE连接相关的广播接收者
+ *
  * @author alm
- *         Created by alm on 17-6-5.
- *         监听BLE连接相关的广播接收者
  */
 
 public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
@@ -127,7 +126,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, final Intent intent) {
         final byte[] values = intent.getByteArrayExtra(LibraryConstants.VALUE);
         String action = intent.getAction();
-        if (action == null){
+        if (action == null) {
             return;
         }
         switch (action) {
@@ -194,11 +193,11 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
             case BleConstants.ACTION_GATT_NOT_SUCCESS:
                 final String methodName = intent.getStringExtra(LibraryConstants.METHOD);
                 final int errorStatus = intent.getIntExtra(LibraryConstants.STATUS, LibraryConstants.DEFAULT_STATUS);
-                if (onBluetoothGattOptionsNotSuccessListener != null){
+                if (onBluetoothGattOptionsNotSuccessListener != null) {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            onBluetoothGattOptionsNotSuccessListener.onBluetoothGattOptionsNotSuccess(methodName,errorStatus);
+                            onBluetoothGattOptionsNotSuccessListener.onBluetoothGattOptionsNotSuccess(methodName, errorStatus);
                         }
                     });
                 }
@@ -318,6 +317,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置设备已连接连接的回调
+     *
      * @param onConnectedListener 设备已连接连接的回调
      */
     void setOnConnectedListener(BleInterface.OnConnectedListener onConnectedListener) {
@@ -326,6 +326,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置设备断开连接的回调
+     *
      * @param onDisconnectedListener 设备断开连接的回调
      */
     void setOnDisconnectedListener(BleInterface.OnDisconnectedListener onDisconnectedListener) {
@@ -334,6 +335,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置服务扫描完成的回调
+     *
      * @param onServicesDiscoveredListener 服务扫描完成的回调
      */
     void setOnServicesDiscoveredListener(BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener) {
@@ -342,6 +344,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置正在连接的回调
+     *
      * @param onConnectingListener 正在连接的回调
      */
     void setOnConnectingListener(BleInterface.OnConnectingListener onConnectingListener) {
@@ -354,6 +357,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置读取到远端设备数据的回调
+     *
      * @param onCharacteristicReadListener 读取到远端设备数据的回调
      */
     void setOnCharacteristicReadListener(BleInterface.OnCharacteristicReadListener onCharacteristicReadListener) {
@@ -362,6 +366,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置收到远端设备通知数据的回调
+     *
      * @param onReceiveNotificationListener 收到远端设备通知数据的回调
      */
     void setOnReceiveNotificationListener(BleInterface.OnReceiveNotificationListener onReceiveNotificationListener) {
@@ -370,6 +375,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置数据写入的回调
+     *
      * @param onCharacteristicWriteListener 数据写入到远端数据的回调
      */
     void setOnCharacteristicWriteListener(BleInterface.OnCharacteristicWriteListener onCharacteristicWriteListener) {
@@ -378,6 +384,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置读取到远端设备描述符的回调
+     *
      * @param onDescriptorReadListener 读取到远端设备描述符的回调
      */
     void setOnDescriptorReadListener(BleInterface.OnDescriptorReadListener onDescriptorReadListener) {
@@ -386,6 +393,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置描述符数据写入的回调
+     *
      * @param onDescriptorWriteListener 描述符数据写入的回调
      */
     void setOnDescriptorWriteListener(BleInterface.OnDescriptorWriteListener onDescriptorWriteListener) {
@@ -394,6 +402,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置可靠数据写入的回调
+     *
      * @param onReliableWriteCompletedListener 可靠数据写入的回调
      */
     void setOnReliableWriteCompletedListener(BleInterface.OnReliableWriteCompletedListener onReliableWriteCompletedListener) {
@@ -402,6 +411,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置获取到远端设备RSSI的回调
+     *
      * @param onReadRemoteRssiListener 获取到远端设备RSSI的回调
      */
     void setOnReadRemoteRssiListener(BleInterface.OnReadRemoteRssiListener onReadRemoteRssiListener) {
@@ -410,6 +420,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置mtu被改变时的回调
+     *
      * @param onMtuChangedListener mtu被改变时的回调
      */
     void setOnMtuChangedListener(BleInterface.OnMtuChangedListener onMtuChangedListener) {
@@ -418,6 +429,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置蓝牙开关状态改变时的回调
+     *
      * @param onBluetoothSwitchChangedListener 蓝牙开关状态改变时的回调
      */
     void setOnBluetoothSwitchChangedListener(BleInterface.OnBluetoothSwitchChangedListener onBluetoothSwitchChangedListener) {
@@ -426,6 +438,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置蓝牙配置未成功的回调
+     *
      * @param onBluetoothGattOptionsNotSuccessListener 蓝牙配置未成功的回调
      */
     void setOnBluetoothGattOptionsNotSuccessListener(BleInterface.OnBluetoothGattOptionsNotSuccessListener onBluetoothGattOptionsNotSuccessListener) {

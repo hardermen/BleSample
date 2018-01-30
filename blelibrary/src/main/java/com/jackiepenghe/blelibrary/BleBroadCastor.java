@@ -20,10 +20,8 @@ import java.lang.ref.WeakReference;
 import java.util.UUID;
 
 /**
- * @author jacke
- * @date 2018/1/18 0018
- * <p>
  * BLE广播实例
+ * @author jacke
  */
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)

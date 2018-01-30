@@ -22,9 +22,8 @@ import java.util.UUID;
 
 
 /**
- * @author alm
- * @date 2017/11/15
  * BLE多连接服务
+ * @author alm
  */
 
 public class BluetoothMultiService extends Service {

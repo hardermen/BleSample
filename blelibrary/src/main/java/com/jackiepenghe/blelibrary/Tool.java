@@ -13,10 +13,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
+ * 工具类
  *
  * @author alm
- * @date 17-6-5
- * 工具类
  */
 
 public class Tool {
@@ -363,7 +362,7 @@ public class Tool {
     @SuppressWarnings("WeakerAccess")
     public static String bytesToHexStr(byte[] bytes) {
 
-        if (bytes == null){
+        if (bytes == null) {
             return "";
         }
 
@@ -596,8 +595,10 @@ public class Tool {
         intent.addCategory(Intent.CATEGORY_HOME);
         context.startActivity(intent);
     }
+
     /**
      * 对象转byte
+     *
      * @param obj Object
      * @return byte[]
      */
@@ -622,6 +623,7 @@ public class Tool {
 
     /**
      * byte转对象
+     *
      * @param bytes byte[]
      * @return Object
      */

@@ -11,8 +11,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * Created by alm on 17-6-5.
  * 自定义Toast，可实现自定义显示时间
+ * Created by alm on 17-6-5.
  */
 
 class CustomToast {

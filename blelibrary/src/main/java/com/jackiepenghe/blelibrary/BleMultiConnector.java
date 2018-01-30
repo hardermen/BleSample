@@ -12,9 +12,8 @@ import java.util.UUID;
 import static com.jackiepenghe.blelibrary.BleManager.resetBleMultiConnector;
 
 /**
- * @author alm
- * @date 2017/11/15
  * 多连接时的Ble连接工具
+ * @author alm
  */
 
 public class BleMultiConnector {

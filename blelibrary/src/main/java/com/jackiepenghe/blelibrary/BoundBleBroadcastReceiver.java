@@ -11,9 +11,10 @@ import android.os.Handler;
 
 
 /**
+ * BLE绑定设备时，监听绑定状态的广播接收者
+ *
  * @author alm
- *         Created by alm on 17-6-5.
- *         BLE绑定设备时，监听绑定状态的广播接收者
+ * @date 17-6-5
  */
 
 public class BoundBleBroadcastReceiver extends BroadcastReceiver {
@@ -126,6 +127,7 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置绑定状态改变时的回调
+     *
      * @param onDeviceBondStateChangedListener 绑定状态改变时的回调
      */
     void setOnDeviceBondStateChangedListener(BleInterface.OnDeviceBondStateChangedListener onDeviceBondStateChangedListener) {

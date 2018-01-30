@@ -12,8 +12,8 @@ import android.os.Handler;
 import java.lang.ref.WeakReference;
 
 /**
- * Created by alm on 17-6-5.
  * 监听蓝牙状态改变的广播接收者
+ * Created by alm on 17-6-5.
  */
 
 class BluetoothStateReceiver extends BroadcastReceiver {

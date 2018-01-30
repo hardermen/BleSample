@@ -11,10 +11,8 @@ import android.os.Handler;
 import java.util.HashMap;
 
 /**
- * @author jacke
- * @date 2018/1/27 0027
- * <p>
  * 多连接时库中默认预设的连接回调
+ * @author jacke
  */
 
 public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {

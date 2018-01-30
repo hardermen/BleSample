@@ -1,9 +1,9 @@
 package com.jackiepenghe.blelibrary;
 
 /**
+ * BLE常量
+ *
  * @author alm
- *         Created by alm on 17-6-6.
- *         BLE常量
  */
 
 public class BleConstants {

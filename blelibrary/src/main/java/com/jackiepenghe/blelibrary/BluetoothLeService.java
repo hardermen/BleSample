@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.UUID;
 
 /**
+ * BLE连接的服务
+ *
  * @author alm
- *         Created by alm on 17-6-5.
- *         BLE连接的服务
  */
 
 public class BluetoothLeService extends Service {

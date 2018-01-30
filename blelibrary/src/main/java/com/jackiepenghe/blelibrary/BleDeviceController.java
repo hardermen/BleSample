@@ -59,6 +59,7 @@ public class BleDeviceController {
      * @param values             数据
      * @return true表示成功
      */
+    @SuppressWarnings("UnusedReturnValue")
     public boolean writeData(String serviceUUID, String characteristicUUID, byte[] values) {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         return bleMultiConnector != null && address != null && bleMultiConnector.writeData(address, serviceUUID, characteristicUUID, values);
@@ -154,6 +155,7 @@ public class BleDeviceController {
      * @param uuid UUID
      * @return 服务
      */
+    @SuppressWarnings("WeakerAccess")
     public BluetoothGattService getService(UUID uuid) {
         BleMultiConnector bleMultiConnector = bleMultiConnectorWeakReference.get();
         if (bleMultiConnector == null) {

@@ -9,9 +9,8 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 
 /**
- * @author alm
- * @date 2017/11/10
  * BlE管理类
+ * @author alm
  */
 
 public class BleManager {

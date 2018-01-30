@@ -4,9 +4,8 @@ import android.bluetooth.BluetoothGatt;
 
 
 /**
- * @author alm
- * @date 2017/11/15
  * 多连接时的连接回调
+ * @author alm
  */
 
 @SuppressWarnings({"WeakerAccess", "unused"})

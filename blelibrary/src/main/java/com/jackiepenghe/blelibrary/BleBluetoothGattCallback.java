@@ -11,8 +11,9 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Created by alm on 17-6-6.
  * BLE Gatt服务的回调
+ *
+ * @author alm
  */
 
 class BleBluetoothGattCallback extends BluetoothGattCallback {

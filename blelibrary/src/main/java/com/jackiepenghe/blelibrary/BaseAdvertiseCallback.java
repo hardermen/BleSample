@@ -7,9 +7,8 @@ import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.os.Build;
 
 /**
- * @author jacke
- * @date 2018/1/26 0026
  * BLE广播回调
+ * @author jacke
  */
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)

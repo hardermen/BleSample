@@ -9,9 +9,9 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 
 /**
+ * 接口定义区
+ *
  * @author alm
- *         Created by alm on 17-6-5.
- *         接口定义区
  */
 
 public class BleInterface {
@@ -85,10 +85,11 @@ public class BleInterface {
     /**
      * BluetoothGatt客户端配置失败的回调接口
      */
-    public interface OnBluetoothGattOptionsNotSuccessListener{
+    public interface OnBluetoothGattOptionsNotSuccessListener {
         /**
          * BluetoothGatt客户端配置失败
-         * @param methodName 执行失败的函数名
+         *
+         * @param methodName  执行失败的函数名
          * @param errorStatus 执行失败的错误状态码
          */
         void onBluetoothGattOptionsNotSuccess(String methodName, int errorStatus);
@@ -244,7 +245,8 @@ public class BleInterface {
      */
     public interface OnBluetoothSwitchChangedListener {
         /**
-         *  蓝牙开关状态改变
+         * 蓝牙开关状态改变
+         *
          * @param switchStatus true表示开关打开，false表示开关关闭
          */
         void onBluetoothSwitchChanged(boolean switchStatus);
@@ -253,7 +255,7 @@ public class BleInterface {
     /**
      * 蓝牙广播时，作为服务端的相关回调
      */
-    public interface OnBluetoothGattServerCallbackListener{
+    public interface OnBluetoothGattServerCallbackListener {
 
         /**
          * Callback indicating when a remote device has been connected or disconnected.

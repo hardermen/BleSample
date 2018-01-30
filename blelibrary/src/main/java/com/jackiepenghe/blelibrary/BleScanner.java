@@ -18,7 +18,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +26,6 @@ import java.util.List;
  * BLE扫描器
  *
  * @author alm
- *         Created by alm on 17-6-5.
  */
 
 public class BleScanner {
@@ -129,7 +127,7 @@ public class BleScanner {
     private BleInterface.OnScanCompleteListener onScanCompleteListener = new BleInterface.OnScanCompleteListener() {
         @Override
         public void onScanComplete() {
-            Tool.warnOut(TAG,"onScanComplete");
+            Tool.warnOut(TAG, "onScanComplete");
         }
     };
 
@@ -240,7 +238,7 @@ public class BleScanner {
                 if (scanRecord != null) {
                     scanRecordBytes = scanRecord.getBytes();
                     deviceName = scanRecord.getDeviceName();
-                    if (deviceName == null || "".equals(deviceName)){
+                    if (deviceName == null || "".equals(deviceName)) {
                         deviceName = "unnamed device";
                     }
                     Tool.warnOut(TAG, "device.getDeviceName() = " + deviceName);
@@ -302,6 +300,7 @@ public class BleScanner {
 
     /**
      * 设置蓝牙适配器
+     *
      * @param bluetoothAdapter 蓝牙适配器
      */
     void setBluetoothAdapter(BluetoothAdapter bluetoothAdapter) {
@@ -351,6 +350,7 @@ public class BleScanner {
 
     /**
      * 开始扫描
+     *
      * @return true表示成功开启扫描
      */
     @SuppressWarnings("UnusedReturnValue")
@@ -430,6 +430,7 @@ public class BleScanner {
 
     /**
      * 关闭当前GATT连接
+     *
      * @return true表示成功
      */
     public boolean close() {
@@ -511,6 +512,7 @@ public class BleScanner {
 
     /**
      * 设置当发现一个设备时的回调
+     *
      * @param onScanFindOneDeviceListener 当发现一个设备时的回调
      */
     public void setOnScanFindOneDeviceListener(BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener) {
@@ -519,6 +521,7 @@ public class BleScanner {
 
     /**
      * 获取当前扫描状态
+     *
      * @return true表示正在扫描
      */
     public boolean isScanning() {
@@ -527,6 +530,7 @@ public class BleScanner {
 
     /**
      * 设置扫描周期
+     *
      * @param scanPeriod 扫描周期
      */
     public void setScanPeriod(long scanPeriod) {
@@ -535,7 +539,8 @@ public class BleScanner {
 
     /**
      * 设置当扫描结束后是否立即进行下一次扫描
-     * @param scanContinue  当扫描结束后是否立即进行下一次扫描的标志
+     *
+     * @param scanContinue 当扫描结束后是否立即进行下一次扫描的标志
      */
     public void setScanContinue(boolean scanContinue) {
         this.scanContinue = scanContinue;
@@ -543,6 +548,7 @@ public class BleScanner {
 
     /**
      * 设置发现一个新设备时的回调
+     *
      * @param onScanFindOneNewDeviceListener 发现一个新设备时的回调
      */
     public void setOnScanFindOneNewDeviceListener(BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener) {
@@ -551,6 +557,7 @@ public class BleScanner {
 
     /**
      * 设置扫描完成的回调
+     *
      * @param onScanCompleteListener 扫描完成的回调
      */
     public void setOnScanCompleteListener(@NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {

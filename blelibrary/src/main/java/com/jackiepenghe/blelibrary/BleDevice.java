@@ -11,9 +11,9 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 /**
+ * 自定义BLE设备been类
+ *
  * @author alm
- *         Created by alm on 17-6-5.
- *         自定义BLE设备been类
  */
 
 public class BleDevice implements Serializable, Parcelable {
@@ -115,6 +115,7 @@ public class BleDevice implements Serializable, Parcelable {
 
     /**
      * 设置广播包内容
+     *
      * @param scanRecord ScanRecord对象
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -124,6 +125,7 @@ public class BleDevice implements Serializable, Parcelable {
 
     /**
      * 获取设备名称
+     *
      * @return 设备名称
      */
     public String getDeviceName() {
@@ -136,14 +138,16 @@ public class BleDevice implements Serializable, Parcelable {
 
     /**
      * 设置设备名
+     *
      * @param deviceName 设备名
      */
-   private void setDeviceName(String deviceName) {
+    private void setDeviceName(String deviceName) {
         mDeviceName = deviceName;
     }
 
     /**
      * 获取设备地址
+     *
      * @return 设备地址
      */
     public String getDeviceAddress() {
@@ -195,7 +199,7 @@ public class BleDevice implements Serializable, Parcelable {
      * argument; {@code false} otherwise.
      * @see #hashCode()
      * @see HashMap
-     *
+     * <p>
      * 重写equals方法
      */
     @Override
@@ -222,6 +226,7 @@ public class BleDevice implements Serializable, Parcelable {
         dest.writeByteArray(this.scanRecordBytes);
     }
 
+    @SuppressWarnings("WeakerAccess")
     protected BleDevice(Parcel in) {
         this.mBluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
         this.mRssi = in.readInt();

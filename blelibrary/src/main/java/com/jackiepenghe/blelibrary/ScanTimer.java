@@ -10,8 +10,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by alm on 17-6-5.
  * 扫描的定时器
+ * Created by alm on 17-6-5.
  */
 
 class ScanTimer {

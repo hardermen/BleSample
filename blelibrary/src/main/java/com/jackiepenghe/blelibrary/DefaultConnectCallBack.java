@@ -5,8 +5,8 @@ import android.bluetooth.BluetoothGatt;
 
 
 /**
- * Created by alm on 2017/11/16.
  * 默认的多连接回调
+ * Created by alm on 2017/11/16.
  */
 
 class DefaultConnectCallBack extends BaseConnectCallback {

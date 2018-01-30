@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Created by alm on 17-6-5.
  * BLE连接服务的连接回调
+ * Created by alm on 17-6-5.
  */
 
 class BleServiceConnection implements ServiceConnection {
