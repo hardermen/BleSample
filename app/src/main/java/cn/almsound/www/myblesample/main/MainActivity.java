@@ -56,7 +56,6 @@ public class MainActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doBeforeSetLayout() {
-        Tool.setDebugFlag(true);
     }
 
     /**

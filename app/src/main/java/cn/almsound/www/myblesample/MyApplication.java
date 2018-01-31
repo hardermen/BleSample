@@ -30,6 +30,7 @@ public class MyApplication extends Application {
         super.onCreate();
         Tool.setDebugFlag(true);
         Tool.setDefaultTAG("BleLibrary");
+        com.jackiepenghe.baselibrary.Tool.setDebugFlag(true);
         //初始化文件工具类
         FileUtil.init(this);
 

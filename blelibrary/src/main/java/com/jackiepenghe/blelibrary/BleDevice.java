@@ -8,6 +8,7 @@ import android.os.Parcelable;
 import android.support.annotation.RequiresApi;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -44,6 +45,11 @@ public class BleDevice implements Serializable, Parcelable {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private ScanRecord scanRecord;
 
+    /**
+     * 解析广播包后保存的数据
+     */
+    private ArrayList<AdRecord> adRecords;
+
 
     /**
      * 构造器
@@ -52,11 +58,7 @@ public class BleDevice implements Serializable, Parcelable {
      * @param rssi            rssi值
      */
     public BleDevice(BluetoothDevice bluetoothDevice, int rssi, String deviceName) {
-        mBluetoothDevice = bluetoothDevice;
-        mRssi = rssi;
-        if (bluetoothDevice.getName() == null || bluetoothDevice.getName().isEmpty()) {
-            setDeviceName(deviceName);
-        }
+        this(bluetoothDevice, rssi, null, deviceName);
     }
 
     /**
@@ -71,6 +73,7 @@ public class BleDevice implements Serializable, Parcelable {
         mBluetoothDevice = bluetoothDevice;
         mRssi = rssi;
         this.scanRecordBytes = scanRecordBytes;
+        adRecords = AdRecord.parseScanRecord(scanRecordBytes);
         if (bluetoothDevice.getName() == null || "".equals(bluetoothDevice.getName())) {
             setDeviceName(deviceName);
         }
@@ -153,6 +156,41 @@ public class BleDevice implements Serializable, Parcelable {
     public String getDeviceAddress() {
         return mBluetoothDevice.getAddress();
     }
+
+    /**
+     * 获取广播包的解析结果集合
+     *
+     * @return 广播包的解析结果集合
+     */
+    public ArrayList<AdRecord> getAdRecords() {
+        return adRecords;
+    }
+
+    /**
+     * 获取指定类型的广播包字段
+     *
+     * @param type 指定类型
+     * @return 广播包字段
+     */
+    public byte[] getManufacturerSpecificData(int type) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            byte[] manufacturerSpecificData = scanRecord.getManufacturerSpecificData(type);
+            if (manufacturerSpecificData != null) {
+                return manufacturerSpecificData;
+            }
+        }
+
+        for (int i = 0; i < adRecords.size(); i++) {
+            AdRecord adRecord = adRecords.get(i);
+            if (adRecord.getType() == type) {
+                return adRecord.getData();
+            }
+        }
+
+        return new byte[0];
+    }
+
+    /*------------------------重写父类函数----------------------------*/
 
     /**
      * Indicates whether some other object is "equal to" this one.
