@@ -1,4 +1,4 @@
-[API文档](http://47.52.138.198/)请使用UTF-8编码查看。
+[API文档](http://47.52.138.198/blelibrary/index.html)
 
 配置：(Configure)
 
