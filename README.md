@@ -1,4 +1,4 @@
-[API文档](http://47.52.138.198/blelibrary/index.html)
+[API文档](http://penghe.xyz/blelibraryAPIs/index.html)
 
 配置：(Configure)
 
@@ -6,20 +6,20 @@
 
 2.gradle配置依赖(gradle dependency)
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.5.4'
+compile 'com.jackiepenghe:blelibrary:0.5.5'
 ```
 3.maven配置依赖(maven dependency)
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.5.4</version>
+  <version>0.5.5</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖(vy dependency)
 ```xml
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.5.1'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.5.5'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
