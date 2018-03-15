@@ -1,7 +1,6 @@
 package cn.almsound.www.myblesample.activity.bleconnect;
 
 import android.Manifest;
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -223,6 +222,9 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         adapter = null;
         clickCount = 0;
         bleScanner = null;
+
+        //解除输入法内存泄漏
+        com.jackiepenghe.baselibrary.Tool.releaseInputMethodManagerMemory(this);
     }
 
     /**
@@ -259,9 +261,8 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         //在扫描过程中发现一个设备就会触发一次此回调，不论该设备是否被发现过。在安卓5.0之前此回调效果完全等同于BleInterface.OnScanFindOneNewDeviceListener
         BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener = new BleInterface.OnScanFindOneDeviceListener() {
             @Override
-            public void onScanFindOneDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord) {
+            public void onScanFindOneDevice(BleDevice bleDevice) {
                 //只要发现一个设备就会回调此函数
-                BleDevice bleDevice = new BleDevice(bluetoothDevice, rssi, scanRecord, bluetoothDevice.getName());
                 if (!adapterList.contains(bleDevice)) {
                     adapterList.add(bleDevice);
                     adapter.notifyItemInserted(adapterList.size() - 1);

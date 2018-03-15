@@ -444,6 +444,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
             public void onDeviceBindNone() {
                 Tool.warnOut(TAG,"绑定失败");
                 Tool.toastL(ConnectActivity.this,"绑定失败");
+                startConnect();
             }
         };
         BleInterface.OnMtuChangedListener onMtuChangedListener = new BleInterface.OnMtuChangedListener() {

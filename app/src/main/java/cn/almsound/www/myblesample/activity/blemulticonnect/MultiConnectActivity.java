@@ -50,11 +50,12 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
     private CustomTextCircleView customTextCircleView1, customTextCircleView2, customTextCircleView3, customTextCircleView4, customTextCircleView5;
     private TextView deviceAddressTv1, deviceAddressTv2, deviceAddressTv3, deviceAddressTv4, deviceAddressTv5;
     private boolean first = true;
-    private String device1Address = "00:02:5B:00:15:A4";
+
+    private String device1Address = "00:02:5B:00:15:A1";
     private String device2Address = "00:02:5B:00:15:A2";
-    private String device3Address = "00:02:5B:00:15:A9";
-    private String device4Address = "00:02:5B:00:15:A1";
-    private String device5Address = "00:02:5B:00:15:A8";
+    private String device3Address = "00:02:5B:00:15:A4";
+    private String device4Address = "00:02:5B:00:15:A8";
+    private String device5Address = "00:02:5B:00:15:A9";
     private Device1Callback device1BleCallback;
     private Device2Callback device2BleCallback;
     private Device3Callback device3BleCallback;

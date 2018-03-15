@@ -7,7 +7,7 @@ package com.jackiepenghe.blelibrary;
 
 class LibraryConstants {
     static final String VALUE = "VALUE";
-     static final String METHOD = "METHOD";
+    static final String METHOD = "METHOD";
     static final String STATUS = "STATUS";
     static final int DEFAULT_STATUS = Integer.MAX_VALUE;
 }

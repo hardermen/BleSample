@@ -83,7 +83,6 @@ public class WelcomeActivity extends BaseWelcomeActivity {
                 super.onActivityResult(requestCode, resultCode, data);
                 break;
         }
-
     }
 
     /*-----------------------自定义函数-----------------------*/

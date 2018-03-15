@@ -192,15 +192,19 @@ public class BleScanner {
                     @Override
                     public void run() {
                         Tool.warnOut(TAG, "-------------------------API < 21 onScanResult-----------------------------");
-                        Tool.warnOut(TAG, "name = " + device.getName());
+                        String name = device.getName();
+                        Tool.warnOut(TAG, "name = " + name);
                         Tool.warnOut(TAG, "address = " + device.getAddress());
                         Tool.warnOut(TAG, "rssi = " + rssi);
                         Tool.warnOut(TAG, "scanRecord = " + Tool.bytesToHexStr(scanRecord));
                         Tool.warnOut(TAG, "-------------------------API < 21 onScanResult-----------------------------");
-                        if (mOnScanFindOneDeviceListener != null) {
-                            mOnScanFindOneDeviceListener.onScanFindOneDevice(device, rssi, scanRecord);
+                        if (null == name || "".equals(name)) {
+                            name = contextWeakReference.get().getString(R.string.un_named);
                         }
-                        BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, "unnamed device");
+                        BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, name);
+                        if (mOnScanFindOneDeviceListener != null) {
+                            mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
+                        }
                         if (!mScanResults.contains(bleDevice)) {
                             mScanResults.add(bleDevice);
                             onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
@@ -239,7 +243,7 @@ public class BleScanner {
                     scanRecordBytes = scanRecord.getBytes();
                     deviceName = scanRecord.getDeviceName();
                     if (deviceName == null || "".equals(deviceName)) {
-                        deviceName = "unnamed device";
+                        deviceName = contextWeakReference.get().getString(R.string.un_named);
                     }
                     Tool.warnOut(TAG, "device.getDeviceName() = " + deviceName);
                 }
@@ -254,7 +258,7 @@ public class BleScanner {
                 BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
                 bleDevice.setScanRecord(scanRecord);
                 if (mOnScanFindOneDeviceListener != null) {
-                    mOnScanFindOneDeviceListener.onScanFindOneDevice(device, rssi, scanRecordBytes);
+                    mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
                 }
                 if (onScanFindOneNewDeviceListener != null) {
                     if (!mScanResults.contains(bleDevice)) {

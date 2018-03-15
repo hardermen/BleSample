@@ -33,11 +33,9 @@ public class BleInterface {
         /**
          * 扫描到一个蓝牙设备时回调此函数
          *
-         * @param bluetoothDevice 蓝牙设备
-         * @param rssi            RSSI(信号强度)
-         * @param scanRecord      广播包内容
+         * @param bleDevice 自定义Ble设备Been类
          */
-        void onScanFindOneDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord);
+        void onScanFindOneDevice(BleDevice bleDevice);
     }
 
     /**

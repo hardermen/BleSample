@@ -12,6 +12,7 @@ import android.os.Handler;
 
 /**
  * 默认的蓝牙服务端回调
+ *
  * @author jacke
  */
 
@@ -354,6 +355,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
 
     /**
      * 设置连接回调
+     *
      * @param onBluetoothGattServerCallbackListener 连接回调
      */
     void setOnBluetoothGattServerCallbackListener(BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallbackListener) {
