@@ -142,8 +142,7 @@ public class BleScanner {
         contextWeakReference = new WeakReference<>(context);
         scanTimer = new ScanTimer(BleScanner.this);
         mHandler = new Handler();
-        // Use this check to determine whether BLE is supported on the device.
-        if (!(contextWeakReference.get().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
+        if (!(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
             Tool.toastL(context, R.string.ble_not_supported);
             return;
         }
@@ -165,9 +164,9 @@ public class BleScanner {
 
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
             //如果是由activity创建的，可以直接请求打开蓝牙
-            if (contextWeakReference.get() instanceof Activity) {
+            if (context instanceof Activity) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                contextWeakReference.get().startActivity(enableBtIntent);
+                context.startActivity(enableBtIntent);
             } else {
                 if (mBluetoothAdapter != null) {
                     boolean enable = mBluetoothAdapter.enable();
@@ -188,6 +187,10 @@ public class BleScanner {
         mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
             @Override
             public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
+                final Context context = contextWeakReference.get();
+                if (context == null) {
+                    return;
+                }
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -199,7 +202,7 @@ public class BleScanner {
                         Tool.warnOut(TAG, "scanRecord = " + Tool.bytesToHexStr(scanRecord));
                         Tool.warnOut(TAG, "-------------------------API < 21 onScanResult-----------------------------");
                         if (null == name || "".equals(name)) {
-                            name = contextWeakReference.get().getString(R.string.un_named);
+                            name = context.getString(R.string.un_named);
                         }
                         BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, name);
                         if (mOnScanFindOneDeviceListener != null) {
@@ -232,6 +235,10 @@ public class BleScanner {
              */
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
+                Context context = contextWeakReference.get();
+                if (context == null) {
+                    return;
+                }
                 Tool.warnOut(TAG, "------------------------API >= 21 onScanResult------------------------------");
                 Tool.warnOut(TAG, "callbackType = " + callbackType);
                 BluetoothDevice device = result.getDevice();
@@ -243,7 +250,7 @@ public class BleScanner {
                     scanRecordBytes = scanRecord.getBytes();
                     deviceName = scanRecord.getDeviceName();
                     if (deviceName == null || "".equals(deviceName)) {
-                        deviceName = contextWeakReference.get().getString(R.string.un_named);
+                        deviceName = context.getString(R.string.un_named);
                     }
                     Tool.warnOut(TAG, "device.getDeviceName() = " + deviceName);
                 }
@@ -332,7 +339,8 @@ public class BleScanner {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean open(@NonNull ArrayList<BleDevice> scanResults, @NonNull BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener, @SuppressWarnings("SameParameterValue") long scanPeriod, @SuppressWarnings("SameParameterValue") boolean scanContinueFlag, @NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
-        if (scanPeriod <= 0 || contextWeakReference.get() == null) {
+        Context context = contextWeakReference.get();
+        if (scanPeriod <= 0 || context == null) {
             return false;
         }
 
@@ -342,7 +350,7 @@ public class BleScanner {
             return false;
         }
         mScanResults = scanResults;
-        contextWeakReference.get().registerReceiver(bluetoothStateReceiver, filter);
+        context.registerReceiver(bluetoothStateReceiver, filter);
         mScanResults.clear();
         mOpened = true;
         this.onScanFindOneNewDeviceListener = onScanFindOneNewDeviceListener;
@@ -359,8 +367,12 @@ public class BleScanner {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean startScan() {
+        Context context = contextWeakReference.get();
+        if (context == null) {
+            return false;
+        }
         if (mBluetoothAdapter == null) {
-            Tool.toastL(contextWeakReference.get(), R.string.no_bluetooth_mode);
+            Tool.toastL(context, R.string.no_bluetooth_mode);
             return false;
         }
 
@@ -369,7 +381,7 @@ public class BleScanner {
         }
 
         if (!mBluetoothAdapter.isEnabled()) {
-            Tool.toastL(contextWeakReference.get(), R.string.bluetooth_not_enable);
+            Tool.toastL(context, R.string.bluetooth_not_enable);
             return false;
         }
 
@@ -407,6 +419,10 @@ public class BleScanner {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean stopScan() {
+        Context context = contextWeakReference.get();
+        if (context == null) {
+            return false;
+        }
         if (!mOpened) {
             return false;
         }
@@ -416,7 +432,7 @@ public class BleScanner {
         }
 
         if (mBluetoothAdapter == null) {
-            Tool.toastL(contextWeakReference.get(), R.string.no_bluetooth_mode);
+            Tool.toastL(context, R.string.no_bluetooth_mode);
             return false;
         }
 
@@ -438,6 +454,10 @@ public class BleScanner {
      * @return true表示成功
      */
     public boolean close() {
+        Context context = contextWeakReference.get();
+        if (context == null) {
+            return false;
+        }
         if (!mOpened) {
             return false;
         }
@@ -447,7 +467,7 @@ public class BleScanner {
         }
 
         if (bluetoothStateReceiver != null) {
-            contextWeakReference.get().unregisterReceiver(bluetoothStateReceiver);
+            context.unregisterReceiver(bluetoothStateReceiver);
         }
 
         scanPeriod = 0;
