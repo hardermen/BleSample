@@ -69,6 +69,7 @@ public class BleDevice implements Serializable, Parcelable {
      * @param scanRecordBytes 广播包内容（字节数组）
      * @param deviceName      如果获取到的设备名为空，默认的设备名
      */
+    @SuppressWarnings("WeakerAccess")
     public BleDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecordBytes, String deviceName) {
         mBluetoothDevice = bluetoothDevice;
         mRssi = rssi;
@@ -174,16 +175,20 @@ public class BleDevice implements Serializable, Parcelable {
      */
     public byte[] getManufacturerSpecificData(int type) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            byte[] manufacturerSpecificData = scanRecord.getManufacturerSpecificData(type);
-            if (manufacturerSpecificData != null) {
-                return manufacturerSpecificData;
+            if (scanRecord != null) {
+                byte[] manufacturerSpecificData = scanRecord.getManufacturerSpecificData(type);
+                if (manufacturerSpecificData != null) {
+                    return manufacturerSpecificData;
+                }
             }
         }
 
-        for (int i = 0; i < adRecords.size(); i++) {
-            AdRecord adRecord = adRecords.get(i);
-            if (adRecord.getType() == type) {
-                return adRecord.getData();
+        if (adRecords != null) {
+            for (int i = 0; i < adRecords.size(); i++) {
+                AdRecord adRecord = adRecords.get(i);
+                if (adRecord.getType() == type) {
+                    return adRecord.getData();
+                }
             }
         }
 
