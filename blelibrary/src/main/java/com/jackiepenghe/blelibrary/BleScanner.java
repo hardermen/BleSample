@@ -208,6 +208,10 @@ public class BleScanner {
                         if (mOnScanFindOneDeviceListener != null) {
                             mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
                         }
+
+                        if (scanRecord == null){
+                            return;
+                        }
                         if (!mScanResults.contains(bleDevice)) {
                             mScanResults.add(bleDevice);
                             onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
@@ -266,6 +270,9 @@ public class BleScanner {
                 bleDevice.setScanRecord(scanRecord);
                 if (mOnScanFindOneDeviceListener != null) {
                     mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
+                }
+                if (scanRecord == null){
+                    return;
                 }
                 if (onScanFindOneNewDeviceListener != null) {
                     if (!mScanResults.contains(bleDevice)) {
