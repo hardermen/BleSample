@@ -191,26 +191,19 @@ public class BleScanner {
                 if (context == null) {
                     return;
                 }
+                if (scanRecord == null) {
+                    return;
+                }
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        Tool.warnOut(TAG, "-------------------------API < 21 onScanResult-----------------------------");
                         String name = device.getName();
-                        Tool.warnOut(TAG, "name = " + name);
-                        Tool.warnOut(TAG, "address = " + device.getAddress());
-                        Tool.warnOut(TAG, "rssi = " + rssi);
-                        Tool.warnOut(TAG, "scanRecord = " + Tool.bytesToHexStr(scanRecord));
-                        Tool.warnOut(TAG, "-------------------------API < 21 onScanResult-----------------------------");
                         if (null == name || "".equals(name)) {
                             name = context.getString(R.string.un_named);
                         }
                         BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, name);
                         if (mOnScanFindOneDeviceListener != null) {
                             mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
-                        }
-
-                        if (scanRecord == null){
-                            return;
                         }
                         if (!mScanResults.contains(bleDevice)) {
                             mScanResults.add(bleDevice);
@@ -243,43 +236,41 @@ public class BleScanner {
                 if (context == null) {
                     return;
                 }
-                Tool.warnOut(TAG, "------------------------API >= 21 onScanResult------------------------------");
-                Tool.warnOut(TAG, "callbackType = " + callbackType);
+                ScanRecord scanRecord = result.getScanRecord();
+
+                if (scanRecord == null) {
+                    return;
+                }
+
                 BluetoothDevice device = result.getDevice();
                 int rssi = result.getRssi();
-                ScanRecord scanRecord = result.getScanRecord();
-                byte[] scanRecordBytes = null;
-                String deviceName = null;
-                if (scanRecord != null) {
-                    scanRecordBytes = scanRecord.getBytes();
-                    deviceName = scanRecord.getDeviceName();
-                    if (deviceName == null || "".equals(deviceName)) {
-                        deviceName = context.getString(R.string.un_named);
-                    }
-                    Tool.warnOut(TAG, "device.getDeviceName() = " + deviceName);
+                byte[] scanRecordBytes;
+                String deviceName;
+                scanRecordBytes = scanRecord.getBytes();
+                deviceName = scanRecord.getDeviceName();
+                if (deviceName == null || "".equals(deviceName)) {
+                    deviceName = context.getString(R.string.un_named);
                 }
-                Tool.warnOut(TAG, "device.getName() = " + device.getName());
-                Tool.warnOut(TAG, "device.getAddress() = " + device.getAddress());
-                Tool.warnOut(TAG, "rssi = " + rssi);
-                Tool.warnOut(TAG, "scanRecord = " + scanRecord);
                 if (scanRecordBytes != null) {
                     Tool.warnOut(TAG, "scanRecordByte = " + Tool.bytesToHexStr(scanRecordBytes));
                 }
-                Tool.warnOut(TAG, "------------------------API >= 21 onScanResult------------------------------");
-                BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
+                final BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
                 bleDevice.setScanRecord(scanRecord);
-                if (mOnScanFindOneDeviceListener != null) {
-                    mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
-                }
-                if (scanRecord == null){
-                    return;
-                }
-                if (onScanFindOneNewDeviceListener != null) {
-                    if (!mScanResults.contains(bleDevice)) {
-                        mScanResults.add(bleDevice);
-                        onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
+
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mOnScanFindOneDeviceListener != null) {
+                            mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
+                        }
+                        if (onScanFindOneNewDeviceListener != null) {
+                            if (!mScanResults.contains(bleDevice)) {
+                                mScanResults.add(bleDevice);
+                                onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
+                            }
+                        }
                     }
-                }
+                });
             }
 
             /**
