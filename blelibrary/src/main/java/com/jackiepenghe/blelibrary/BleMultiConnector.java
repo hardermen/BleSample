@@ -23,7 +23,7 @@ public class BleMultiConnector {
     /**
      * 上下文弱引用
      */
-    private WeakReference<Context> contextWeakReference;
+    private Context context;
     /**
      * 多连接服务连接工具
      */
@@ -41,7 +41,7 @@ public class BleMultiConnector {
      * @param context 上下文
      */
     BleMultiConnector(Context context) {
-        contextWeakReference = new WeakReference<>(context);
+        this.context = context;
         bleServiceMultiConnection = new BleServiceMultiConnection(this);
         Intent intent = new Intent(context.getApplicationContext(), BluetoothMultiService.class);
         context.getApplicationContext().bindService(intent, bleServiceMultiConnection, Context.BIND_AUTO_CREATE);
@@ -139,7 +139,7 @@ public class BleMultiConnector {
      * @return 上下文
      */
     Context getContext() {
-        return contextWeakReference.get();
+        return context;
     }
 
     /**
@@ -211,7 +211,7 @@ public class BleMultiConnector {
         }
 
         bluetoothMultiService.closeAll();
-        Context context = contextWeakReference.get();
+        Context context = this.context;
         if (context == null) {
             return false;
         }
@@ -220,9 +220,10 @@ public class BleMultiConnector {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        contextWeakReference = null;
+        this.context = null;
         bleServiceMultiConnection = null;
         bluetoothMultiService = null;
+       this.context = null;
         resetBleMultiConnector();
         return true;
     }

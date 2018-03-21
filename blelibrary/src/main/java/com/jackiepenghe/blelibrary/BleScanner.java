@@ -55,9 +55,9 @@ public class BleScanner {
     private boolean mOpened;
 
     /**
-     * 上下文弱引用
+     * 上下文
      */
-    private WeakReference<Context> contextWeakReference;
+    private Context context;
 
     /**
      * mHandler
@@ -77,7 +77,7 @@ public class BleScanner {
     /**
      * 扫描一次的时间
      */
-    private long scanPeriod = 2000;
+    private long scanPeriod = 20000;
 
     /**
      * 系统的扫描回调(API 20 及以下)
@@ -139,7 +139,7 @@ public class BleScanner {
      * @param context 上下文
      */
     BleScanner(Context context) {
-        contextWeakReference = new WeakReference<>(context);
+        this.context = context;
         scanTimer = new ScanTimer(BleScanner.this);
         mHandler = new Handler();
         if (!(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
@@ -187,7 +187,7 @@ public class BleScanner {
         mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
             @Override
             public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-                final Context context = contextWeakReference.get();
+                final Context context = BleScanner.this.context;
                 if (context == null) {
                     return;
                 }
@@ -232,7 +232,7 @@ public class BleScanner {
              */
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
-                Context context = contextWeakReference.get();
+                Context context = BleScanner.this.context;
                 if (context == null) {
                     return;
                 }
@@ -327,6 +327,13 @@ public class BleScanner {
 
     /**
      * 打开扫描器
+     */
+    public boolean open() {
+        return open(mScanResults,onScanFindOneNewDeviceListener,scanPeriod,true,onScanCompleteListener);
+    }
+
+    /**
+     * 打开扫描器
      *
      * @param scanResults                    扫描设备结果存放列表
      * @param onScanFindOneNewDeviceListener 发现一个新设备的回调
@@ -337,14 +344,14 @@ public class BleScanner {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean open(@NonNull ArrayList<BleDevice> scanResults, @NonNull BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener, @SuppressWarnings("SameParameterValue") long scanPeriod, @SuppressWarnings("SameParameterValue") boolean scanContinueFlag, @NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
-        Context context = contextWeakReference.get();
+        Context context = this.context;
         if (scanPeriod <= 0 || context == null) {
             return false;
         }
 
         //广播接收者过滤器
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-        if (contextWeakReference == null) {
+        if (this.context == null) {
             return false;
         }
         mScanResults = scanResults;
@@ -365,7 +372,7 @@ public class BleScanner {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean startScan() {
-        Context context = contextWeakReference.get();
+        Context context = this.context;
         if (context == null) {
             return false;
         }
@@ -417,7 +424,7 @@ public class BleScanner {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean stopScan() {
-        Context context = contextWeakReference.get();
+        Context context = this.context;
         if (context == null) {
             return false;
         }
@@ -452,7 +459,7 @@ public class BleScanner {
      * @return true表示成功
      */
     public boolean close() {
-        Context context = contextWeakReference.get();
+        Context context = this.context;
         if (context == null) {
             return false;
         }
@@ -474,7 +481,7 @@ public class BleScanner {
         scanContinue = false;
         mScanResults = null;
         bluetoothStateReceiver = null;
-        contextWeakReference = null;
+        this.context = null;
         mHandler = null;
         mBluetoothAdapter = null;
         mLeScanCallback = null;

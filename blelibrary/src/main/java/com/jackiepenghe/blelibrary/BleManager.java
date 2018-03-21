@@ -1,5 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -10,6 +11,7 @@ import android.support.annotation.RequiresApi;
 
 /**
  * BlE管理类
+ *
  * @author alm
  */
 
@@ -20,18 +22,22 @@ public class BleManager {
     /**
      * Ble连接实例
      */
+    @SuppressLint("StaticFieldLeak")
     private static BleConnector bleConnector;
     /**
      * Ble扫描实例
      */
+    @SuppressLint("StaticFieldLeak")
     private static BleScanner bleScanner;
     /**
      * Ble多连接实例
      */
+    @SuppressLint("StaticFieldLeak")
     private static BleMultiConnector bleMultiConnector;
     /**
      * Ble广播实例
      */
+    @SuppressLint("StaticFieldLeak")
     private static BleBroadCastor bleBroadCastor;
     /**
      * 重置Ble广播实例的标志（避免无限循环调用）
@@ -107,6 +113,18 @@ public class BleManager {
             synchronized (BleManager.class) {
                 if (bleConnector == null) {
                     bleConnector = new BleConnector(context);
+                }
+            }
+        } else {
+            if (bleConnector.getContext() == null) {
+                bleConnector = null;
+            }
+
+            if (bleConnector == null) {
+                synchronized (BleManager.class) {
+                    if (bleConnector == null) {
+                        bleConnector = new BleConnector(context);
+                    }
                 }
             }
         }
@@ -258,5 +276,64 @@ public class BleManager {
         BluetoothAdapter adapter = bluetoothManager.getAdapter();
 
         return adapter != null && adapter.disable();
+    }
+
+    /**
+     * 释放BLE连接工具的资源
+     */
+    @SuppressWarnings("WeakerAccess")
+    public static void releaseBleConnector() {
+        if (bleConnector != null) {
+            if (bleConnector.getContext() != null) {
+                bleConnector.close();
+            }
+            bleConnector = null;
+        }
+    }
+
+    /**
+     * 释放BLE扫描器的资源
+     */
+    @SuppressWarnings("WeakerAccess")
+    public static void releaseBleScanner() {
+        if (bleScanner != null) {
+            bleScanner.close();
+            bleConnector = null;
+        }
+    }
+
+    /**
+     * 释放BLE多连接器的资源
+     */
+    @SuppressWarnings("WeakerAccess")
+    public static void releaseBleMultiConnector() {
+        if (bleMultiConnector != null) {
+            bleMultiConnector.closeAll();
+            bleConnector = null;
+        }
+    }
+
+    /**
+     * 释放BLE广播实例的资源
+     */
+    @SuppressWarnings("WeakerAccess")
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public static void releaseBleBroadCastor() {
+        if (bleBroadCastor != null) {
+            bleBroadCastor.close();
+            bleBroadCastor = null;
+        }
+    }
+
+    /**
+     * 释放全部实例的资源
+     */
+    public static void releaseAll() {
+        releaseBleConnector();
+        releaseBleScanner();
+        releaseBleMultiConnector();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            releaseBleBroadCastor();
+        }
     }
 }

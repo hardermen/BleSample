@@ -16,11 +16,11 @@ import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 
-import java.lang.ref.WeakReference;
 import java.util.UUID;
 
 /**
  * BLE广播实例
+ *
  * @author jacke
  */
 
@@ -40,7 +40,7 @@ public class BleBroadCastor {
     /**
      * 上下文对象弱引用
      */
-    private WeakReference<Context> contextWeakReference;
+    private Context context;
     /**
      * 蓝牙适配器
      */
@@ -147,13 +147,14 @@ public class BleBroadCastor {
 
     /**
      * 构造函数
+     *
      * @param context 上下文
      */
     BleBroadCastor(Context context) {
-        contextWeakReference = new WeakReference<>(context);
+        this.context = context;
 
         // Use this check to determine whether BLE is supported on the device.
-        if (!(contextWeakReference.get().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
+        if (!(this.context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
             Tool.toastL(context, R.string.ble_not_supported);
             return;
         }
@@ -175,9 +176,9 @@ public class BleBroadCastor {
 
         if (!mBluetoothAdapter.isEnabled()) {
             //如果是由activity创建的，可以通过请求码打开蓝牙
-            if (contextWeakReference.get() instanceof Activity) {
+            if (this.context instanceof Activity) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                contextWeakReference.get().startActivity(enableBtIntent);
+                this.context.startActivity(enableBtIntent);
             }
             //如果不是由activity创建的，直接通过蓝牙适配器打开蓝牙
             else {
@@ -322,7 +323,7 @@ public class BleBroadCastor {
             return false;
         }
 
-        Context context = contextWeakReference.get();
+        Context context = this.context;
         if (context == null) {
             initSuccess = false;
             return false;
@@ -392,11 +393,8 @@ public class BleBroadCastor {
         if (mBluetoothAdvertiser != null) {
             stopAdvertising();
         }
-        if (contextWeakReference != null) {
-            contextWeakReference.clear();
-        }
         initSuccess = false;
-        contextWeakReference = null;
+        context = null;
         mBluetoothAdvertiser = null;
         mBluetoothAdapter = null;
         defaultAdvertiseSettings = null;

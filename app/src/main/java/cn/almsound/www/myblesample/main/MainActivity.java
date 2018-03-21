@@ -147,6 +147,7 @@ public class MainActivity extends BaseAppCompatActivity {
         super.onDestroy();
         simpleUseBtn.setOnClickListener(null);
         simpleUseBtn = null;
+        BleManager.releaseAll();
     }
 
     /**
