@@ -318,7 +318,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                     for (int i = 0; i < deviceServices.size(); i++) {
                         BluetoothGattService bluetoothGattService = deviceServices.get(i);
                         String serviceUuidString = bluetoothGattService.getUuid().toString();
-                        Tool.warnOut(TAG, "service UUID = " + serviceUuidString);
+                        Tool.warnOut(TAG, "bluetoothGattService UUID = " + serviceUuidString);
 
                         ServiceUuidItem serviceUuidItem = new ServiceUuidItem(serviceUuidString);
                         List<BluetoothGattCharacteristic> characteristics = bluetoothGattService.getCharacteristics();
