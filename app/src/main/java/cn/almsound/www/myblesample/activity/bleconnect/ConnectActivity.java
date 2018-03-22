@@ -509,8 +509,9 @@ public class ConnectActivity extends BaseAppCompatActivity {
         //先设置地址
         if (bleConnector.checkAndSetAddress(address)) {
             //发起连接
-            if (bleConnector.startConnect(true)) {
+            if (bleConnector.startConnect()) {
                 Tool.warnOut("开始连接");
+                Tool.toastL(ConnectActivity.this,"发起连接");
                 customTextCircleView.setColor(Color.YELLOW);
             } else {
                 Tool.warnOut("发起连接失败");
