@@ -6,7 +6,7 @@ android {
     buildToolsVersion "26.0.3"
     defaultConfig {
         applicationId "cn.almsound.www.myblesample"
-        minSdkVersion 19
+        minSdkVersion 18
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
