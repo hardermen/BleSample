@@ -23,7 +23,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
     /**
      * TAG
      */
-    private static final String TAG = "DefaultBluetoothGattSer";
+    private static final String TAG = DefaultBluetoothGattServerCallback.class.getSimpleName();
 
     /*------------------------成员变量----------------------------*/
 

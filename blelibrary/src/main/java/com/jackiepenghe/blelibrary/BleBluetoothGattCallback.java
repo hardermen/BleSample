@@ -23,7 +23,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
     /**
      * TAG
      */
-    private static final String TAG = "BleBluetoothGattCallbac";
+    private static final String TAG = BleBluetoothGattCallback.class.getSimpleName();
 
     /*-------------------------成员变量-------------------------*/
 

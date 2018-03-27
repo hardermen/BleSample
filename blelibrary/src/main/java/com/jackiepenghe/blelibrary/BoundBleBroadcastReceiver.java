@@ -21,7 +21,7 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
 
     /*------------------------静态常量----------------------------*/
 
-    private static final String TAG = "BoundBLEBroadcastReceiv";
+    private static final String TAG = BoundBleBroadcastReceiver.class.getSimpleName();
     /**
      * The user will be prompted to enter a passkey
      */

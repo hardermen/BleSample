@@ -2,8 +2,6 @@ package com.jackiepenghe.blelibrary;
 
 import android.os.Binder;
 
-import java.lang.ref.WeakReference;
-
 /**
  * BluetoothLeService绑定成功后返回的IBinder对象,通过这个对象的方法来获取当前的BluetoothLeService服务
  * Created by alm on 17-6-5.
@@ -14,9 +12,9 @@ class BluetoothLeServiceBinder extends Binder {
     /*------------------------成员变量----------------------------*/
 
     /**
-     * BLE连接服务的弱引用
+     * BLE连接服务
      */
-    private WeakReference<BluetoothLeService> bluetoothLeServiceWeakReference;
+    private BluetoothLeService bluetoothLeService;
 
     /*------------------------构造函数----------------------------*/
 
@@ -26,7 +24,7 @@ class BluetoothLeServiceBinder extends Binder {
      * @param bluetoothLeService BLE连接服务
      */
     BluetoothLeServiceBinder(BluetoothLeService bluetoothLeService) {
-        bluetoothLeServiceWeakReference = new WeakReference<>(bluetoothLeService);
+        this.bluetoothLeService = bluetoothLeService;
     }
 
     /*------------------------库内函数----------------------------*/
@@ -37,6 +35,6 @@ class BluetoothLeServiceBinder extends Binder {
      * @return BLE连接服务
      */
     BluetoothLeService getBluetoothLeService() {
-        return bluetoothLeServiceWeakReference.get();
+        return bluetoothLeService;
     }
 }

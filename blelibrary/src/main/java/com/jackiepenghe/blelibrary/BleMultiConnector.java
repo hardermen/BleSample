@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +20,7 @@ public class BleMultiConnector {
     /*------------------------成员变量----------------------------*/
 
     /**
-     * 上下文弱引用
+     * 上下文
      */
     private Context context;
     /**

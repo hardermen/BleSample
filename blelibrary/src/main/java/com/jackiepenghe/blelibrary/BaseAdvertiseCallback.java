@@ -2,7 +2,9 @@ package com.jackiepenghe.blelibrary;
 
 import android.annotation.TargetApi;
 import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
+import android.bluetooth.le.AdvertisingSet;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.os.Build;
 
@@ -19,7 +21,7 @@ public abstract class BaseAdvertiseCallback extends AdvertiseCallback {
     /**
      * TAG
      */
-    private static final String TAG = "BaseAdvertiseCallback";
+    private static final String TAG = BaseAdvertiseCallback.class.getSimpleName();
 
     /*-------------------------重写父类函数-------------------------*/
 

@@ -18,7 +18,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +34,7 @@ public class BleScanner {
     /**
      * TAG
      */
-    private static final String TAG = "BleScanner";
+    private static final String TAG = BleScanner.class.getSimpleName();
 
     /*------------------------成员变量----------------------------*/
 
@@ -472,6 +471,7 @@ public class BleScanner {
         }
 
         if (bluetoothStateReceiver != null) {
+            bluetoothStateReceiver.releaseData();
             context.unregisterReceiver(bluetoothStateReceiver);
         }
 

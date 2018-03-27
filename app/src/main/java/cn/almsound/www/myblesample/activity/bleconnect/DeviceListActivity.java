@@ -238,15 +238,15 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
             @Override
             public void onScanFindOneNewDevice(BleDevice bleDevice) {
-//                byte[] manufacturerSpecificData = bleDevice.getManufacturerSpecificData(-1);
-//                Tool.warnOut(TAG, Tool.bytesToHexStr(manufacturerSpecificData));
+//                byte[] manufacturerSpecificData = bleDevice.getManufacturerSpecificData(-1);\
+//                Tool.warnOut(TAG, Tool.bytesToHexStr(manufacturerSpecificData));\
                 //可以在此处过滤一些不需要的设备
             /*if(bleDevice.getBluetoothDevice().getAddress().equalsIgnoreCase("00:00:00:AA:SS:BB")){
                 return;
             }*/
 
-//                adapterList.add(bleDevice);
-//                adapter.notifyItemInserted(adapterList.size() - 1);
+//                adapterList.add(bleDevice);'
+//                adapter.notifyItemInserted(adapterList.size() - 1);'
             }
         };
 

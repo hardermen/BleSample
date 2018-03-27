@@ -16,7 +16,7 @@ class DefaultConnectCallBack extends BaseConnectCallback {
     /**
      * TAG
      */
-    private static final String TAG = "DefaultConnectCallBack";
+    private static final String TAG = DefaultConnectCallBack.class.getSimpleName();
 
     /*------------------------重写父类函数----------------------------*/
 

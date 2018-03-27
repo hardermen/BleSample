@@ -16,7 +16,7 @@ public abstract class BaseConnectCallback {
     /**
      * TAG
      */
-    private static final String TAG = "BaseConnectCallback";
+    private static final String TAG = BaseConnectCallback.class.getSimpleName();
 
     private boolean isConnected;
 

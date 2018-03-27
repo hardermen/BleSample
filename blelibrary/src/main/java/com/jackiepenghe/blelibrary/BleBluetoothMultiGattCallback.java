@@ -19,7 +19,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
 
     /*-------------------------静态常量-------------------------*/
 
-    private static final String TAG = "BleBluetoothMultiGattCa";
+    private static final String TAG = BleBluetoothMultiGattCallback.class.getSimpleName();
 
      /*-------------------------成员变量-------------------------*/
 

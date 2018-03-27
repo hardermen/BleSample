@@ -8,9 +8,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
 
-
-import java.lang.ref.WeakReference;
-
 /**
  * 监听蓝牙状态改变的广播接收者
  * Created by alm on 17-6-5.
@@ -23,16 +20,17 @@ class BluetoothStateReceiver extends BroadcastReceiver {
     /**
      * 蓝牙扫描器弱引用
      */
-    private WeakReference<BleScanner> bleScannerWeakReference;
+    private BleScanner bleScanner;
 
     /*------------------------构造函数----------------------------*/
 
     /**
      * 构造函数
+     *
      * @param bleScanner BLE扫描器
      */
     public BluetoothStateReceiver(BleScanner bleScanner) {
-        bleScannerWeakReference = new WeakReference<>(bleScanner);
+        this.bleScanner = bleScanner;
     }
 
     /*------------------------实现父类函数----------------------------*/
@@ -75,7 +73,7 @@ class BluetoothStateReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        if (action == null){
+        if (action == null) {
             return;
         }
         switch (action) {
@@ -84,15 +82,19 @@ class BluetoothStateReceiver extends BroadcastReceiver {
                 switch (bluetoothState) {
                     case BluetoothAdapter.STATE_OFF:
                         Tool.toastL(context, R.string.bluetooth_off);
-                        bleScannerWeakReference.get().stopScan();
+                        if (bleScanner != null) {
+                            bleScanner.stopScan();
+                        }
                         break;
                     case BluetoothAdapter.STATE_ON:
                         Tool.toastL(context, R.string.bluetooth_on);
                         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-                        if (bluetoothManager == null){
+                        if (bluetoothManager == null) {
                             return;
                         }
-                        bleScannerWeakReference.get().setBluetoothAdapter(bluetoothManager.getAdapter());
+                        if (bleScanner != null) {
+                            bleScanner.setBluetoothAdapter(bluetoothManager.getAdapter());
+                        }
                         break;
                     default:
                         break;
@@ -101,5 +103,14 @@ class BluetoothStateReceiver extends BroadcastReceiver {
             default:
                 break;
         }
+    }
+
+    /*------------------------自定义库内函数----------------------------*/
+
+    /**
+     * 释放内存
+     */
+    void releaseData() {
+        bleScanner = null;
     }
 }

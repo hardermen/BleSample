@@ -28,10 +28,6 @@ import java.util.UUID;
 
 public class BluetoothMultiService extends Service {
 
-    /*------------------------静态常量----------------------------*/
-
-    private static final String TAG = "BluetoothMultiService";
-
     /*------------------------成员变量----------------------------*/
 
     /**
@@ -359,6 +355,7 @@ public class BluetoothMultiService extends Service {
         }
 
         try {
+            //noinspection JavaReflectionMemberAccess
             Method refresh = bluetoothGatt.getClass().getMethod("refresh");
             if (refresh != null) {
                 return (boolean) refresh.invoke(bluetoothGatt);

@@ -18,7 +18,7 @@ public class BleServiceMultiConnection implements ServiceConnection {
     /**
      * TAG
      */
-    private static final String TAG = "BleServiceMultiConnecti";
+    private static final String TAG = BleServiceMultiConnection.class.getSimpleName();
 
     /*------------------------成员变量----------------------------*/
 

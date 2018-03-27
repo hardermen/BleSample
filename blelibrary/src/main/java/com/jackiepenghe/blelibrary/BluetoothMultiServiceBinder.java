@@ -13,7 +13,7 @@ class BluetoothMultiServiceBinder extends Binder {
 
     /*------------------------静态常量----------------------------*/
 
-    private static final String TAG = "BluetoothMultiServiceBi";
+    private static final String TAG = BluetoothMultiServiceBinder.class.getSimpleName();
 
     /*------------------------成员变量----------------------------*/
 

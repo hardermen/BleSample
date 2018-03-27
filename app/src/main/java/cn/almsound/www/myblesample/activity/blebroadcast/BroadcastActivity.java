@@ -57,6 +57,7 @@ public class BroadcastActivity extends BaseAppCompatActivity {
         @Override
         protected void onBroadCastStartFailure(int errorCode) {
             broadcastStatusTv.setText(R.string.open_broadcast_failed);
+            Tool.warnOut(TAG,"errorCode = " + errorCode);
         }
     };
 

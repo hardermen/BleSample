@@ -28,13 +28,6 @@ import java.util.UUID;
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class BleBroadCastor {
 
-    /*-------------------------静态常量-------------------------*/
-
-    /**
-     * TAG
-     */
-    private static final String TAG = "BleBroadCastor";
-
     /*---------------------成员变量---------------------*/
 
     /**
@@ -60,7 +53,7 @@ public class BleBroadCastor {
     private AdvertiseSettings defaultAdvertiseSettings = new AdvertiseSettings.Builder()
             .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
             .setTimeout(0)
-            .setConnectable(true)
+            .setConnectable(false)
             .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
             .build();
 

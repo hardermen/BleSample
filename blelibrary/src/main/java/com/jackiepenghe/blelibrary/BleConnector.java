@@ -95,7 +95,12 @@ public class BleConnector {
      * @param address 设备地址
      * @return true表示成功解绑
      */
+    @SuppressWarnings("WeakerAccess")
     public static boolean unBound(Context context, String address) {
+
+        if (context == null){
+            return false;
+        }
 
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
@@ -122,6 +127,7 @@ public class BleConnector {
         Method removeBondMethod;
         boolean result = false;
         try {
+            //noinspection JavaReflectionMemberAccess
             removeBondMethod = BluetoothDevice.class.getMethod("removeBond");
             result = (boolean) removeBondMethod.invoke(remoteDevice);
         } catch (NoSuchMethodException e) {
@@ -247,6 +253,7 @@ public class BleConnector {
      * @param autoConnect 自动连接（当连接被断开后，自动尝试重连，这是系统中蓝牙的API中自带的参数）
      * @return true表示成功发起连接
      */
+    @SuppressWarnings("WeakerAccess")
     public boolean startConnect(boolean autoConnect) {
         if (bleServiceConnection == null) {
             return false;
@@ -333,45 +340,7 @@ public class BleConnector {
      * @return true代表成功
      */
     public boolean unBound() {
-        Context context = this.context;
-        if (context == null) {
-            return false;
-        }
-
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-
-        if (bluetoothManager == null) {
-            return false;
-        }
-
-        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
-
-        if (bluetoothAdapter == null) {
-            return false;
-        }
-        BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(bondAddress);
-        if (remoteDevice.getBondState() != BluetoothDevice.BOND_BONDED) {
-            return false;
-        }
-        Method removeBondMethod;
-        boolean result = false;
-        try {
-            removeBondMethod = BluetoothDevice.class.getMethod("removeBond");
-            result = (boolean) removeBondMethod.invoke(remoteDevice);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-
-        if (result) {
-            Tool.warnOut(TAG, "解除配对成功");
-        } else {
-            Tool.warnOut(TAG, "解除配对失败");
-        }
-        return result;
+        return unBound(context,bondAddress);
     }
 
     public BluetoothGatt getBluetoothGatt() {

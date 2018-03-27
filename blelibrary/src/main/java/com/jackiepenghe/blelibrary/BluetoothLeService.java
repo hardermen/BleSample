@@ -33,7 +33,7 @@ public class BluetoothLeService extends Service {
     /**
      * TAG
      */
-    private static final String TAG = "BluetoothLeService";
+    private static final String TAG = BluetoothLeService.class.getSimpleName();
 
     /*------------------------成员变量----------------------------*/
 
@@ -301,6 +301,7 @@ public class BluetoothLeService extends Service {
         }
 
         try {
+            //noinspection JavaReflectionMemberAccess
             Method refresh = bluetoothGatt.getClass().getMethod("refresh");
             if (refresh != null) {
                 return (boolean) refresh.invoke(bluetoothGatt);

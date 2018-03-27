@@ -2,7 +2,6 @@ package cn.almsound.www.myblesample;
 
 import android.app.Application;
 
-import com.jackiepenghe.baselibrary.CrashHandler;
 import com.jackiepenghe.baselibrary.FileUtil;
 import com.jackiepenghe.blelibrary.Tool;
 
@@ -29,8 +28,8 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         Tool.setDebugFlag(true);
-        Tool.setDefaultTAG("BleLibrary");
         com.jackiepenghe.baselibrary.Tool.setDebugFlag(true);
+        com.jackiepenghe.baselibrary.Tool.setDefaultTAG("BleLibrary");
         //初始化文件工具类
         FileUtil.init(this);
 

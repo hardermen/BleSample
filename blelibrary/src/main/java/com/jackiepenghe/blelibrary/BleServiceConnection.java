@@ -23,7 +23,7 @@ class BleServiceConnection implements ServiceConnection {
     /**
      * TAG
      */
-    private static final String TAG = "BleServiceConnection";
+    private static final String TAG = BleServiceConnection.class.getSimpleName();
 
      /*------------------------成员变量----------------------------*/
 
