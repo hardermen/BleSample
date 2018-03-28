@@ -147,10 +147,10 @@ public class BleScanner {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             //初始化扫描回调(API21及以上的设备)
-            initBLeScanCallBack();
+            initBLeScanCallBack21();
         } else {
             //初始化BLE扫描回调(API21以下且不包含API21)
-            initBLeScanCallback();
+            initBLeScanCallBack18();
         }
 
         bluetoothStateReceiver = new BluetoothStateReceiver(BleScanner.this);
@@ -182,7 +182,7 @@ public class BleScanner {
     /**
      * 初始化BLE扫描回调(API21以下且不包含API21)
      */
-    private void initBLeScanCallback() {
+    private void initBLeScanCallBack18() {
         mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
             @Override
             public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
@@ -204,6 +204,9 @@ public class BleScanner {
                         if (mOnScanFindOneDeviceListener != null) {
                             mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
                         }
+                        if (mScanResults == null){
+                            return;
+                        }
                         if (!mScanResults.contains(bleDevice)) {
                             mScanResults.add(bleDevice);
                             onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
@@ -218,7 +221,7 @@ public class BleScanner {
      * 初始化扫描回调(API21及以上的设备)
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void initBLeScanCallBack() {
+    private void initBLeScanCallBack21() {
         mScanCallback = new ScanCallback() {
             /**
              * BaseConnectCallback when a BLE advertisement has been found.
@@ -263,6 +266,9 @@ public class BleScanner {
                             mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
                         }
                         if (onScanFindOneNewDeviceListener != null) {
+                            if (mScanResults == null){
+                                return;
+                            }
                             if (!mScanResults.contains(bleDevice)) {
                                 mScanResults.add(bleDevice);
                                 onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
