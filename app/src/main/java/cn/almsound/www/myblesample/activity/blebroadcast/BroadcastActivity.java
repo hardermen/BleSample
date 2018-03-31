@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.blelibrary.BaseAdvertiseCallback;
-import com.jackiepenghe.blelibrary.BleBroadCastor;
+import com.jackiepenghe.blelibrary.BleAdvertiser;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.Tool;
 
@@ -27,7 +27,7 @@ public class BroadcastActivity extends BaseAppCompatActivity {
     /**
      * BLE广播实例
      */
-    private BleBroadCastor bleBroadCastor;
+    private BleAdvertiser bleAdvertiser;
     /**
      * 显示广播开启状态的文本
      */
@@ -75,20 +75,20 @@ public class BroadcastActivity extends BaseAppCompatActivity {
     @Override
     protected void doBeforeSetLayout() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            bleBroadCastor = BleManager.getBleBroadCastor(this);
-            if (bleBroadCastor != null) {
+            bleAdvertiser = BleManager.getBleAdvertiser(this);
+            if (bleAdvertiser != null) {
                 //默认的初始化
-//            bleBroadCastor.init()
+//            bleAdvertiser.init()
 
                 //带回调的初始化
-                if (!bleBroadCastor.init(advertiseCallback)) {
+                if (!bleAdvertiser.init(advertiseCallback)) {
                     Tool.warnOut(TAG, "初始化失败");
                 } else {
                     Tool.warnOut(TAG, "初始化成功");
                 }
             }
         }
-        Tool.warnOut(TAG, "bleBroadCastor = " + bleBroadCastor);
+        Tool.warnOut(TAG, "bleAdvertiser = " + bleAdvertiser);
 
 
     }
@@ -148,10 +148,10 @@ public class BroadcastActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doAfterAll() {
-        if (bleBroadCastor != null) {
+        if (bleAdvertiser != null) {
             boolean b = false;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                b = bleBroadCastor.startAdvertising();
+                b = bleAdvertiser.startAdvertising();
             }
             if (b) {
                 Tool.warnOut(TAG, "广播请求发起成功（是否真的成功，在init的advertiseCallback回调中查看）");
@@ -192,11 +192,11 @@ public class BroadcastActivity extends BaseAppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        if (bleBroadCastor != null) {
+        if (bleAdvertiser != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                bleBroadCastor.stopAdvertising();
-                bleBroadCastor.close();
-                bleBroadCastor = null;
+                bleAdvertiser.stopAdvertising();
+                bleAdvertiser.close();
+                bleAdvertiser = null;
             }
         }
     }

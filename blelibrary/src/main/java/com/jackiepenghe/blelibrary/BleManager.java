@@ -38,7 +38,7 @@ public class BleManager {
      * Ble广播实例
      */
     @SuppressLint("StaticFieldLeak")
-    private static BleBroadCastor bleBroadCastor;
+    private static BleAdvertiser bleAdvertiser;
     /**
      * 重置Ble广播实例的标志（避免无限循环调用）
      */
@@ -66,10 +66,10 @@ public class BleManager {
         }
         resetBleBroadCastorFlag = true;
 
-        if (bleBroadCastor != null) {
-            bleBroadCastor.close();
+        if (bleAdvertiser != null) {
+            bleAdvertiser.close();
         }
-        bleBroadCastor = null;
+        bleAdvertiser = null;
         resetBleBroadCastorFlag = false;
     }
 
@@ -81,6 +81,7 @@ public class BleManager {
      * @param context 上下文
      * @return true表示支持BLE
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isSupportBle(Context context) {
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
     }
@@ -168,37 +169,22 @@ public class BleManager {
      * 获取蓝牙广播单例实例
      *
      * @param context 上下文
-     * @return BleBroadCastor
+     * @return BleAdvertiser
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public static BleBroadCastor getBleBroadCastor(Context context) {
+    public static BleAdvertiser getBleAdvertiser(Context context) {
         if (!isSupportBle(context)) {
             return null;
         }
-        if (bleBroadCastor == null) {
+        if (bleAdvertiser == null) {
             synchronized (BleManager.class) {
-                if (bleBroadCastor == null) {
-                    bleBroadCastor = new BleBroadCastor(context);
+                if (bleAdvertiser == null) {
+                    bleAdvertiser = new BleAdvertiser(context);
                 }
             }
         }
-        return bleBroadCastor;
-    }
-
-    /**
-     * 创建一个新的广播实例
-     *
-     * @param context 上下文
-     * @return 广播实例
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public static BleBroadCastor newBleBroadCastor(Context context) {
-        if (!isSupportBle(context)) {
-            return null;
-        }
-        return new BleBroadCastor(context);
+        return bleAdvertiser;
     }
 
     /**
@@ -207,7 +193,7 @@ public class BleManager {
      * @param context 上下文
      * @return BleMultiConnector
      */
-    public static BleMultiConnector getBleMultiConnector(Context context) {
+    public static BleMultiConnector getBleMultiConnectorInstance(Context context) {
         if (!isSupportBle(context)) {
             return null;
         }
@@ -319,9 +305,9 @@ public class BleManager {
     @SuppressWarnings("WeakerAccess")
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static void releaseBleBroadCastor() {
-        if (bleBroadCastor != null) {
-            bleBroadCastor.close();
-            bleBroadCastor = null;
+        if (bleAdvertiser != null) {
+            bleAdvertiser.close();
+            bleAdvertiser = null;
         }
     }
 

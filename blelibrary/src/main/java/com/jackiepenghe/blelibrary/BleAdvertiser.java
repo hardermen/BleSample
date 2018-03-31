@@ -23,10 +23,8 @@ import java.util.UUID;
  *
  * @author jacke
  */
-
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class BleBroadCastor {
+public class BleAdvertiser {
 
     /*---------------------成员变量---------------------*/
 
@@ -143,7 +141,7 @@ public class BleBroadCastor {
      *
      * @param context 上下文
      */
-    BleBroadCastor(Context context) {
+    BleAdvertiser(Context context) {
         this.context = context;
 
         // Use this check to determine whether BLE is supported on the device.

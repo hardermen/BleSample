@@ -181,7 +181,7 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doBeforeSetLayout() {
-        bleMultiConnector = BleManager.getBleMultiConnector(this);
+        bleMultiConnector = BleManager.getBleMultiConnectorInstance(this);
     }
 
     /**

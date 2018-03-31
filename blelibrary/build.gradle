@@ -27,7 +27,7 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:27.1.0'
 }
 
-version = "0.6.4"
+version = "0.6.5"
 
 def siteUrl = 'https://github.com/JackiePenghe/BleSample'
 def gitUrl = 'git@github.com:JackiePenghe/BleSample.git'
