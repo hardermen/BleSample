@@ -57,7 +57,7 @@ public class BroadcastActivity extends BaseAppCompatActivity {
         @Override
         protected void onBroadCastStartFailure(int errorCode) {
             broadcastStatusTv.setText(R.string.open_broadcast_failed);
-            Tool.warnOut(TAG,"errorCode = " + errorCode);
+            Tool.warnOut(TAG, "errorCode = " + errorCode);
         }
     };
 
@@ -196,7 +196,15 @@ public class BroadcastActivity extends BaseAppCompatActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 bleBroadCastor.stopAdvertising();
                 bleBroadCastor.close();
+                bleBroadCastor = null;
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //释放所有BLE设备相关的内存
+        BleManager.releaseAll();
     }
 }

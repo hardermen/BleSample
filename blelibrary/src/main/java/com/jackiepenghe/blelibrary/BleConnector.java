@@ -197,8 +197,6 @@ public class BleConnector {
         return intentFilter;
     }
 
-    /*-------------------------公开函数-------------------------*/
-
     /**
      * 广播接收者Action过滤器
      *
@@ -212,6 +210,8 @@ public class BleConnector {
         intentFilter.setPriority(Integer.MAX_VALUE);
         return intentFilter;
     }
+
+    /*-------------------------公开函数-------------------------*/
 
     /**
      * 检查设备地址并设置地址
