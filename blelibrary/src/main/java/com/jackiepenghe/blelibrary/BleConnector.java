@@ -72,6 +72,10 @@ public class BleConnector {
      * 如果发起绑定，会记录下绑定设备的地址
      */
     private String bondAddress;
+    /**
+     * 发起连接的设备
+     */
+    private BluetoothDevice bluetoothDevice;
 
     /*-------------------------构造函数-------------------------*/
 
@@ -98,7 +102,7 @@ public class BleConnector {
     @SuppressWarnings("WeakerAccess")
     public static boolean unBound(Context context, String address) {
 
-        if (context == null){
+        if (context == null) {
             return false;
         }
 
@@ -155,6 +159,10 @@ public class BleConnector {
     private void setAddress(String address) {
         //将地址传入服务连接工具并初始化
         bleServiceConnection = new BleServiceConnection(address);
+    }
+
+    private void setDevice(BluetoothDevice bluetoothDevice) {
+        bleServiceConnection = new BleServiceConnection(bluetoothDevice);
     }
 
     /**
@@ -216,14 +224,18 @@ public class BleConnector {
     /**
      * 检查设备地址并设置地址
      *
-     * @param address 设备地址
+     * @param bluetoothDevice 设备
      * @return true表示成功设置地址
      */
-    public boolean checkAndSetAddress(String address) {
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+    public boolean checkAndSetDevice(BluetoothDevice bluetoothDevice) {
+        if (bluetoothDevice == null) {
             return false;
         }
-        setAddress(address);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setAddress(bluetoothDevice.getAddress());
+        } else {
+            setDevice(bluetoothDevice);
+        }
         return true;
     }
 
@@ -340,7 +352,7 @@ public class BleConnector {
      * @return true代表成功
      */
     public boolean unBound() {
-        return unBound(context,bondAddress);
+        return unBound(context, bondAddress);
     }
 
     public BluetoothGatt getBluetoothGatt() {

@@ -56,10 +56,6 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     private CustomTextCircleView customTextCircleView;
     /**
-     * 设备地址
-     */
-    private String address;
-    /**
      * BLE连接器
      */
     private BleConnector bleConnector;
@@ -129,8 +125,6 @@ public class ConnectActivity extends BaseAppCompatActivity {
         }
         //获取蓝牙实例
         bluetoothDevice = bleDevice.getBluetoothDevice();
-        //获取蓝牙地址
-        address = bluetoothDevice.getAddress();
         //初始化BLE连接工具
         initBleConnector();
     }
@@ -268,7 +262,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
 //        }
 
         //屏蔽返回键
-        /*super.onBackPressed();a*/
+        /*super.onBackPressed();*/
         //关闭连接工具,如果返回false,直接调用super.onBackPressed()，否则在close的回调中调用返回
         if (!bleConnector.close()) {
             super.onBackPressed();
@@ -506,9 +500,9 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     private void startConnect() {
         //先设置地址
-        if (bleConnector.checkAndSetAddress(address)) {
+        if (bleConnector.checkAndSetDevice(bluetoothDevice)) {
             //发起连接
-            if (bleConnector.startConnect()) {
+            if (bleConnector.startConnect(true)) {
                 Tool.warnOut("开始连接");
                 Tool.toastL(ConnectActivity.this,"发起连接");
                 customTextCircleView.setColor(Color.YELLOW);

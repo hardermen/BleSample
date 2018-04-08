@@ -1,5 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattService;
 import android.content.ComponentName;
@@ -18,15 +19,19 @@ import java.util.UUID;
 
 class BleServiceConnection implements ServiceConnection {
 
- /*------------------------静态常量----------------------------*/
+    /*------------------------静态常量----------------------------*/
 
     /**
      * TAG
      */
     private static final String TAG = BleServiceConnection.class.getSimpleName();
 
-     /*------------------------成员变量----------------------------*/
+    /*------------------------成员变量----------------------------*/
 
+    /**
+     * 设备
+     */
+    private BluetoothDevice mBluetoothDevice;
     /**
      * 设备地址
      */
@@ -40,7 +45,7 @@ class BleServiceConnection implements ServiceConnection {
      */
     private boolean autoConnect;
 
-     /*------------------------构造函数----------------------------*/
+    /*------------------------构造函数----------------------------*/
 
     /**
      * 构造器
@@ -51,7 +56,11 @@ class BleServiceConnection implements ServiceConnection {
         mAddress = address;
     }
 
-     /*------------------------实现接口函数----------------------------*/
+    BleServiceConnection(BluetoothDevice bluetoothDevice) {
+        mBluetoothDevice = bluetoothDevice;
+    }
+
+    /*------------------------实现接口函数----------------------------*/
 
     /**
      * Called when a connection to the Service has been established, with
@@ -74,11 +83,16 @@ class BleServiceConnection implements ServiceConnection {
             Tool.warnOut(TAG, "bluetoothLeService initialize failed!");
             return;
         }
-        if (mAddress == null) {
-            Tool.warnOut(TAG, "address is null!");
+        if (mAddress == null && mBluetoothDevice == null) {
+            Tool.warnOut(TAG, "address and mBluetoothDevice is null!");
             return;
         }
-        boolean connect = bluetoothLeService.connect(mAddress, autoConnect);
+        boolean connect;
+        if (mAddress != null) {
+            connect = bluetoothLeService.connect(mAddress, autoConnect);
+        }else {
+            connect = bluetoothLeService.connect(mBluetoothDevice,autoConnect);
+        }
         Tool.warnOut(TAG, "connect " + connect);
     }
 
@@ -145,9 +159,10 @@ class BleServiceConnection implements ServiceConnection {
 
     /**
      * 打开或关闭通知
-     * @param serviceUUID 服务UUID
+     *
+     * @param serviceUUID        服务UUID
      * @param characteristicUUID 特征UUID
-     * @param enable true表示打开通知，false表示关闭通知
+     * @param enable             true表示打开通知，false表示关闭通知
      * @return true表示执行成功
      */
     boolean enableNotification(String serviceUUID, String characteristicUUID, boolean enable) {

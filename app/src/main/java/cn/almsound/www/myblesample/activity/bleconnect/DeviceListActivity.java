@@ -74,6 +74,9 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         }
     };
 
+    /**
+     * 点击事件的监听
+     */
     private View.OnClickListener OnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
