@@ -12,7 +12,7 @@ import android.widget.Toast;
  * @author alm
  */
 
-public class Tool {
+class Tool {
     //log部分
 
     /**

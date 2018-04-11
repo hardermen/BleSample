@@ -11,6 +11,7 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.lang.reflect.InvocationTargetException;
@@ -138,7 +139,7 @@ public class BluetoothMultiService extends Service {
      * @param autoConnect         自动连接标志
      * @return true表示成功发起连接
      */
-    boolean connectDevice(String address, BaseConnectCallback baseConnectCallback, boolean autoConnect) {
+    boolean connectAddress(String address, BaseConnectCallback baseConnectCallback, boolean autoConnect) {
         if (bluetoothAdapter == null) {
             return false;
         }
@@ -174,6 +175,43 @@ public class BluetoothMultiService extends Service {
         }
         if (!gattCallbackHashMap.containsKey(address)) {
             gattCallbackHashMap.put(address, bluetoothGatt);
+        }
+        return bluetoothGatt.connect();
+    }
+
+    /**
+     * 发起一个连接
+     *
+     * @param bluetoothDevice             设备地址
+     * @param baseConnectCallback 连接回调
+     * @param autoConnect         自动连接标志
+     * @return true表示成功发起连接
+     */
+    boolean connectDevice(@NonNull BluetoothDevice bluetoothDevice, BaseConnectCallback baseConnectCallback, boolean autoConnect) {
+        if (bluetoothAdapter == null) {
+            return false;
+        }
+
+        BluetoothGatt bluetoothGatt = bluetoothDevice.connectGatt(this, autoConnect, bleBluetoothMultiGattCallback);
+        if (autoConnect) {
+            if (!bleBluetoothMultiGattCallback.callbackHashMap.containsKey(bluetoothDevice.getAddress())) {
+                bleBluetoothMultiGattCallback.callbackHashMap.put(bluetoothDevice.getAddress(), baseConnectCallback);
+            }
+            if (!gattCallbackHashMap.containsKey(bluetoothDevice.getAddress())) {
+                gattCallbackHashMap.put(bluetoothDevice.getAddress(), bluetoothGatt);
+            }
+            return true;
+        }
+
+        if (bluetoothGatt == null) {
+            return false;
+        }
+
+        if (!bleBluetoothMultiGattCallback.callbackHashMap.containsKey(bluetoothDevice.getAddress())) {
+            bleBluetoothMultiGattCallback.callbackHashMap.put(bluetoothDevice.getAddress(), baseConnectCallback);
+        }
+        if (!gattCallbackHashMap.containsKey(bluetoothDevice.getAddress())) {
+            gattCallbackHashMap.put(bluetoothDevice.getAddress(), bluetoothGatt);
         }
         return bluetoothGatt.connect();
     }

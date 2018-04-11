@@ -3,8 +3,8 @@ package cn.almsound.www.myblesample.callback;
 import android.bluetooth.BluetoothGatt;
 import android.graphics.Color;
 
+import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BaseConnectCallback;
-import com.jackiepenghe.blelibrary.Tool;
 
 import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 
@@ -22,6 +22,7 @@ public class Device3Callback extends BaseConnectCallback {
     public Device3Callback(CustomTextCircleView customTextCircleView) {
         this.customTextCircleView = customTextCircleView;
     }
+
     /**
      * 蓝牙连接后无法正常进行服务发现时回调
      *
@@ -29,17 +30,20 @@ public class Device3Callback extends BaseConnectCallback {
      */
     @Override
     public void onDiscoverServicesFailed(BluetoothGatt gatt) {
-        Tool.warnOut(TAG,"onDiscoverServicesFailed");
+        Tool.warnOut(TAG, "onDiscoverServicesFailed");
         customTextCircleView.setColor(Color.RED);
+        Tool.toastL(customTextCircleView.getContext(), gatt.getDevice().getAddress() + ":onDiscoverServicesFailed");
     }
 
     /**
      * 蓝牙GATT被关闭时回调
+     *
      * @param address 设备地址
      */
     @Override
     public void onGattClosed(String address) {
-        Tool.warnOut(TAG,"onGattClosed");
+        Tool.warnOut(TAG, "onGattClosed");
+        Tool.toastL(customTextCircleView.getContext(), address + ":onGattClosed");
     }
 
     /**
@@ -51,22 +55,26 @@ public class Device3Callback extends BaseConnectCallback {
      */
     @Override
     public void onBluetoothGattOptionsNotSuccess(BluetoothGatt gatt, String methodName, int errorStatus) {
-        Tool.warnOut(TAG,"onBluetoothGattOptionsNotSuccess");
+        Tool.warnOut(TAG, "onBluetoothGattOptionsNotSuccess");
+        Tool.toastL(customTextCircleView.getContext(), gatt.getDevice().getAddress() + ":onBluetoothGattOptionsNotSuccess");
     }
 
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt) {
-        Tool.warnOut(TAG,"设备3 onServicesDiscovered");
+        Tool.warnOut(TAG, gatt.getDevice().getAddress() + " onServicesDiscovered");
         customTextCircleView.setColor(Color.GREEN);
-    }
-
-    @Override
-    public void onDisConnected(BluetoothGatt gatt) {
-        customTextCircleView.setColor(Color.RED);
+        Tool.toastL(customTextCircleView.getContext(), gatt.getDevice().getAddress() + ":onServicesDiscovered");
     }
 
     @Override
     public void onConnected(BluetoothGatt gatt) {
         customTextCircleView.setColor(Color.BLUE);
+        Tool.toastL(customTextCircleView.getContext(), gatt.getDevice().getAddress() + ":onConnected");
+    }
+
+    @Override
+    public void onDisConnected(BluetoothGatt gatt) {
+        customTextCircleView.setColor(Color.RED);
+        Tool.toastL(customTextCircleView.getContext(), gatt.getDevice().getAddress() + ":onDisConnected");
     }
 }

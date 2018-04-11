@@ -1,8 +1,10 @@
 package com.jackiepenghe.blelibrary;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.support.annotation.NonNull;
 
 import java.util.List;
@@ -12,6 +14,7 @@ import static com.jackiepenghe.blelibrary.BleManager.resetBleMultiConnector;
 
 /**
  * 多连接时的Ble连接工具
+ *
  * @author alm
  */
 
@@ -88,15 +91,6 @@ public class BleMultiConnector {
     }
 
     /**
-     * 设置蓝牙多连接服务（将蓝牙多连接服务传递进来以进行操作）
-     *
-     * @param bluetoothMultiService 蓝牙多连接服务
-     */
-    void setBluetoothMultiService(BluetoothMultiService bluetoothMultiService) {
-        this.bluetoothMultiService = bluetoothMultiService;
-    }
-
-    /**
      * 写入数据
      *
      * @param serviceUUID        服务UUID
@@ -158,7 +152,6 @@ public class BleMultiConnector {
         return bluetoothMultiService.getServices(address);
     }
 
-
     BluetoothGattService getService(String address, UUID uuid) {
         if (bluetoothMultiService == null) {
             return null;
@@ -176,6 +169,15 @@ public class BleMultiConnector {
      */
     BluetoothMultiService getBluetoothMultiService() {
         return bluetoothMultiService;
+    }
+
+    /**
+     * 设置蓝牙多连接服务（将蓝牙多连接服务传递进来以进行操作）
+     *
+     * @param bluetoothMultiService 蓝牙多连接服务
+     */
+    void setBluetoothMultiService(BluetoothMultiService bluetoothMultiService) {
+        this.bluetoothMultiService = bluetoothMultiService;
     }
 
     /*------------------------公开函数----------------------------*/
@@ -222,7 +224,7 @@ public class BleMultiConnector {
         this.context = null;
         bleServiceMultiConnection = null;
         bluetoothMultiService = null;
-       this.context = null;
+        this.context = null;
         resetBleMultiConnector();
         return true;
     }
@@ -230,45 +232,49 @@ public class BleMultiConnector {
     /**
      * 发起一个连接
      *
-     * @param address 设备地址
+     * @param bluetoothDevice 设备
      * @return true表示请求发起成功
      */
-    public boolean connect(@NonNull String address) {
-        return connect(address, false);
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice) {
+        return connect(bluetoothDevice, false);
     }
 
     /**
      * 发起一个连接
      *
-     * @param address     设备地址
-     * @param autoConnect 自动重连标识
+     * @param bluetoothDevice 设备
+     * @param autoConnect     自动重连标识
      * @return true表示请求发起成功
      */
-    public boolean connect(@NonNull String address, boolean autoConnect) {
-        return connect(address, new DefaultConnectCallBack(), autoConnect);
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoConnect) {
+        return connect(bluetoothDevice, new DefaultConnectCallBack(), autoConnect);
     }
 
     /**
      * 发起一个连接
      *
-     * @param address             设备地址
+     * @param bluetoothDevice             设备地址
      * @param baseConnectCallback 连接回调
      * @return true表示请求发起成功
      */
-    public boolean connect(@NonNull String address, @NonNull BaseConnectCallback baseConnectCallback) {
-        return connect(address, baseConnectCallback, false);
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, @NonNull BaseConnectCallback baseConnectCallback) {
+        return connect(bluetoothDevice, baseConnectCallback, false);
     }
 
     /**
      * 发起一个连接
      *
-     * @param address             设备地址
+     * @param bluetoothDevice             设备地址
      * @param baseConnectCallback 连接回调
      * @param autoConnect         自动重连标识
      * @return true表示请求发起成功
      */
-    public boolean connect(@NonNull String address, @NonNull BaseConnectCallback baseConnectCallback, boolean autoConnect) {
-        return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectDevice(address, baseConnectCallback, autoConnect);
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, @NonNull BaseConnectCallback baseConnectCallback, boolean autoConnect) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectDevice(bluetoothDevice, baseConnectCallback, autoConnect);
+        }else {
+            return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectAddress(bluetoothDevice.getAddress(), baseConnectCallback, autoConnect);
+        }
     }
 
     /**

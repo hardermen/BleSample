@@ -8,10 +8,10 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BaseAdvertiseCallback;
 import com.jackiepenghe.blelibrary.BleAdvertiser;
 import com.jackiepenghe.blelibrary.BleManager;
-import com.jackiepenghe.blelibrary.Tool;
 
 import cn.almsound.www.myblesample.R;
 
@@ -75,7 +75,7 @@ public class BroadcastActivity extends BaseAppCompatActivity {
     @Override
     protected void doBeforeSetLayout() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            bleAdvertiser = BleManager.getBleAdvertiser(this);
+            bleAdvertiser = BleManager.getBleAdvertiserInstance(this);
             if (bleAdvertiser != null) {
                 //默认的初始化
 //            bleAdvertiser.init()

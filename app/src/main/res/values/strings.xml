@@ -56,4 +56,7 @@
     <string name="open_broadcast_success">广播开启成功</string>
     <string name="open_broadcast_failed">广播开启失败</string>
     <string name="real_time_scan">实时扫描RSSI</string>
+    <string name="confirm">确认</string>
+    <string name="nothing_selected">没有选中任何设备</string>
+    <string name="selected_more_than">选中设备数量不能超过5个</string>
 </resources>

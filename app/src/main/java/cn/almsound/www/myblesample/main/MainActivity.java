@@ -8,13 +8,13 @@ import android.view.View;
 import android.widget.Button;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BleManager;
-import com.jackiepenghe.blelibrary.Tool;
 
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.activity.blebroadcast.BroadcastActivity;
 import cn.almsound.www.myblesample.activity.bleconnect.DeviceListActivity;
-import cn.almsound.www.myblesample.activity.blemulticonnect.MultiConnectActivity;
+import cn.almsound.www.myblesample.activity.blemulticonnect.MultiConnectDeviceListActivity;
 
 /**
  * @author alm
@@ -172,7 +172,7 @@ public class MainActivity extends BaseAppCompatActivity {
             Tool.toastL(this, R.string.ble_not_supported);
             return;
         }
-        Intent intent = new Intent(MainActivity.this, MultiConnectActivity.class);
+        Intent intent = new Intent(MainActivity.this, MultiConnectDeviceListActivity.class);
         startActivity(intent);
     }
 

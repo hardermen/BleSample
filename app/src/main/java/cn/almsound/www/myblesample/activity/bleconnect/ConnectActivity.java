@@ -274,7 +274,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     private void initBleConnector() {
         //创建BLE连接器实例
-        bleConnector = BleManager.newBleConnector(ConnectActivity.this);
+        bleConnector = BleManager.getBleConnectorInstance(ConnectActivity.this);
         //创建连接成功的回调（在设备连接成功之后会触发此回调）
         BleInterface.OnConnectedListener onConnectedListener = new BleInterface.OnConnectedListener() {
             @Override
@@ -502,7 +502,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         //先设置地址
         if (bleConnector.checkAndSetDevice(bluetoothDevice)) {
             //发起连接
-            if (bleConnector.startConnect(true)) {
+            if (bleConnector.startConnect()) {
                 Tool.warnOut("开始连接");
                 Tool.toastL(ConnectActivity.this,"发起连接");
                 customTextCircleView.setColor(Color.YELLOW);

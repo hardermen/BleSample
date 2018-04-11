@@ -92,6 +92,7 @@ public class BleManager {
      * @param context 上下文
      * @return BleConnector
      */
+    @Deprecated
     public static BleConnector newBleConnector(Context context) {
         if (!isSupportBle(context)) {
             return null;
@@ -138,6 +139,7 @@ public class BleManager {
      * @param context 上下文
      * @return BleScanner
      */
+    @Deprecated
     public static BleScanner newBleScanner(Context context) {
         if (!isSupportBle(context)) {
             return null;
@@ -161,6 +163,18 @@ public class BleManager {
                     bleScanner = new BleScanner(context);
                 }
             }
+        }else {
+            if (bleScanner.getContext() == null){
+                bleScanner = null;
+            }
+
+            if (bleScanner == null) {
+                synchronized (BleManager.class) {
+                    if (bleScanner == null) {
+                        bleScanner = new BleScanner(context);
+                    }
+                }
+            }
         }
         return bleScanner;
     }
@@ -173,7 +187,7 @@ public class BleManager {
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public static BleAdvertiser getBleAdvertiser(Context context) {
+    public static BleAdvertiser getBleAdvertiserInstance(Context context) {
         if (!isSupportBle(context)) {
             return null;
         }
@@ -186,6 +200,24 @@ public class BleManager {
         }
         return bleAdvertiser;
     }
+
+    /**
+     * 获取蓝牙广播单例实例
+     *
+     * @param context 上下文
+     * @return BleAdvertiser
+     */
+    @Deprecated
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public static BleAdvertiser newBleAdvertiser(Context context) {
+        if (!isSupportBle(context)) {
+            return null;
+        }
+
+        return new BleAdvertiser(context);
+    }
+
 
     /**
      * 获取BLE多连接单例
@@ -205,6 +237,23 @@ public class BleManager {
             }
         }
         return bleMultiConnector;
+    }
+
+
+
+
+    /**
+     * 获取BLE多连接单例
+     *
+     * @param context 上下文
+     * @return BleMultiConnector
+     */
+    @Deprecated
+    public static BleMultiConnector newBleMultiConnector(Context context) {
+        if (!isSupportBle(context)) {
+            return null;
+        }
+        return new BleMultiConnector(context);
     }
 
     /**
@@ -284,7 +333,7 @@ public class BleManager {
     public static void releaseBleScanner() {
         if (bleScanner != null) {
             bleScanner.close();
-            bleConnector = null;
+            bleScanner = null;
         }
     }
 
@@ -321,5 +370,13 @@ public class BleManager {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             releaseBleBroadCastor();
         }
+    }
+
+    /**
+     * 设置是否要打印出调式信息
+     * @param debugFlag true表示要打印
+     */
+    public static void setDebugFlag(boolean debugFlag) {
+        Tool.setDebugFlag(debugFlag);
     }
 }

@@ -20,11 +20,11 @@ import android.widget.Button;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.baselibrary.DefaultItemDecoration;
+import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleScanner;
-import com.jackiepenghe.blelibrary.Tool;
 
 import java.util.ArrayList;
 
@@ -227,7 +227,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         bleScanner = null;
 
         //解除输入法内存泄漏
-        com.jackiepenghe.baselibrary.Tool.releaseInputMethodManagerMemory(this);
+       Tool.releaseInputMethodManagerMemory(this);
     }
 
     /**
@@ -236,7 +236,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
     private void initBleScanner() {
 
         //创建扫描器实例
-        bleScanner = BleManager.newBleScanner(DeviceListActivity.this);
+        bleScanner = BleManager.getBleScannerInstance(DeviceListActivity.this);
         //发现一个新设备（在此之前该设备没有被发现过）时触发此回调
         BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
             @Override

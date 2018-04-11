@@ -9,4 +9,5 @@ package cn.almsound.www.myblesample.utils;
 public class Constants {
     public static final String DEVICE = "device";
     public static final String BUNDLE = "bundle";
+    public static final String DEVICE_LIST = "device_list";
 }

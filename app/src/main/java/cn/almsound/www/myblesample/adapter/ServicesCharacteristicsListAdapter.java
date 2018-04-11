@@ -5,7 +5,7 @@ import android.view.View;
 import com.chad.library.adapter.base.BaseMultiItemQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.chad.library.adapter.base.entity.MultiItemEntity;
-import com.jackiepenghe.blelibrary.Tool;
+import com.jackiepenghe.baselibrary.Tool;
 
 import java.util.List;
 

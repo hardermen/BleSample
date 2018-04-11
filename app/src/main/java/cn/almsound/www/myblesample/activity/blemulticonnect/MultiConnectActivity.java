@@ -1,20 +1,18 @@
 package cn.almsound.www.myblesample.activity.blemulticonnect;
 
-import android.bluetooth.BluetoothAdapter;
-import android.content.DialogInterface;
-import android.support.v7.app.AlertDialog;
+import android.bluetooth.BluetoothDevice;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
-import com.jackiepenghe.blelibrary.BleDeviceController;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleMultiConnector;
-import com.jackiepenghe.blelibrary.Tool;
+
+import java.io.Serializable;
+import java.util.ArrayList;
 
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.callback.Device1Callback;
@@ -22,7 +20,7 @@ import cn.almsound.www.myblesample.callback.Device2Callback;
 import cn.almsound.www.myblesample.callback.Device3Callback;
 import cn.almsound.www.myblesample.callback.Device4Callback;
 import cn.almsound.www.myblesample.callback.Device5Callback;
-import cn.almsound.www.myblesample.watcher.EditTextWatcherForMacAddress;
+import cn.almsound.www.myblesample.utils.Constants;
 import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 
 /**
@@ -32,30 +30,21 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
 
     private static final String TAG = MultiConnectActivity.class.getSimpleName();
 
-    private static final byte[] OPEN_SOCKET_BYTE_ARRAY = new byte[]{0x00, 0x00};
-    private static final byte[] CLOSE_SOCKET_BYTE_ARRAY = new byte[]{0x00, 0x01};
-    /**
-     * 手机直控插座时，需要用到的服务UUID
-     */
-    private static final String SOCKET_SERVICE_UUID = "0000FFF0-0000-1000-8000-00805f9b34fb";
-    /**
-     * 手机直控插座时，进行开启或关闭操作的特征UUID
-     */
-    private static final String CHARACTERISTIC_PHONE_CONTROL = "0000fff3-0000-1000-8000-00805f9b34fb";
-
     private BleMultiConnector bleMultiConnector;
     private Button connectButton;
-    private Button openSocket1Btn, openSocket2Btn, openSocket3Btn, openSocket4Btn, openSocket5Btn;
-    private Button closeSocket1Btn, closeSocket2Btn, closeSocket3Btn, closeSocket4Btn, closeSocket5Btn;
     private CustomTextCircleView customTextCircleView1, customTextCircleView2, customTextCircleView3, customTextCircleView4, customTextCircleView5;
     private TextView deviceAddressTv1, deviceAddressTv2, deviceAddressTv3, deviceAddressTv4, deviceAddressTv5;
     private boolean first = true;
 
-    private String device1Address = "00:02:5B:00:15:A1";
-    private String device2Address = "00:02:5B:00:15:A2";
-    private String device3Address = "00:02:5B:00:15:A4";
-    private String device4Address = "00:02:5B:00:15:A8";
-    private String device5Address = "00:02:5B:00:15:A9";
+    private BluetoothDevice device1;
+    private BluetoothDevice device2;
+    private BluetoothDevice device3;
+    private BluetoothDevice device4;
+    private BluetoothDevice device5;
+
+    /**
+     * 用于监测连接状态的回调
+     */
     private Device1Callback device1BleCallback;
     private Device2Callback device2BleCallback;
     private Device3Callback device3BleCallback;
@@ -70,103 +59,12 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
                 case R.id.connect_button:
                     doConnect();
                     break;
-                case R.id.open_socket1:
-                    openSocket1();
-                    break;
-                case R.id.open_socket2:
-                    openSocket2();
-                    break;
-                case R.id.close_socket1:
-                    closeSocket1();
-                    break;
-                case R.id.close_socket2:
-                    closeSocket2();
-                    break;
-                case R.id.open_socket3:
-                    openSocket3();
-                    break;
-                case R.id.close_socket3:
-                    closeSocket3();
-                    break;
-                case R.id.open_socket4:
-                    openSocket4();
-                    break;
-                case R.id.close_socket4:
-                    closeSocket4();
-                    break;
-                case R.id.open_socket5:
-                    openSocket5();
-                    break;
-                case R.id.close_socket5:
-                    closeSocket5();
-                    break;
                 default:
-                    showSetAddressDialog(view.getId());
                     break;
             }
         }
     };
-
-    private void doConnect() {
-        if (!first) {
-            return;
-        }
-        first = false;
-
-
-        //使用默认的回调连接
-//        bleMultiConnector.connect(device1Address);
-//        bleMultiConnector.connect(device2Address);
-
-        //断开后自动连接（此函数调用的是系统的API，由系统自动连接设备)
-//        bleMultiConnector.connect(device1Address, device1BleCallback, true);
-//        bleMultiConnector.connect(device2Address, device2BleCallback, true);
-//        bleMultiConnector.connect(device3Address, device3BleCallback, true);
-//        bleMultiConnector.connect(device4Address, device4BleCallback, true);
-//        bleMultiConnector.connect(device5Address, device5BleCallback, true);
-
-        // 使用线程 顺序发起连接
-        new Thread() {
-            @Override
-            public void run() {
-                bleMultiConnector.connect(device1Address, device1BleCallback, true);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                bleMultiConnector.connect(device2Address, device2BleCallback, true);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                bleMultiConnector.connect(device3Address, device3BleCallback, true);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                bleMultiConnector.connect(device4Address, device4BleCallback, true);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                bleMultiConnector.connect(device5Address, device5BleCallback, true);
-            }
-        }.start();
-
-
-        //连接时传入对应的回调，方便进行操作,通常使用这个就行了
-//        bleMultiConnector.connect(device1Address, device1BleCallback);
-//        bleMultiConnector.connect(device2Address, device2BleCallback);
-
-
-        //连接时传入对应的回调，方便进行操作,并且在连接断开之后自动尝试连接（系统会默认自动去连接该设备，这是系统自身的重连参数，推荐用这个参数进行重连）
-//        bleMultiConnector.connect(device1Address,device1BleCallback,true);
-//        bleMultiConnector.connect(device2Address,device2BleCallback,true);
-    }
+    private ArrayList<BluetoothDevice> bluetoothDevices;
 
     /**
      * 标题栏的返回按钮被按下的时候回调此函数
@@ -181,7 +79,36 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doBeforeSetLayout() {
-        bleMultiConnector = BleManager.getBleMultiConnectorInstance(this);
+        Serializable serializableExtra = getIntent().getSerializableExtra(Constants.DEVICE_LIST);
+        if (serializableExtra instanceof ArrayList) {
+            //noinspection unchecked
+            bluetoothDevices = (ArrayList<BluetoothDevice>) serializableExtra;
+        }
+        if (bluetoothDevices == null || bluetoothDevices.size() == 0) {
+            return;
+        }
+        for (int i = 0; i < bluetoothDevices.size(); i++) {
+            BluetoothDevice bluetoothDevice = bluetoothDevices.get(i);
+            switch (i) {
+                case 0:
+                    device1 = bluetoothDevice;
+                    break;
+                case 1:
+                    device2 = bluetoothDevice;
+                    break;
+                case 2:
+                    device3 = bluetoothDevice;
+                    break;
+                case 3:
+                    device4 = bluetoothDevice;
+                    break;
+                case 4:
+                    device5 = bluetoothDevice;
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     /**
@@ -199,7 +126,7 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doBeforeInitOthers() {
-
+        bleMultiConnector = BleManager.getBleMultiConnectorInstance(this);
     }
 
     /**
@@ -208,16 +135,6 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
     @Override
     protected void initViews() {
         connectButton = findViewById(R.id.connect_button);
-        openSocket1Btn = findViewById(R.id.open_socket1);
-        openSocket2Btn = findViewById(R.id.open_socket2);
-        closeSocket1Btn = findViewById(R.id.close_socket1);
-        closeSocket2Btn = findViewById(R.id.close_socket2);
-        openSocket3Btn = findViewById(R.id.open_socket3);
-        closeSocket3Btn = findViewById(R.id.close_socket3);
-        openSocket4Btn = findViewById(R.id.open_socket4);
-        closeSocket4Btn = findViewById(R.id.close_socket4);
-        openSocket5Btn = findViewById(R.id.open_socket5);
-        closeSocket5Btn = findViewById(R.id.close_socket5);
 
         customTextCircleView1 = findViewById(R.id.circle_device1);
         customTextCircleView2 = findViewById(R.id.circle_device2);
@@ -237,11 +154,31 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void initViewData() {
-        deviceAddressTv1.setText(device1Address);
-        deviceAddressTv2.setText(device2Address);
-        deviceAddressTv3.setText(device3Address);
-        deviceAddressTv4.setText(device4Address);
-        deviceAddressTv5.setText(device5Address);
+        if (device1 != null) {
+            deviceAddressTv1.setText(device1.getAddress());
+        }else {
+            deviceAddressTv1.setText(R.string.null_);
+        }
+        if (device2 != null) {
+            deviceAddressTv2.setText(device2.getAddress());
+        }else {
+            deviceAddressTv2.setText(R.string.null_);
+        }
+        if (device3 != null) {
+            deviceAddressTv3.setText(device3.getAddress());
+        }else {
+            deviceAddressTv3.setText(R.string.null_);
+        }
+        if (device4 != null) {
+            deviceAddressTv4.setText(device4.getAddress());
+        }else {
+            deviceAddressTv4.setText(R.string.null_);
+        }
+        if (device5 != null) {
+            deviceAddressTv5.setText(device5.getAddress());
+        }else {
+            deviceAddressTv5.setText(R.string.null_);
+        }
     }
 
     /**
@@ -262,22 +199,6 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
     @Override
     protected void initEvents() {
         connectButton.setOnClickListener(onClickListener);
-        openSocket1Btn.setOnClickListener(onClickListener);
-        openSocket2Btn.setOnClickListener(onClickListener);
-        closeSocket1Btn.setOnClickListener(onClickListener);
-        closeSocket2Btn.setOnClickListener(onClickListener);
-        openSocket3Btn.setOnClickListener(onClickListener);
-        closeSocket3Btn.setOnClickListener(onClickListener);
-        openSocket4Btn.setOnClickListener(onClickListener);
-        closeSocket4Btn.setOnClickListener(onClickListener);
-        openSocket5Btn.setOnClickListener(onClickListener);
-        closeSocket5Btn.setOnClickListener(onClickListener);
-
-        customTextCircleView1.setOnClickListener(onClickListener);
-        customTextCircleView2.setOnClickListener(onClickListener);
-        customTextCircleView3.setOnClickListener(onClickListener);
-        customTextCircleView4.setOnClickListener(onClickListener);
-        customTextCircleView5.setOnClickListener(onClickListener);
     }
 
 
@@ -318,132 +239,126 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
         bleMultiConnector.closeAll();
     }
 
-    private void open(BleDeviceController bleDeviceController) {
-        if (bleDeviceController == null) {
+    /**
+     * 开始连接
+     */
+    private void doConnect() {
+        if (!first) {
             return;
         }
-        bleDeviceController.writeData(SOCKET_SERVICE_UUID, CHARACTERISTIC_PHONE_CONTROL, OPEN_SOCKET_BYTE_ARRAY);
-    }
+        first = false;
 
-    private void close(BleDeviceController bleDeviceController) {
-        if (bleDeviceController == null) {
-            return;
-        }
-        bleDeviceController.writeData(SOCKET_SERVICE_UUID, CHARACTERISTIC_PHONE_CONTROL, CLOSE_SOCKET_BYTE_ARRAY);
-    }
+        //使用默认的回调连接
+//        bleMultiConnector.connect(device1Address);
+//        bleMultiConnector.connect(device2Address);
 
-    private void openSocket1() {
-        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device1Address);
-        open(bleDeviceController);
-    }
+        //断开后自动连接（此函数调用的是系统的API，由系统自动连接设备)
+//        bleMultiConnector.connect(device1Address, device1BleCallback, true);
+//        bleMultiConnector.connect(device2Address, device2BleCallback, true);
+//        bleMultiConnector.connect(device3Address, device3BleCallback, true);
+//        bleMultiConnector.connect(device4Address, device4BleCallback, true);
+//        bleMultiConnector.connect(device5Address, device5BleCallback, true);
 
-    private void openSocket2() {
-        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device2Address);
-        open(bleDeviceController);
-    }
-
-    private void closeSocket1() {
-        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device1Address);
-        close(bleDeviceController);
-    }
-
-    private void closeSocket2() {
-        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device2Address);
-        close(bleDeviceController);
-    }
-
-    private void openSocket3() {
-        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device3Address);
-        open(bleDeviceController);
-    }
-
-    private void closeSocket3() {
-        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device3Address);
-        close(bleDeviceController);
-    }
-
-    private void openSocket4() {
-        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device4Address);
-        open(bleDeviceController);
-    }
-
-    private void closeSocket4() {
-        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device4Address);
-        close(bleDeviceController);
-    }
-
-    private void openSocket5() {
-        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device5Address);
-        open(bleDeviceController);
-    }
-
-    private void closeSocket5() {
-        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(device5Address);
-        close(bleDeviceController);
-    }
-
-    private void showSetAddressDialog(final int id) {
-        View viewById = findViewById(id);
-        if (!(viewById instanceof CustomTextCircleView)) {
-            return;
-        }
-
-        final EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
-        EditTextWatcherForMacAddress editTextWatcherForMacAddress = new EditTextWatcherForMacAddress(editText);
-        editText.addTextChangedListener(editTextWatcherForMacAddress);
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.set_address)
-                .setView(editText)
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String text = editText.getText().toString();
-                        if (text.length() != 17) {
-                            Tool.toastL(MultiConnectActivity.this, R.string.address_error);
-                            showSetAddressDialog(id);
-                            return;
+        //我在此处使用线程顺序发起连接
+        new Thread() {
+            @Override
+            public void run() {
+                if (device1 != null) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    bleMultiConnector.connect(device1, device1BleCallback, true);
+                                }
+                            });
                         }
-                        if (!BluetoothAdapter.checkBluetoothAddress(text)) {
-                            Tool.toastL(MultiConnectActivity.this, R.string.address_error);
-                            showSetAddressDialog(id);
-                            return;
-                        }
-                        setAddress(id, text);
+                    }).start();
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .setCancelable(false)
-                .show();
-    }
+                }
+                if (device2 != null) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    bleMultiConnector.connect(device2, device2BleCallback, true);
+                                }
+                            });
+                        }
+                    }).start();
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (device3 != null) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    bleMultiConnector.connect(device3, device3BleCallback, true);
+                                }
+                            });
+                        }
+                    }).start();
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (device4 != null) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    bleMultiConnector.connect(device4, device4BleCallback, true);
+                                }
+                            });
+                        }
+                    }).start();
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (device5 != null) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    bleMultiConnector.connect(device5, device5BleCallback, true);
+                                }
+                            });
+                        }
+                    }).start();
+                }
+            }
+        }.start();
 
-    private void setAddress(int id, String text) {
-        View viewById = findViewById(id);
-        if (!(viewById instanceof CustomTextCircleView)) {
-            return;
-        }
-        switch (id) {
-            case R.id.circle_device1:
-                device1Address = text;
-                deviceAddressTv1.setText(text);
-                break;
-            case R.id.circle_device2:
-                device2Address = text;
-                deviceAddressTv2.setText(text);
-                break;
-            case R.id.circle_device3:
-                device3Address = text;
-                deviceAddressTv3.setText(text);
-                break;
-            case R.id.circle_device4:
-                device4Address = text;
-                deviceAddressTv4.setText(text);
-                break;
-            case R.id.circle_device5:
-                device5Address = text;
-                deviceAddressTv5.setText(text);
-                break;
-            default:
-                break;
-        }
+
+        //连接时传入对应的回调，方便进行操作,通常使用这个就行了
+//        bleMultiConnector.connect(device1Address, device1BleCallback);
+//        bleMultiConnector.connect(device2Address, device2BleCallback);
+
+
+        //连接时传入对应的回调，方便进行操作,并且在连接断开之后自动尝试连接（系统会默认自动去连接该设备，这是系统自身的重连参数，推荐用这个参数进行重连）
+//        bleMultiConnector.connect(device1Address,device1BleCallback,true);
+//        bleMultiConnector.connect(device2Address,device2BleCallback,true);
     }
 }

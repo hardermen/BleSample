@@ -1,6 +1,7 @@
 package cn.almsound.www.myblesample.adapter.entity.services_characteristics_list_entity;
 
-import com.chad.library.adapter.base.entity.AbstractExpandableItem;
+import android.bluetooth.BluetoothGattCharacteristic;
+
 import com.chad.library.adapter.base.entity.MultiItemEntity;
 
 import cn.almsound.www.myblesample.adapter.ServicesCharacteristicsListAdapter;
@@ -28,7 +29,7 @@ public class CharacteristicUuidItem implements MultiItemEntity {
         return uuid;
     }
 
-    public void setUuid(String uuid) {
+    public void setBluetoothGattCharacteristic(String uuid) {
         this.uuid = uuid;
     }
 

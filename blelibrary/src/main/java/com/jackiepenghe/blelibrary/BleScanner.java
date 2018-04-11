@@ -598,4 +598,12 @@ public class BleScanner {
     public void setOnScanCompleteListener(@NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
         scanTimer.setOnScanCompleteListener(onScanCompleteListener);
     }
+
+    /**
+     * 获取上下文
+     * @return 上下文
+     */
+    public Context getContext(){
+        return context;
+    }
 }

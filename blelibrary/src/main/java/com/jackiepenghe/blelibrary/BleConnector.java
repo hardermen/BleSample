@@ -365,6 +365,16 @@ public class BleConnector {
      * @return true表示关闭成功
      */
     public boolean close() {
+        return close(false);
+    }
+
+    /**
+     * 关闭BLE连接工具
+     *
+     * @param withGattRefresh 是否要在关闭连接之前 刷新GATT缓存
+     * @return true表示关闭成功
+     */
+    public boolean close(boolean withGattRefresh) {
         if (bleServiceConnection == null) {
             return false;
         }
@@ -380,12 +390,14 @@ public class BleConnector {
             e.printStackTrace();
         }
 
+        context.unregisterReceiver(connectBleBroadcastReceiver);
+        if (withGattRefresh) {
+            refreshGattCache();
+        }
         disconnect();
         bleServiceConnection.closeGatt();
         bleServiceConnection.stopService();
         context.unbindService(bleServiceConnection);
-        context.unregisterReceiver(connectBleBroadcastReceiver);
-
         checkCloseStatus();
         context = null;
         return true;

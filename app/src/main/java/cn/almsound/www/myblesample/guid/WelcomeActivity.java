@@ -93,7 +93,7 @@ public class WelcomeActivity extends BaseWelcomeActivity {
     private void requestPermission() {
         AndPermission.with(this)
                 .requestCode(REQUEST_CODE)
-                .permission(Permission.LOCATION, Permission.STORAGE)
+                .permission(Permission.LOCATION)
                 .callback(permissionListener)
                 .rationale(rationaleListener)
                 .start();
