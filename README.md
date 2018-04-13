@@ -31,7 +31,7 @@ compile 'com.jackiepenghe:blelibrary:0.5.5'
    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 <!--BLE权限(If you want to declare that your app is available to BLE-capable devices only, include the following in your app's manifest)-->
     <uses-feature
-        android:name="android.hardware.bluetooth_le"
+       android:name="android.hardware.bluetooth_le"
         android:required="true" />
 <!-- 5.0以上的手机可能会需要这个权限(If your Android version is above 21 (including 21(Android 5.0)),maybe need declare this permission) -->
 <uses-feature android:name="android.hardware.location.gps" />
@@ -60,7 +60,8 @@ BleScanner bleScanner = BleManager.newBleScanner(context);
    *                                     为true表示一直扫描，永远不会调用BleInterface.OnScanCompleteListener，
    *                                     为false，在时间到了之后回调BleInterface.OnScanCompleteListener，然后结束
    *                                     (Whether the next scan starts when the scanning time arrives.
-   *                                     If true,scanner will start a new scan without  trigger callback                                    *                                     BleInterface.onScanCompleteListener.
+   *                                     If true,scanner will start a new scan without  trigger callback                       
+   *                                     BleInterface.onScanCompleteListener.
    *                                     If false,scanner stop san and trigger callback BleInterface.onScanCompleteListener)
    * @param onScanCompleteListener       扫描完成的回调(Callback triggered if the scanning time arrives and scanContinueFlag is false)
    * @return true表示打开成功(true means open scanner succeed)
