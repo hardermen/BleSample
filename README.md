@@ -6,20 +6,20 @@
 
 2.gradle配置依赖(gradle dependency)
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.5.5'
+compile 'com.jackiepenghe:blelibrary:0.6.7'
 ```
 3.maven配置依赖(maven dependency)
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.5.5</version>
+  <version>0.6.7</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖(vy dependency)
 ```xml
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.5.5'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.6.7'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
@@ -49,87 +49,120 @@ if(!BleManager.isSupportBle()){
 ```
 ### BLE扫描：(Search for BLE devices)
 ```java
-//创建化扫描器（Create a BLE scanner）
-BleScanner bleScanner = BleManager.newBleScanner(context);
-  /*
-   * 打开扫描器，并设置相关参数(Open the scanner,and setting parameters)
-   * @param scanResults                  扫描到的设备结果存放列表(The scanned devices will be saved to the scanResults)
-   * @param onScanFindOneNewDeviceListener 发现一个新设备的回调(Callback triggered if a new device is found)
-   * @param scanPeriod                   扫描持续时间(Scanning time)
-   * @param scanContinueFlag             是否在扫描完成后立即进行下一次扫描的标志
-   *                                     为true表示一直扫描，永远不会调用BleInterface.OnScanCompleteListener，
-   *                                     为false，在时间到了之后回调BleInterface.OnScanCompleteListener，然后结束
-   *                                     (Whether the next scan starts when the scanning time arrives.
-   *                                     If true,scanner will start a new scan without  trigger callback                       
-   *                                     BleInterface.onScanCompleteListener.
-   *                                     If false,scanner stop san and trigger callback BleInterface.onScanCompleteListener)
-   * @param onScanCompleteListener       扫描完成的回调(Callback triggered if the scanning time arrives and scanContinueFlag is false)
-   * @return true表示打开成功(true means open scanner succeed)
-   */
-bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, false, onScanCompleteListener);
-//开始扫描，扫描的结果在回调中，扫描的设备列表会自动添加到上方open函数中的scanList中
-bleScanner.startScan();
+    /**
+     * 初始化扫描器(Initialization scanner)
+     */
+    private void initBleScanner() {
+
+        //获取扫描器单例（get Blescanner instance）
+        bleScanner = BleManager.getBleScannerInstance(DeviceListActivity.this);
+        //你也可以直接创建一个扫描器实例，但是我并不推荐(You can also create a scanner instance directly, but I don't recommend it.)
+        //bleScanner = BleManager.newBleScanner(DeviceListActivity.this);
+        
+        //如果手机不支持蓝牙的话，这里得到的是null,所以需要进行判空(If the phone doesn't support Bluetooth, here is null.So, we need to judge whether it's null here. )
+        if(bleScanner == null){
+            Tool.toastL(DeviceListActivity.this,R.string.ble_not_supported);
+            return;
+        }
+        /*
+         * 打开扫描器，并设置相关回调(open sacanner,and set some callback)
+         * @param scanResults                  扫描到的设备结果存放列表(this list used to store the scanned equipment result)
+         * @param onScanFindOneNewDeviceListener 发现一个新设备的回调(this callback will be called when found a new device)
+         * @param scanPeriod                   扫描持续时间，单位：毫秒(The duration of the scan. Unit:ms)
+         * @param scanContinueFlag             是否在扫描完成后立即进行下一次扫描的标志(A sign determines whether to start next scan after completing the scan.)
+         *                                     为true表示一直扫描，永远不会调用BleInterface.OnScanCompleteListener，(if true,means that scanning will never stop unless stopScan () is invoked. And the callback "onScanCompleteListener" will never be called.)
+         *                                     为false，在时间到了之后回调BleInterface.OnScanCompleteListener，然后结束.(If false,scanner will stop after "scanPeriod" ms,and call onScanCompleteListener.finish a scan)
+         * @param onScanCompleteListener       扫描完成的回调(this callback will be called when san finished)
+         * @return true表示打开成功(if true,means scanner open succeed)
+         */
+        bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, false, onScanCompleteListener);
+
+        //设置其他回调(you can also set other callbacks)
+        bleScanner.setOnScanFindOneDeviceListener(onScanFindOneDeviceListener);
+        //开始扫描（start scan）
+        blescanner.startScan();
+    }
 ```
+
 
 ### BLE扫描进阶设置(需要API21支持)(BLE scanner advanced settings(API 21 supported))
 #### 设置过滤条件(Configure filters)
 ```java
- if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            //声明过滤集合,可同时设置多组过滤条件(Declaring a filter list to set multiple set of filtering conditions at the same time)
-            ArrayList<ScanFilter> scanFilters = new ArrayList<>();
-            //声明服务UUID(Declaring service uuid)
-            String serviceUUID = "C3E6FEA0-E966-1000-8000-BE99C223DF6A";
-            ScanFilter scanFilter = new ScanFilter.Builder()
-                    //设置过滤设备地址(Device address filtering setting)
-                    .setDeviceAddress("00:02:5B:00:15:AA")
-                    //设置过滤设备名称(Device name filtering setting)
-                    .setDeviceName("Y11-")
-                    //根据厂商自定义的广播id和广播内容过滤(Device manufacturer data filtering setting)
-                    .setManufacturerData(2, new byte[]{0, 2})
-                    //根据服务数据进行过滤(Device service uuid filtering setting)
-                    .setServiceUuid(new ParcelUuid(UUID.fromString(serviceUUID)))
-                    //构建(build filter)
-                    .build();
-             //添加一个过滤到过滤集合中(add a filter to filter list)
-            scanFilters.add(scanFilter);
-            //设置过滤条件(set scanner filters)
-            bleScanner.setScanFilters(scanFilters);
-        }
+    /**
+     * 设置扫描器的过滤条件(set scan filters)
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void setScanFilters() {
+        //声明过滤集合,可同时设置多组过滤条件(Declaring a filter list to set multiple set of filtering conditions at the same time)
+        ArrayList<ScanFilter> scanFilters = new ArrayList<>();
+        //声明服务UUID(Declaring service uuid)
+        String serviceUUID = "C3E6FEA0-E966-1000-8000-BE99C223DF6A";
+        ScanFilter scanFilter = new ScanFilter.Builder()
+                //设置过滤设备地址(Device address filtering setting)
+                .setDeviceAddress("00:02:5B:00:15:AA")
+                //设置过滤设备名称(Device name filtering setting)
+                .setDeviceName("Y11-")
+                //根据厂商自定义的广播id和广播内容过滤(Device manufacturer data filtering setting)
+                .setManufacturerData(2, new byte[]{0, 2})
+                //根据服务数据进行过滤(Device service uuid filtering setting)
+                .setServiceUuid(new ParcelUuid(UUID.fromString(serviceUUID)))
+                //构建(build filter)
+                .build();
+        //添加一个过滤到过滤集合中(add a filter to filter list)
+        scanFilters.add(scanFilter);
+        //设置过滤条件(set scanner filters)
+        bleScanner.setScanFilters(scanFilters);
+    }
 ```
 #### 设置扫描参数(Configure scan paramters)
 ```java
- if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            ScanSettings scanSettings = new ScanSettings.Builder()
-                    //设置回调触发方式（需要API23及以上）(set callback type(API 23 supported))
+     /**
+     * 设置扫描器的扫描参数(set scan settings)
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void setScanSettings() {
+        ScanSettings scanSettings = new ScanSettings.Builder()
+                //设置回调触发方式（需要API23及以上）(set callback type(API 23 supported))
 //                    .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-                    //如果只有传统（我猜测是经典蓝牙，并不确定）的广播，是否回调callback函数(需要API26及以上)
-                    // Set whether only legacy advertisments should be returned in scan results.
-                    //Legacy advertisements include advertisements as specified by the
-                    //Bluetooth core specification 4.2 and below. This is true by default
-                    //for compatibility with older apps.
-                    //true if only legacy advertisements will be returned
+                //如果只有传统（我猜测是经典蓝牙，并不确定）的广播，是否回调callback函数(需要API26及以上)
+                // Set whether only legacy advertisments should be returned in scan results.
+                //Legacy advertisements include advertisements as specified by the
+                //Bluetooth core specification 4.2 and below. This is true by default
+                //for compatibility with older apps.
+                //true if only legacy advertisements will be returned
 //                    .setLegacy(false)
-                    //设置扫描匹配方式（需要API23及以上）(set match mode(API 23 supported))
+                //设置扫描匹配方式（需要API23及以上）(set match mode(API 23 supported))
 //                    .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-                    //设置扫描匹配次数（需要API23及以上）(set num of matches(API 23 supported))
+                //设置扫描匹配次数（需要API23及以上）(set num of matches(API 23 supported))
 //                    .setNumOfMatches(2)
-                    //在扫描过程中设置物理层(需要API23及以上)(set phy(API 23 supported))
+                //在扫描过程中设置物理层(需要API23及以上)(set phy(API 23 supported))
 //                    .setPhy(BluetoothDevice.PHY_LE_1M)
-                    //设置报告延迟时间(set report delay)
-                    .setReportDelay(100)
-                    //设置扫描模式(set scan mode(default mode:ScanSettings.SCAN_MODE_LOW_LATENCY))
-                    .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
-                    //构建
-                    .build();
-            //设置扫描参数(set scan settings)
-          bleScanner.setScanSettings(scanSettings);
-        }
+                //设置报告延迟时间(set report delay)
+                .setReportDelay(100)
+                //设置扫描模式(set scan mode(default mode:ScanSettings.SCAN_MODE_LOW_LATENCY))
+                .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
+                //构建
+                .build();
+        //设置扫描参数(set scan settings)
+        bleScanner.setScanSettings(scanSettings);
+    }
 ```
-注销：(close)
+### 注销：(close and release memory)
 一定要记得在activity被销毁之前，注销扫描器(You must close the scanner before the activity is destroyed)
 
 ```java
-bleScanner.close();
+    /**
+     * 在activity被销毁的时候关闭扫描器
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //关闭扫描器(close scanner)
+        bleScanner.close();
+    }
+    
+    //在程序完全退出的时候，一定要执行这一句（When the program exits, it is necessary to release memory）
+      BleManager.releaseAll();
 ```
 
 ### BLE设备的连接：（BLE Connection）
@@ -137,10 +170,10 @@ bleScanner.close();
 在进行连接之前，一定要检查是否在AndroidManifest中配置已一个必须的服务！(Connections depend on this service)
 
 ```xml 
-<service
-    android:name="com.jackiepenghe.blelibrary.BluetoothLeService"
-    android:enabled="true"
-    android:exported="false" />
+ <service
+            android:name="com.jackiepenghe.blelibrary.BluetoothLeService"
+            android:enabled="true"
+            android:exported="false" />
 
 ``` 
 接下来就是Java代码了（The next is the Java code）
