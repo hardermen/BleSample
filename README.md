@@ -159,10 +159,12 @@ if(!BleManager.isSupportBle()){
         super.onDestroy();
         //关闭扫描器(close scanner)
         bleScanner.close();
+        BleManager.releaseBleScanner();
     }
-    
-    //在程序完全退出的时候，一定要执行这一句（When the program exits, it is necessary to release memory）
-      BleManager.releaseAll();
+```
+在程序完全退出的时候，一定要执行这一句（When the program exits, it is necessary to release memory）
+```
+BleManager.releaseAll();
 ```
 
 ### BLE设备的连接：（BLE Connection）
@@ -179,28 +181,58 @@ if(!BleManager.isSupportBle()){
 接下来就是Java代码了（The next is the Java code）
 
 ```java
-//创建连接器(create a ble connector)
- BleConnector bleConnector = BleManager.newBleConnector(context);
-//设置回调，在这个回调中判断连接成功最为保险(set callback triggered while discovered remote device services finished)
- bleConnector.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
-//设置要连接的设备的地址，并发起连接(set remote device's address,and start connect)
-private void startConnect() {
-        if (bleConnector.checkAndSetAddress(address)) {
-            if (bleConnector.startConnect()) {
-                LogUtil.w("开始连接(connecting)");    
-            } else {
-                LogUtil.w("连接失败(connect failed)");              
-            }
+
+
+    /**
+     * 初始化连接工具(Initialization connector)
+     */
+    private void initBleConnector() {
+        //获取BLE连接器单例(get Connector instance)
+        bleConnector = BleManager.getBleConnectorInstance(ConnectActivity.this);
+        //创建一个新的连接器实例（create a new connector instance）
+        //bleConnector = BleManager.getBleConnectorInstance(ConnectActivity.this);
+       //如果手机不支持蓝牙的话，这里得到的是null,所以需要进行判空(If the phone doesn't support Bluetooth, here is null.So, we need to judge whether it's null here. )
+        if (bleConnector == null) {
+            Tool.toastL(ConnectActivity.this, R.string.ble_not_supported);
+            return;
         }
-        
-     /*if (bleConnector.checkAndSetAddress(address)) {
-            //发起连接时传入true代表断链后自动重连(If you set true here,system will be reconnect while remote device unexpected disconnected)
-            if (bleConnector.startConnect(true)) {
+        //设置连接设备成功的回调(set callback that called when connected remote device)
+        bleConnector.setOnConnectedListener(onConnectedListener);
+        //设置连接之后，服务发现完成的回调(set callback that called when discover remote device services finished)
+        bleConnector.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
+        //设置连接被断开的回调(set callback that called when disconnected remote device)
+        bleConnector.setOnDisconnectedListener(onDisconnectedListener);
+        //设置 读取到设备的数据时的回调(set callback that called when read data from remote device)
+        bleConnector.setOnCharacteristicReadListener(onCharacteristicReadListener);
+        //设置 获取设备的RSSI的回调(set callback that called when get remote device rssi)
+        bleConnector.setOnReadRemoteRssiListener(onReadRemoteRssiListener);     
+        //设置 Mtu参数被更改时的回调
+        bleConnector.setOnMtuChangedListener(onMtuChangedListener);
+    }
+```
+#### 注意：请不要在“onConnectedListener”回调中判断为设备连接成功。有些情况下，在连接上设备之后会立刻断开。所以一定要在“onServicesDiscoveredListener”中判断为设备已经连接成功。
+#### notice:If you want do something about BLE after connected remote device, please do it in callback "onServicesDiscoveredListener" Instead of callback "onConnectedListener".
+
+发起连接请求（Initiating a connection request ）
+
+```
+private void startConnect() {
+        //设置要连接的设备，并发起连接(set remote device,and start connect)
+        if (bleConnector.checkAndSetDevice(bluetoothDevice)) {
+           if (bleConnector.startConnect()) {
                 LogUtil.w("开始连接(connecting)");    
             } else {
                 LogUtil.w("连接失败(connect failed)");              
             }
-        }*/
+            
+            /*
+            //发起连接时传入true代表断链后自动重连(If you set true here,system will be reconnect while remote device unexpected disconnected)
+            if (bleConnector.startConnect(true)) {
+                LogUtil.w("开始连接(connecting)");    
+            } else {
+                LogUtil.w("连接失败(connect failed)");              
+            }*/
+        }
     }
 ```
 
@@ -254,7 +286,10 @@ bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
 ```java
     @Override
     public void onBackPressed() {
-        bleConnector.close();
+        boolean closeResult = bleConnector.close();
+        if(!closeResult){
+          super.onBackPressed();
+        }
     }
 ```
 
@@ -269,6 +304,19 @@ onCloseCompleteListener = new BleConnector.OnCloseCompleteListener() {
             }
         };
 bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
+```
+
+在销毁Activity的时候，释放内存
+```
+@Override
+public void onDestroy() {
+  super.onDestroy();
+  BleManager.realseBleConnector();
+}
+```
+在程序完全退出的时候，一定要执行这一句（When the program exits, it is necessary to release memory）
+```
+BleManager.releaseAll();
 ```
 
 ### BLE设备的绑定(也可以说是配对)：(Bluetooth pairing)
@@ -327,7 +375,7 @@ bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
              */
             @Override
             public void onDeviceBonded() {
-                //发起连接
+                //发起连接(Initiating a connection request)
                 startConnect();
             }
 
