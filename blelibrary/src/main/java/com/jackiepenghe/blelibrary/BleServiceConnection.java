@@ -218,7 +218,7 @@ class BleServiceConnection implements ServiceConnection {
     /**
      * 根据UUID获取设备的服务
      *
-     * @param uuid UUID
+     * @param uuid BLUETOOTH_GATT_CHARACTERISTIC
      * @return BluetoothGattService
      */
     BluetoothGattService getService(UUID uuid) {

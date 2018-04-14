@@ -2,8 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/BleSample.iml" filepath="$PROJECT_DIR$/.idea/BleSample.iml" />
       <module fileurl="file://$PROJECT_DIR$/BleSample.iml" filepath="$PROJECT_DIR$/BleSample.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/blelibrary/blelibrary.iml" filepath="$PROJECT_DIR$/blelibrary/blelibrary.iml" />
       <module fileurl="file://$PROJECT_DIR$/blelibrary/blelibrary.iml" filepath="$PROJECT_DIR$/blelibrary/blelibrary.iml" />
     </modules>
   </component>

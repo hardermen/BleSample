@@ -1,12 +1,15 @@
 package com.jackiepenghe.blelibrary;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Handler;
+
+import java.io.Serializable;
 
 
 /**
@@ -123,12 +126,13 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     @SuppressWarnings({"JavadocReference", "JavaDoc"})
     @Override
-    public void onReceive(Context context, final Intent intent) {
+    public void onReceive(Context context, Intent intent) {
         final byte[] values = intent.getByteArrayExtra(LibraryConstants.VALUE);
         String action = intent.getAction();
         if (action == null) {
             return;
         }
+        final String uuid = intent.getStringExtra(BleConstants.UUID);
         switch (action) {
             case BluetoothAdapter.ACTION_STATE_CHANGED:
                 int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -2147483648);
@@ -230,7 +234,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            onCharacteristicReadListener.onCharacteristicRead(values);
+                            onCharacteristicReadListener.onCharacteristicRead(uuid,values);
                         }
                     });
                 }
@@ -241,7 +245,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            onReceiveNotificationListener.onReceiveNotification(values);
+                            onReceiveNotificationListener.onReceiveNotification(uuid,values);
                         }
                     });
                 }
@@ -252,7 +256,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            onCharacteristicWriteListener.onCharacteristicWrite(values);
+                            onCharacteristicWriteListener.onCharacteristicWrite(uuid,values);
                         }
                     });
                 }
@@ -263,7 +267,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            onDescriptorReadListener.onDescriptorRead(values);
+                            onDescriptorReadListener.onDescriptorRead(uuid,values);
                         }
                     });
                 }
@@ -274,7 +278,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            onDescriptorWriteListener.onDescriptorWrite(values);
+                            onDescriptorWriteListener.onDescriptorWrite(uuid,values);
                         }
                     });
                 }

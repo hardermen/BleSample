@@ -132,7 +132,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         //BluetoothGatt客户端配置成功
         else {
             byte[] value = characteristic.getValue();
-            broadcastUpdate(BleConstants.ACTION_CHARACTERISTIC_READ, value);
+            broadcastUpdate(characteristic.getUuid().toString(),BleConstants.ACTION_CHARACTERISTIC_READ, value);
         }
     }
 
@@ -153,7 +153,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         //BluetoothGatt客户端配置成功
         else {
             byte[] value = characteristic.getValue();
-            broadcastUpdate(BleConstants.ACTION_CHARACTERISTIC_WRITE, value);
+            broadcastUpdate(characteristic.getUuid().toString(),BleConstants.ACTION_CHARACTERISTIC_WRITE, value);
         }
     }
 
@@ -167,7 +167,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         Tool.warnOut(TAG, "onReceivedNotification");
         byte[] value = characteristic.getValue();
-        broadcastUpdate(BleConstants.ACTION_CHARACTERISTIC_CHANGED, value);
+        broadcastUpdate(characteristic.getUuid().toString(),BleConstants.ACTION_CHARACTERISTIC_CHANGED, value);
     }
 
     /**
@@ -187,7 +187,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         //BluetoothGatt客户端配置成功
         else {
             byte[] value = descriptor.getValue();
-            broadcastUpdate(BleConstants.ACTION_DESCRIPTOR_READ, value);
+            broadcastUpdate(descriptor.getUuid().toString(),BleConstants.ACTION_DESCRIPTOR_READ, value);
         }
     }
 
@@ -208,7 +208,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         //BluetoothGatt客户端配置成功
         else {
             byte[] value = descriptor.getValue();
-            broadcastUpdate(BleConstants.ACTION_DESCRIPTOR_WRITE, value);
+            broadcastUpdate(descriptor.getUuid().toString(),BleConstants.ACTION_DESCRIPTOR_WRITE, value);
         }
 
     }
@@ -282,6 +282,20 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
     private void broadcastUpdate(String action) {
         Intent intent = new Intent();
         intent.setAction(action);
+        bluetoothLeService.sendBroadcast(intent);
+    }
+
+    /**
+     * 发送广播
+     *
+     * @param action 广播中需要包含的action
+     * @param value  广播中需要包含的数据
+     */
+    private void broadcastUpdate( String uuid,String action, byte[] value) {
+        Intent intent = new Intent();
+        intent.putExtra(BleConstants.UUID,uuid);
+        intent.setAction(action);
+        intent.putExtra(LibraryConstants.VALUE, value);
         bluetoothLeService.sendBroadcast(intent);
     }
 

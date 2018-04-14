@@ -8,6 +8,8 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 
+import java.util.UUID;
+
 /**
  * 接口定义区
  *
@@ -151,9 +153,10 @@ public class BleInterface {
         /**
          * 读取到远端设备的数据
          *
+         * @param uuid   uuid的String字符串
          * @param values 读取到的数据
          */
-        void onCharacteristicRead(byte[] values);
+        void onCharacteristicRead(String uuid, byte[] values);
     }
 
     /**
@@ -163,9 +166,10 @@ public class BleInterface {
         /**
          * 收到远端设备的通知
          *
+         * @param uuid   uuid的字符串
          * @param values 远端设备的通知数据
          */
-        void onReceiveNotification(byte[] values);
+        void onReceiveNotification(String uuid, byte[] values);
     }
 
     /**
@@ -175,9 +179,10 @@ public class BleInterface {
         /**
          * 向远端设备写入数据
          *
+         * @param uuid   uuid的字符串
          * @param values 向远端设备写入的数据
          */
-        void onCharacteristicWrite(byte[] values);
+        void onCharacteristicWrite(String uuid, byte[] values);
     }
 
     /**
@@ -187,9 +192,10 @@ public class BleInterface {
         /**
          * 读取到远端设备的描述符
          *
+         * @param uuid   uuid的字符串
          * @param values 远端设备的描述符
          */
-        void onDescriptorRead(byte[] values);
+        void onDescriptorRead(String uuid, byte[] values);
     }
 
     /**
@@ -199,9 +205,10 @@ public class BleInterface {
         /**
          * 向远端设备写入描述符
          *
+         * @param uuid   uuid的字符串
          * @param values 写入的描述符
          */
-        void onDescriptorWrite(byte[] values);
+        void onDescriptorWrite(String uuid, byte[] values);
     }
 
     /**

@@ -152,7 +152,7 @@ public class BleDeviceController {
     /**
      * 根据指定UUID获取服务
      *
-     * @param uuid UUID
+     * @param uuid BLUETOOTH_GATT_CHARACTERISTIC
      * @return 服务
      */
     @SuppressWarnings("WeakerAccess")

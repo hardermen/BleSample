@@ -100,6 +100,201 @@ public class ConnectActivity extends BaseAppCompatActivity {
     };
 
     /**
+     * 连接成功的回调（在设备连接成功之后会触发此回调）
+     */
+    private BleInterface.OnConnectedListener onConnectedListener = new BleInterface.OnConnectedListener() {
+        @Override
+        public void onConnected() {
+            //记录是否连接成功的标志，同时也记录本方法是否已经被回调,避免部分手机多次回调
+            if (isLinked) {
+                return;
+            }
+            isLinked = true;
+            //连接成功，将指示标志设置为蓝色
+            customTextCircleView.setColor(Color.BLUE);
+        }
+    };
+    /**
+     * 连接成功后会扫描远端设备的服务，在服务扫描完成之后会触发此回调
+     */
+    private BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener = new BleInterface.OnServicesDiscoveredListener() {
+        @Override
+        public void onServicesDiscovered() {
+            //记录本方法是否已经被回调，避免部分手机多次回调
+            if (serviceDiscovered) {
+                return;
+            }
+            serviceDiscovered = true;
+
+            //服务发现完成，将指示标志设置为绿色（对BLE远端设备的所有操作都在服务扫描完成之后）
+            customTextCircleView.setColor(Color.GREEN);
+
+            Tool.toastL(ConnectActivity.this, R.string.connect_success);
+
+            //获取服务列表
+            List<BluetoothGattService> deviceServices = bleConnector.getServices();
+
+            if (deviceServices != null) {
+
+                for (int i = 0; i < deviceServices.size(); i++) {
+                    BluetoothGattService bluetoothGattService = deviceServices.get(i);
+                    String serviceUuidString = bluetoothGattService.getUuid().toString();
+                    Tool.warnOut(TAG, "bluetoothGattService UUID = " + serviceUuidString);
+
+                    ServiceUuidItem serviceUuidItem = new ServiceUuidItem(serviceUuidString);
+                    List<BluetoothGattCharacteristic> characteristics = bluetoothGattService.getCharacteristics();
+                    for (int j = 0; j < characteristics.size(); j++) {
+                        BluetoothGattCharacteristic bluetoothGattCharacteristic = characteristics.get(j);
+                        String characteristicUuidString = bluetoothGattCharacteristic.getUuid().toString();
+                        Tool.warnOut(TAG, "bluetoothGattCharacteristic UUID = " + characteristicUuidString);
+                        boolean canRead = bleConnector.canRead(serviceUuidString, characteristicUuidString);
+                        boolean canWrite = bleConnector.canWrite(serviceUuidString, characteristicUuidString);
+                        boolean canNotify = bleConnector.canNotify(serviceUuidString, characteristicUuidString);
+                        CharacteristicUuidItem characteristicUuidItem = new CharacteristicUuidItem(characteristicUuidString, canRead, canWrite, canNotify);
+                        serviceUuidItem.addSubItem(characteristicUuidItem);
+                    }
+                    adapterData.add(serviceUuidItem);
+                }
+
+                servicesCharacteristicsListAdapter.notifyDataSetChanged();
+            }
+
+            //提取设备名与设备地址
+            nameTv.setText(bluetoothDevice.getName());
+            addressTv.setText(bluetoothDevice.getAddress());
+
+            //请求更改mtu
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                int mtu = 24;
+                if (bleConnector.requestMtu(mtu)) {
+                    Tool.warnOut(TAG, mtu + " 字节MTU请求成功");
+                } else {
+                    Tool.warnOut(TAG, mtu + " 字节MTU请求失败");
+                }
+            } else {
+                Tool.warnOut(TAG, "系统版本过低，无法请求更新MTU");
+            }
+        }
+    };
+    /**
+     * 与远端设备断开连接后触发此回调
+     */
+    private BleInterface.OnDisconnectedListener onDisconnectedListener = new BleInterface.OnDisconnectedListener() {
+        @Override
+        public void onDisconnected() {
+            //如果还没有连接上，不做任何操作
+            if (!isLinked) {
+                return;
+            }
+            //重置连接标志
+            isLinked = false;
+            //重置服务扫描状态标志
+            serviceDiscovered = false;
+            //断开连接，将指示标志设置为红色
+            customTextCircleView.setColor(Color.RED);
+        }
+    };
+    /**
+     * 读取到远端设备数据后会触发此回调,返回的数据是一个byte数组
+     */
+    private BleInterface.OnCharacteristicReadListener onCharacteristicReadListener = new BleInterface.OnCharacteristicReadListener() {
+        @Override
+        public void onCharacteristicRead(String uuid, byte[] values) {
+            String hexStr = Tool.bytesToHexStr(values);
+            String str = new String(values);
+            Tool.warnOut(TAG, "读取到的数据 = " + hexStr);
+            showReadDataResultDialog(hexStr, str);
+        }
+    };
+    /**
+     * 正在连接时触发此回调（不过此回调从来没有被触发过，我也不知道为何）
+     */
+    private BleInterface.OnConnectingListener onConnectingListener = new BleInterface.OnConnectingListener() {
+        @Override
+        public void onConnecting() {
+            customTextCircleView.setColor(Color.YELLOW);
+        }
+    };
+    /**
+     * 收到远端设备的主动通知时，触发此回调
+     */
+    private BleInterface.OnReceiveNotificationListener onReceiveNotificationListener = new BleInterface.OnReceiveNotificationListener() {
+        @Override
+        public void onReceiveNotification(String uuid,byte[] values) {
+            String hexStr = Tool.bytesToHexStr(values);
+            String str = new String(values);
+            Tool.warnOut("ConnectActivity", "value = " + hexStr);
+            showReceiveNotificationDialog(hexStr, str);
+        }
+    };
+    /**
+     * 取到远端设备的RSSI值时触发此回调
+     */
+    private BleInterface.OnReadRemoteRssiListener onReadRemoteRssiListener = new BleInterface.OnReadRemoteRssiListener() {
+        @Override
+        public void onReadRemoteRssi(int rssi) {
+            Tool.warnOut("ConnectActivity", "rssi = " + rssi);
+        }
+    };
+    /**
+     * 当连接工具调用Close方法之后，在连接工具彻底关闭时会触发此回调
+     * 最好是屏蔽onBackPressed()方法，onBackPressed()方法中只调用bleConnector.closeAll().然后在这个方法中回调super.onBackPressed()结束activity
+     * 一定要在这个回调中做结束activity的操作，不要直接在onDestroy中调用close避免连接工具还没有彻底关闭，activity就结束造成内存泄漏
+     */
+    BleInterface.OnCloseCompleteListener onCloseCompleteListener = new BleInterface.OnCloseCompleteListener() {
+        @Override
+        public void onCloseComplete() {
+            ConnectActivity.super.onBackPressed();
+        }
+    };
+    /**
+     * 设备的绑定(也可以说配对)状态改变后触发此回调
+     */
+    BleInterface.OnDeviceBondStateChangedListener onBondStateChangedListener = new BleInterface.OnDeviceBondStateChangedListener() {
+        /**
+         * 正在绑定设备
+         */
+        @Override
+        public void onDeviceBinding() {
+            Tool.warnOut(TAG, "绑定中");
+            Tool.toastL(ConnectActivity.this, "绑定中");
+        }
+
+        /**
+         * 绑定完成
+         */
+        @Override
+        public void onDeviceBonded() {
+            Tool.warnOut(TAG, "绑定成功");
+            Tool.toastL(ConnectActivity.this, "绑定成功");
+            //发起连接
+            startConnect();
+        }
+
+        /**
+         * 取消绑定或者绑定失败
+         */
+        @Override
+        public void onDeviceBindNone() {
+            Tool.warnOut(TAG, "绑定失败");
+            Tool.toastL(ConnectActivity.this, "绑定失败");
+            startConnect();
+        }
+    };
+    BleInterface.OnMtuChangedListener onMtuChangedListener = new BleInterface.OnMtuChangedListener() {
+        @Override
+        public void onMtuChanged(int mtu) {
+            Tool.warnOut(TAG, "onMtuChanged:mtu = " + mtu);
+        }
+    };
+    private BleInterface.OnDisconnectingListener onDisconnectingListener = new BleInterface.OnDisconnectingListener() {
+        @Override
+        public void onDisconnecting() {
+            Tool.warnOut(TAG, "onDisconnecting");
+        }
+    };
+
+    /**
      * 标题栏的返回按钮被按下的时候回调此函数
      */
     @Override
@@ -275,195 +470,38 @@ public class ConnectActivity extends BaseAppCompatActivity {
     private void initBleConnector() {
         //创建BLE连接器实例
         bleConnector = BleManager.getBleConnectorInstance(ConnectActivity.this);
-        //创建连接成功的回调（在设备连接成功之后会触发此回调）
-        BleInterface.OnConnectedListener onConnectedListener = new BleInterface.OnConnectedListener() {
-            @Override
-            public void onConnected() {
-                //记录是否连接成功的标志，同时也记录本方法是否已经被回调,避免部分手机多次回调
-                if (isLinked) {
-                    return;
-                }
-                isLinked = true;
-                //连接成功，将指示标志设置为蓝色
-                customTextCircleView.setColor(Color.BLUE);
-            }
-        };
-        //连接成功后会扫描远端设备的服务，在服务扫描完成之后会触发此回调
-        BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener = new BleInterface.OnServicesDiscoveredListener() {
-            @Override
-            public void onServicesDiscovered() {
-                //记录本方法是否已经被回调，避免部分手机多次回调
-                if (serviceDiscovered) {
-                    return;
-                }
-                serviceDiscovered = true;
-
-                //服务发现完成，将指示标志设置为绿色（对BLE远端设备的所有操作都在服务扫描完成之后）
-                customTextCircleView.setColor(Color.GREEN);
-
-                Tool.toastL(ConnectActivity.this, R.string.connect_success);
-
-                //获取服务列表
-                List<BluetoothGattService> deviceServices = bleConnector.getServices();
-
-                if (deviceServices != null) {
-
-                    for (int i = 0; i < deviceServices.size(); i++) {
-                        BluetoothGattService bluetoothGattService = deviceServices.get(i);
-                        String serviceUuidString = bluetoothGattService.getUuid().toString();
-                        Tool.warnOut(TAG, "bluetoothGattService UUID = " + serviceUuidString);
-
-                        ServiceUuidItem serviceUuidItem = new ServiceUuidItem(serviceUuidString);
-                        List<BluetoothGattCharacteristic> characteristics = bluetoothGattService.getCharacteristics();
-                        for (int j = 0; j < characteristics.size(); j++) {
-                            BluetoothGattCharacteristic bluetoothGattCharacteristic = characteristics.get(j);
-                            String characteristicUuidString = bluetoothGattCharacteristic.getUuid().toString();
-                            Tool.warnOut(TAG, "bluetoothGattCharacteristic UUID = " + characteristicUuidString);
-                            boolean canRead = bleConnector.canRead(serviceUuidString, characteristicUuidString);
-                            boolean canWrite = bleConnector.canWrite(serviceUuidString, characteristicUuidString);
-                            boolean canNotify = bleConnector.canNotify(serviceUuidString, characteristicUuidString);
-                            CharacteristicUuidItem characteristicUuidItem = new CharacteristicUuidItem(characteristicUuidString, canRead, canWrite, canNotify);
-                            serviceUuidItem.addSubItem(characteristicUuidItem);
-                        }
-                        adapterData.add(serviceUuidItem);
-                    }
-
-                    servicesCharacteristicsListAdapter.notifyDataSetChanged();
-                }
-
-                //提取设备名与设备地址
-                nameTv.setText(bluetoothDevice.getName());
-                addressTv.setText(bluetoothDevice.getAddress());
-
-                //请求更改mtu
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    int mtu = 24;
-                    if (bleConnector.requestMtu(mtu)) {
-                        Tool.warnOut(TAG, mtu + " 字节MTU请求成功");
-                    } else {
-                        Tool.warnOut(TAG, mtu + " 字节MTU请求失败");
-                    }
-                } else {
-                    Tool.warnOut(TAG, "系统版本过低，无法请求更新MTU");
-                }
-            }
-        };
-        //与远端设备断开连接后触发此回调
-        BleInterface.OnDisconnectedListener onDisconnectedListener = new BleInterface.OnDisconnectedListener() {
-            @Override
-            public void onDisconnected() {
-                //如果还没有连接上，不做任何操作
-                if (!isLinked) {
-                    return;
-                }
-                //重置连接标志
-                isLinked = false;
-                //重置服务扫描状态标志
-                serviceDiscovered = false;
-                //断开连接，将指示标志设置为红色
-                customTextCircleView.setColor(Color.RED);
-            }
-        };
-        //读取到远端设备数据后会触发此回调,返回的数据是一个byte数组
-        BleInterface.OnCharacteristicReadListener onCharacteristicReadListener = new BleInterface.OnCharacteristicReadListener() {
-            @Override
-            public void onCharacteristicRead(byte[] values) {
-                String hexStr = Tool.bytesToHexStr(values);
-                String str = new String(values);
-                Tool.warnOut(TAG, "读取到的数据 = " + hexStr);
-                showReadDataResultDialog(hexStr, str);
-            }
-        };
-        //正在连接时触发此回调（不过此回调从来没有被触发过，我也不知道为何）
-        BleInterface.OnConnectingListener onConnectingListener = new BleInterface.OnConnectingListener() {
-            @Override
-            public void onConnecting() {
-                customTextCircleView.setColor(Color.YELLOW);
-            }
-        };
-        //收到远端设备的主动通知时，触发此回调
-        BleInterface.OnReceiveNotificationListener onReceiveNotificationListener = new BleInterface.OnReceiveNotificationListener() {
-            @Override
-            public void onReceiveNotification(byte[] values) {
-                String hexStr = Tool.bytesToHexStr(values);
-                String str = new String(values);
-                Tool.warnOut("ConnectActivity", "value = " + hexStr);
-                showReceiveNotificationDialog(hexStr, str);
-            }
-        };
-        //读取到远端设备的RSSI值时触发此回调
-        BleInterface.OnReadRemoteRssiListener onReadRemoteRssiListener = new BleInterface.OnReadRemoteRssiListener() {
-            @Override
-            public void onReadRemoteRssi(int rssi) {
-                Tool.warnOut("ConnectActivity", "rssi = " + rssi);
-            }
-        };
-        /*当连接工具调用Close方法之后，在连接工具彻底关闭时会触发此回调
-         *最好是屏蔽onBackPressed()方法，onBackPressed()方法中只调用bleConnector.closeAll().然后在这个方法中回调super.onBackPressed()结束activity
-         *一定要在这个回调中做结束activity的操作，不要直接在onDestroy中调用close避免连接工具还没有彻底关闭，activity就结束造成内存泄漏
-         */
-        BleInterface.OnCloseCompleteListener onCloseCompleteListener = new BleInterface.OnCloseCompleteListener() {
-            @Override
-            public void onCloseComplete() {
-                ConnectActivity.super.onBackPressed();
-            }
-        };
-        //设备的绑定(也可以说配对)状态改变后触发此回调
-        BleInterface.OnDeviceBondStateChangedListener onBondStateChangedListener = new BleInterface.OnDeviceBondStateChangedListener() {
-            /**
-             * 正在绑定设备
-             */
-            @Override
-            public void onDeviceBinding() {
-                Tool.warnOut(TAG,"绑定中");
-                Tool.toastL(ConnectActivity.this,"绑定中");
-            }
-
-            /**
-             * 绑定完成
-             */
-            @Override
-            public void onDeviceBonded() {
-                Tool.warnOut(TAG,"绑定成功");
-                Tool.toastL(ConnectActivity.this,"绑定成功");
-                //发起连接
-                startConnect();
-            }
-
-            /**
-             * 取消绑定或者绑定失败
-             */
-            @Override
-            public void onDeviceBindNone() {
-                Tool.warnOut(TAG,"绑定失败");
-                Tool.toastL(ConnectActivity.this,"绑定失败");
-                startConnect();
-            }
-        };
-        BleInterface.OnMtuChangedListener onMtuChangedListener = new BleInterface.OnMtuChangedListener() {
-            @Override
-            public void onMtuChanged(int mtu) {
-                Tool.warnOut(TAG, "onMtuChanged:mtu = " + mtu);
-            }
-        };
-
-        /*设置连接工具一系列的监听事件*/
-        bleConnector.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
-        bleConnector.setOnDisconnectedListener(onDisconnectedListener);
-        bleConnector.setOnCharacteristicReadListener(onCharacteristicReadListener);
+        //如果手机不支持蓝牙的话，这里得到的是null,所以需要进行判空
+        if (bleConnector == null) {
+            Tool.toastL(ConnectActivity.this, R.string.ble_not_supported);
+            return;
+        }
+        //bleConnector.setOnConnectingListener(onConnectingListener);//
+        //设置连接设备成功的回调
         bleConnector.setOnConnectedListener(onConnectedListener);
-        bleConnector.setOnConnectingListener(onConnectingListener);
+        //设置连接之后，服务发现完成的回调
+        bleConnector.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
+        //bleConnector.setOnDisconnectingListener(onDisconnectingListener);//
+        //设置连接被断开的回调
+        bleConnector.setOnDisconnectedListener(onDisconnectedListener);
+        //设置 读取到设备的数据时的回调
+        bleConnector.setOnCharacteristicReadListener(onCharacteristicReadListener);
+        //设置 收到设备发来的通知时的回调
         bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
+        //设置 获取设备的RSSI的回调
         bleConnector.setOnReadRemoteRssiListener(onReadRemoteRssiListener);
+        //设置 连接器关闭时的回调
         bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
+        //设置 绑定状态被更改时的回调
         bleConnector.setOnBondStateChangedListener(onBondStateChangedListener);
+        //设置 Mtu参数被更改时的回调
         bleConnector.setOnMtuChangedListener(onMtuChangedListener);
     }
 
     /**
      * 显示收到的通知
+     *
      * @param hexStr 收到的通知（十六进制字符串）
-     * @param str 收到的通知
+     * @param str    收到的通知
      */
     private void showReceiveNotificationDialog(String hexStr, String str) {
         EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
@@ -481,7 +519,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * 读到数据后显示数据内容
      *
      * @param hexStr 读到的数据（十六进制字符串）
-     * @param str 读到的数据
+     * @param str    读到的数据
      */
     private void showReadDataResultDialog(String hexStr, String str) {
         EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
@@ -499,12 +537,12 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * 发起连接
      */
     private void startConnect() {
-        //先设置地址
+        //先设置要连接的设备
         if (bleConnector.checkAndSetDevice(bluetoothDevice)) {
             //发起连接
             if (bleConnector.startConnect()) {
                 Tool.warnOut("开始连接");
-                Tool.toastL(ConnectActivity.this,"发起连接");
+                Tool.toastL(ConnectActivity.this, "发起连接");
                 customTextCircleView.setColor(Color.YELLOW);
             } else {
                 Tool.warnOut("发起连接失败");
@@ -561,7 +599,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                                     Tool.toastL(ConnectActivity.this, R.string.write_not_notify);
                                     return;
                                 }
-                                boolean openNotification = bleConnector.enableNotification(serviceUUID, characteristicUUID,true);
+                                boolean openNotification = bleConnector.enableNotification(serviceUUID, characteristicUUID, true);
                                 if (!openNotification) {
                                     Tool.toastL(ConnectActivity.this, R.string.open_notification_failed);
                                 } else {

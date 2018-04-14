@@ -7,6 +7,13 @@ package com.jackiepenghe.blelibrary;
  */
 
 public class BleConstants {
+
+    /*库内常量定义区域*/
+
+    /**
+     * 用于传输远端设备的特征的KEY
+     */
+    static final String UUID = "UUID";
     /**
      * 打开通知时会使用到的UUID
      */
