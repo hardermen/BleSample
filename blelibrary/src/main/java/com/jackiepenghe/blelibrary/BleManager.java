@@ -42,7 +42,7 @@ public class BleManager {
     /**
      * 重置Ble广播实例的标志（避免无限循环调用）
      */
-    private static boolean resetBleBroadCastorFlag;
+    private static boolean resetBleAdvertiserFlag;
 
     /*------------------------库内静态函数----------------------------*/
 
@@ -60,17 +60,17 @@ public class BleManager {
      * 重置Ble广播实例
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    static void resetBleBroadCastor() {
-        if (resetBleBroadCastorFlag) {
+    static void resetBleAdvertiser() {
+        if (resetBleAdvertiserFlag) {
             return;
         }
-        resetBleBroadCastorFlag = true;
+        resetBleAdvertiserFlag = true;
 
         if (bleAdvertiser != null) {
             bleAdvertiser.close();
         }
         bleAdvertiser = null;
-        resetBleBroadCastorFlag = false;
+        resetBleAdvertiserFlag = false;
     }
 
     /*------------------------公开静态函数----------------------------*/

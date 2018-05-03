@@ -14,7 +14,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 
 import java.util.UUID;
 
@@ -392,7 +391,7 @@ public class BleAdvertiser {
         defaultAdvertiseData = null;
         defaultScanResponse = null;
         defaultAdvertiseCallback = null;
-        BleManager.resetBleBroadCastor();
+        BleManager.resetBleAdvertiser();
     }
 
     /**
