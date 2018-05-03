@@ -6,6 +6,6 @@
     <string name="bluetooth_on">蓝牙已开启</string>
     <string name="bluetooth_not_enable">在您打开蓝牙之前，将无法使用某些功能</string>
     <string name="no_bluetooth_mode">您的手机不支持蓝牙</string>
-    <string name="multiple_advertisement_not_supported">您的手机不支持BLE蓝牙广播</string>
+    <string name="multiple_advertisement_not_supported">您的手机可能不支持BLE蓝牙广播</string>
     <string name="un_named">未命名</string>
 </resources>
