@@ -353,7 +353,7 @@ public class BleManager {
      */
     @SuppressWarnings("WeakerAccess")
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public static void releaseBleBroadCastor() {
+    public static void releaseBleAdvertiser() {
         if (bleAdvertiser != null) {
             bleAdvertiser.close();
             bleAdvertiser = null;
@@ -368,7 +368,7 @@ public class BleManager {
         releaseBleScanner();
         releaseBleMultiConnector();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            releaseBleBroadCastor();
+            releaseBleAdvertiser();
         }
     }
 
