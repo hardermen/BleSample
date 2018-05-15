@@ -64,6 +64,16 @@ public class WelcomeActivity extends BaseWelcomeActivity {
         requestPermission();
     }
 
+    /**
+     * 设置ImageView的图片资源
+     *
+     * @return 图片资源ID
+     */
+    @Override
+    protected int setImageViewSource() {
+        return 0;
+    }
+
     /*-----------------------重写父类函数-----------------------*/
 
     /**

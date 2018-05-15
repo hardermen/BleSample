@@ -239,6 +239,26 @@ public class BleConnector {
         return true;
     }
 
+    /*-------------------------公开函数-------------------------*/
+
+    /**
+     * 检查设备地址并设置地址
+     *
+     * @param address 设备地址
+     * @return true表示成功设置地址
+     */
+    public boolean checkAndSetAddress(String address) {
+        if (address == null || !BluetoothAdapter.checkBluetoothAddress(address)) {
+            return false;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setAddress(address);
+        } else {
+            setDevice(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address));
+        }
+        return true;
+    }
+
     /**
      * 请求更改mtu
      *
@@ -555,6 +575,7 @@ public class BleConnector {
      *
      * @return true表示成功
      */
+    @SuppressWarnings("WeakerAccess")
     public boolean refreshGattCache() {
         return bleServiceConnection != null && bleServiceConnection.refreshGattCache();
     }
