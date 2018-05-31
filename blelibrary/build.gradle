@@ -9,8 +9,8 @@ android {
     defaultConfig {
         minSdkVersion 18
         targetSdkVersion 27
-        versionCode 73
-        versionName "0.7.3"
+        versionCode 75
+        versionName "0.7.5"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -27,7 +27,7 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:27.1.1'
 }
 
-version = "0.7.3"
+version = "0.7.5"
 
 def siteUrl = 'https://github.com/JackiePenghe/BleSample'
 def gitUrl = 'git@github.com:JackiePenghe/BleSample.git'

@@ -1,5 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
@@ -185,6 +186,7 @@ public class BleMultiConnector {
     /**
      * 断开所有连接
      */
+    @SuppressWarnings("unused")
     public boolean disconnectAll() {
         if (bluetoothMultiService == null) {
             return false;
@@ -239,6 +241,18 @@ public class BleMultiConnector {
         return connect(bluetoothDevice, false);
     }
 
+
+    /**
+     * 发起一个连接
+     *
+     * @param address 设备地址
+     * @return true表示请求发起成功
+     */
+    @Deprecated
+    public boolean connect(String address) {
+        return address != null && BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), false);
+    }
+
     /**
      * 发起一个连接
      *
@@ -253,7 +267,19 @@ public class BleMultiConnector {
     /**
      * 发起一个连接
      *
-     * @param bluetoothDevice             设备地址
+     * @param address     设备地址
+     * @param autoConnect 自动重连标识
+     * @return true表示请求发起成功
+     */
+    @Deprecated
+    public boolean connect(String address, boolean autoConnect) {
+        return address != null && BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), new DefaultConnectCallBack(), autoConnect);
+    }
+
+    /**
+     * 发起一个连接
+     *
+     * @param bluetoothDevice     设备
      * @param baseConnectCallback 连接回调
      * @return true表示请求发起成功
      */
@@ -264,7 +290,19 @@ public class BleMultiConnector {
     /**
      * 发起一个连接
      *
-     * @param bluetoothDevice             设备地址
+     * @param address             设备地址
+     * @param baseConnectCallback 连接回调
+     * @return true表示请求发起成功
+     */
+    @Deprecated
+    public boolean connect(String address, @NonNull BaseConnectCallback baseConnectCallback) {
+        return address != null && BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), baseConnectCallback, false);
+    }
+
+    /**
+     * 发起一个连接
+     *
+     * @param bluetoothDevice     设备
      * @param baseConnectCallback 连接回调
      * @param autoConnect         自动重连标识
      * @return true表示请求发起成功
@@ -272,7 +310,28 @@ public class BleMultiConnector {
     public boolean connect(@NonNull BluetoothDevice bluetoothDevice, @NonNull BaseConnectCallback baseConnectCallback, boolean autoConnect) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectDevice(bluetoothDevice, baseConnectCallback, autoConnect);
-        }else {
+        } else {
+            return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectAddress(bluetoothDevice.getAddress(), baseConnectCallback, autoConnect);
+        }
+    }
+
+    /**
+     * 发起一个连接
+     *
+     * @param address             设备地址
+     * @param baseConnectCallback 连接回调
+     * @param autoConnect         自动重连标识
+     * @return true表示请求发起成功
+     */
+    @Deprecated
+    public boolean connect(String address, @NonNull BaseConnectCallback baseConnectCallback, boolean autoConnect) {
+        if (address == null || !BluetoothAdapter.checkBluetoothAddress(address)) {
+            return false;
+        }
+        BluetoothDevice bluetoothDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectDevice(bluetoothDevice, baseConnectCallback, autoConnect);
+        } else {
             return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectAddress(bluetoothDevice.getAddress(), baseConnectCallback, autoConnect);
         }
     }
@@ -293,6 +352,7 @@ public class BleMultiConnector {
      * @param address 设备地址
      * @return BleDeviceController
      */
+    @SuppressWarnings("unused")
     public BleDeviceController getBleDeviceController(String address) {
         if (bluetoothMultiService == null) {
             return null;

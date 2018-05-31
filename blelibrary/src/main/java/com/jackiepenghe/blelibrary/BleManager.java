@@ -262,6 +262,7 @@ public class BleManager {
      * @param context 上下文
      * @return true表示蓝牙已打开
      */
+    @SuppressWarnings("unused")
     public static boolean isBluetoothOpened(Context context) {
         if (!isSupportBle(context)) {
             return false;
@@ -280,6 +281,7 @@ public class BleManager {
      * @param context 上下文
      * @return true表示请求发起成功（只是发起打开蓝牙的请求成功，并不是开启蓝牙成功）
      */
+    @SuppressWarnings("unused")
     public static boolean openBluetooth(Context context) {
         if (!isSupportBle(context)) {
             return false;
@@ -300,6 +302,7 @@ public class BleManager {
      * @param context 上下文
      * @return true表示请求发起成功（只是发起关闭蓝牙的请求成功，并不是关闭蓝牙成功）
      */
+    @SuppressWarnings("unused")
     public static boolean closeBluetooth(Context context) {
         if (!isSupportBle(context)) {
             return false;

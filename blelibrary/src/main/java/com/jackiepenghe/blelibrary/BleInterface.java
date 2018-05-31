@@ -1,5 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -7,7 +8,11 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.le.ScanResult;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -50,6 +55,32 @@ public class BleInterface {
          * @param bleDevice 自定义Ble设备Been类
          */
         void onScanFindOneNewDevice(BleDevice bleDevice);
+    }
+
+    /**
+     * 安卓5.0以上的API才拥有的接口
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    public interface On21ScanCallback {
+
+        /**
+         * 将扫描结果批量提交
+         *
+         * @param results 扫描结果
+         */
+        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+        @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+        void onBatchScanResults(List<ScanResult> results);
+
+        /**
+         * 扫描失败
+         *
+         * @param errorCode 错误码
+         */
+        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+        @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+        void onScanFailed(int errorCode);
     }
 
     /**
