@@ -53,10 +53,6 @@ public class DeviceListActivity extends BaseAppCompatActivity {
     private static final int REQUEST_CODE_ASK_ACCESS_COARSE_LOCATION = 1;
 
     /**
-     * 扫描到的所有设备列表
-     */
-    private ArrayList<BleDevice> scanList;
-    /**
      * 适配器添加的设备列表
      */
     private ArrayList<BleDevice> adapterList;
@@ -75,23 +71,23 @@ public class DeviceListActivity extends BaseAppCompatActivity {
             doListViewItemClick(position);
         }
     };
-    /**
-     * 发现一个新设备（在此之前该设备没有被发现过）时触发此回调
-     */
-    private BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
-        @Override
-        public void onScanFindOneNewDevice(BleDevice bleDevice) {
-//                byte[] manufacturerSpecificData = bleDevice.getManufacturerSpecificData(-1);\
-//                Tool.warnOut(TAG, Tool.bytesToHexStr(manufacturerSpecificData));\
-            //可以在此处过滤一些不需要的设备
-            /*if(bleDevice.getBluetoothDevice().getAddress().equalsIgnoreCase("00:00:00:AA:SS:BB")){
-                return;
-            }*/
-
-//                adapterList.add(bleDevice);'
-//                adapter.notifyItemInserted(adapterList.size() - 1);'
-        }
-    };
+//    /**
+//     * 发现一个新设备（在此之前该设备没有被发现过）时触发此回调
+//     */
+//    private BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
+//        @Override
+//        public void onScanFindOneNewDevice(BleDevice bleDevice) {
+////                byte[] manufacturerSpecificData = bleDevice.getManufacturerSpecificData(-1);\
+////                Tool.warnOut(TAG, Tool.bytesToHexStr(manufacturerSpecificData));\
+//            //可以在此处过滤一些不需要的设备
+//            /*if(bleDevice.getBluetoothDevice().getAddress().equalsIgnoreCase("00:00:00:AA:SS:BB")){
+//                return;
+//            }*/
+//
+////                adapterList.add(bleDevice);'
+////                adapter.notifyItemInserted(adapterList.size() - 1);'
+//        }
+//    };
 
     /**
      * 扫描结束后会触发此回调
@@ -149,7 +145,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
             }
             for (int i = 0; i < results.size(); i++) {
                 ScanResult scanResult = results.get(i);
-               Tool.warnOut(TAG, "scanResult[" + i + "] = " + scanResult.toString());
+                Tool.warnOut(TAG, "scanResult[" + i + "] = " + scanResult.toString());
             }
         }
 
@@ -172,7 +168,6 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doBeforeSetLayout() {
-        scanList = new ArrayList<>();
         adapterList = new ArrayList<>();
         //初始化BLE扫描器
         initBleScanner();
@@ -288,7 +283,6 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         super.onDestroy();
         //关闭扫描器
         bleScanner.close();
-        scanList = null;
         adapterList = null;
         button = null;
         adapter = null;
@@ -322,13 +316,15 @@ public class DeviceListActivity extends BaseAppCompatActivity {
          * @param onScanCompleteListener       扫描完成的回调
          * @return true表示打开成功
          */
-        bleScanner.open(scanList, onScanFindOneNewDeviceListener, 10000, false, onScanCompleteListener);
-
+//        bleScanner.init(scanList, onScanFindOneNewDeviceListener, 10000, false, onScanCompleteListener);；
+        bleScanner.init();
         //设置其他回调
         bleScanner.setOnScanFindOneDeviceListener(onScanFindOneDeviceListener);
+        bleScanner.setOnScanCompleteListener(onScanCompleteListener);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             bleScanner.setOn21ScanCallback(on21ScanCallback);
         }
+
 //        //bleScanner进阶设置
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 //            bleScannerSettings();
@@ -443,10 +439,9 @@ public class DeviceListActivity extends BaseAppCompatActivity {
     private void doButtonClick() {
         if (clickCount % TWO == 0) {
             button.setText(R.string.stop_scan);
-            bleScanner.clearScanResults();
             adapterList.clear();
             adapter.notifyDataSetChanged();
-            bleScanner.startScan();
+            bleScanner.startScan(true);
         } else {
             button.setText(R.string.start_scan);
             bleScanner.stopScan();

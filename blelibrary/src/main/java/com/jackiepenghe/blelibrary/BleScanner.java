@@ -42,7 +42,7 @@ public class BleScanner {
     /**
      * 扫描的结果
      */
-    private ArrayList<BleDevice> mScanResults = new ArrayList<>();
+    private ArrayList<BleDevice> mScanResults;
 
     /**
      * 检测蓝牙状态的广播接收者
@@ -101,7 +101,7 @@ public class BleScanner {
     /**
      * 扫描一次的时间
      */
-    private long scanPeriod = 20000;
+    private long scanPeriod;
 
     /**
      * 系统的扫描回调(API 20 及以下)
@@ -126,12 +126,7 @@ public class BleScanner {
     /**
      * 发现一个新设备进行的回调
      */
-    private BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
-        @Override
-        public void onScanFindOneNewDevice(BleDevice bleDevice) {
-            Tool.warnOut(TAG, "find a new Device: name = " + bleDevice.getDeviceName() + ", address = " + bleDevice.getDeviceAddress());
-        }
-    };
+    private BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener;
 
     /**
      * 扫描的定时器
@@ -147,13 +142,6 @@ public class BleScanner {
      * 扫描设置
      */
     private ScanSettings scanSettings;
-
-    private BleInterface.OnScanCompleteListener onScanCompleteListener = new BleInterface.OnScanCompleteListener() {
-        @Override
-        public void onScanComplete() {
-            Tool.warnOut(TAG, "onScanComplete");
-        }
-    };
 
     /*------------------------构造函数----------------------------*/
 
@@ -236,7 +224,12 @@ public class BleScanner {
                 }
                 if (!mScanResults.contains(bleDevice)) {
                     mScanResults.add(bleDevice);
-                    onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
+                        }
+                    });
                 }
             }
         };
@@ -375,8 +368,8 @@ public class BleScanner {
      * 打开扫描器
      */
     @SuppressWarnings("unused")
-    public boolean open() {
-        return open(mScanResults, onScanFindOneNewDeviceListener, scanPeriod, true, onScanCompleteListener);
+    public boolean init() {
+        return init(new ArrayList<BleDevice>(), new DefaultOnScanFindOneNewDeviceListener(), 20000, false, new DefaultOnScanCompleteListener());
     }
 
     /**
@@ -390,11 +383,10 @@ public class BleScanner {
      * @return true表示打开成功
      */
     @SuppressWarnings("UnusedReturnValue")
-    public boolean open
-    (@NonNull ArrayList<BleDevice> scanResults, @NonNull BleInterface.OnScanFindOneNewDeviceListener
+    public boolean init(@NonNull ArrayList<BleDevice> scanResults, @NonNull BleInterface.OnScanFindOneNewDeviceListener
             onScanFindOneNewDeviceListener, @SuppressWarnings("SameParameterValue") long scanPeriod,
-     @SuppressWarnings("SameParameterValue") boolean scanContinueFlag,
-     @NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
+                        @SuppressWarnings("SameParameterValue") boolean scanContinueFlag,
+                        @NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
         Context context = this.context;
         if (scanPeriod <= 0 || context == null) {
             return false;
@@ -416,6 +408,7 @@ public class BleScanner {
         return true;
     }
 
+
     /**
      * 开始扫描
      *
@@ -423,6 +416,17 @@ public class BleScanner {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean startScan() {
+        return startScan(false);
+    }
+
+    /**
+     * 开始扫描
+     *
+     * @param clearScanResult 是否要清空之前的扫描记录
+     * @return true表示成功开启扫描
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    public boolean startScan(boolean clearScanResult) {
         Context context = this.context;
         if (context == null) {
             return false;
@@ -444,6 +448,11 @@ public class BleScanner {
         if (scanning) {
             return false;
         }
+
+        if (clearScanResult) {
+            clearScanResults();
+        }
+
         scanTimer.startTimer(scanPeriod);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (scanFilters == null) {
@@ -610,6 +619,7 @@ public class BleScanner {
 
     /**
      * 设置安卓5.0以上的API才拥有的接口
+     *
      * @param on21ScanCallback 安卓5.0以上的API才拥有的接口
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)

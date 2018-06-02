@@ -279,7 +279,7 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
         if (bleScanner == null) {
             return;
         }
-        bleScanner.open(scanResults, onScanFindOneNewDeviceListener, 20000, false, onScanCompleteListener);
+        bleScanner.init(scanResults, onScanFindOneNewDeviceListener, 20000, false, onScanCompleteListener);
     }
 
     /**
