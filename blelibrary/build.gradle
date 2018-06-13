@@ -8,9 +8,10 @@ android {
     buildToolsVersion "27.0.3"
     defaultConfig {
         minSdkVersion 18
+        //noinspection OldTargetApi
         targetSdkVersion 27
-        versionCode 76
-        versionName "0.7.6"
+        versionCode 77
+        versionName "0.7.7"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -27,7 +28,7 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:27.1.1'
 }
 
-version = "0.7.6"
+version = "0.7.7"
 
 def siteUrl = 'https://github.com/JackiePenghe/BleSample'
 def gitUrl = 'git@github.com:JackiePenghe/BleSample.git'

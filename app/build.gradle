@@ -7,9 +7,10 @@ android {
     defaultConfig {
         applicationId "cn.almsound.www.myblesample"
         minSdkVersion 18
+        //noinspection OldTargetApi
         targetSdkVersion 27
-        versionCode 76
-        versionName "0.7.6"
+        versionCode 77
+        versionName "0.7.7"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
@@ -29,7 +30,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support:design:27.1.1'
-    implementation 'com.jackiepenghe:baselibrary:0.7.7'
+    implementation 'com.jackiepenghe:baselibrary:0.7.9'
     implementation 'com.yanzhenjie:permission:1.1.2'
     implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.30'
     implementation project(':blelibrary')

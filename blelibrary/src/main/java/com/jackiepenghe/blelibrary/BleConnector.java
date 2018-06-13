@@ -292,6 +292,9 @@ public class BleConnector {
             return false;
         }
 
+        if (context == null){
+            return false;
+        }
         mClosed = false;
 
         bleServiceConnection.setAutoConnect(autoConnect);
