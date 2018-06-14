@@ -215,7 +215,9 @@ public class BleScanner {
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
+                            if (mOnScanFindOneDeviceListener != null) {
+                                mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
+                            }
                         }
                     });
                 }
@@ -227,7 +229,9 @@ public class BleScanner {
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
+                            if (onScanFindOneNewDeviceListener != null) {
+                                onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
+                            }
                         }
                     });
                 }
@@ -291,7 +295,9 @@ public class BleScanner {
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
+                                if (onScanFindOneNewDeviceListener != null) {
+                                    onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
+                                }
                             }
                         });
                     }
@@ -470,7 +476,7 @@ public class BleScanner {
             mBluetoothAdapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings, mScanCallback);
 
         } else {
-            //noinspection deprecation
+            //noinspection deprecation,AliDeprecation
             mBluetoothAdapter.startLeScan(this.mLeScanCallback);
         }
         scanning = true;
