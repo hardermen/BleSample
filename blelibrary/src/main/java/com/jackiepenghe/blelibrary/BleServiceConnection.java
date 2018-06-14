@@ -90,8 +90,8 @@ class BleServiceConnection implements ServiceConnection {
         boolean connect;
         if (mAddress != null) {
             connect = bluetoothLeService.connect(mAddress, autoConnect);
-        }else {
-            connect = bluetoothLeService.connect(mBluetoothDevice,autoConnect);
+        } else {
+            connect = bluetoothLeService.connect(mBluetoothDevice, autoConnect);
         }
         Tool.warnOut(TAG, "connect " + connect);
     }
@@ -108,7 +108,7 @@ class BleServiceConnection implements ServiceConnection {
      */
     @Override
     public void onServiceDisconnected(ComponentName name) {
-
+        bluetoothLeService = null;
     }
 
     /*------------------------库内函数----------------------------*/
@@ -141,16 +141,14 @@ class BleServiceConnection implements ServiceConnection {
      * @return true表示成功
      */
     boolean writeData(String serviceUUID, String characteristicUUID, byte[] value) {
-        return !(serviceUUID == null || characteristicUUID == null || value == null) && bluetoothLeService.writeData(serviceUUID, characteristicUUID, value);
+        return bluetoothLeService != null && !(serviceUUID == null || characteristicUUID == null || value == null) && bluetoothLeService.writeData(serviceUUID, characteristicUUID, value);
     }
 
     /**
      * 获取远端设备的数据
      *
      * @param serviceUUID        服务UUID
-     *                           *
      * @param characteristicUUID 特征UUID
-     *                           *
      * @return true表示成功
      */
     boolean readData(String serviceUUID, String characteristicUUID) {
@@ -166,7 +164,7 @@ class BleServiceConnection implements ServiceConnection {
      * @return true表示执行成功
      */
     boolean enableNotification(String serviceUUID, String characteristicUUID, boolean enable) {
-        return bluetoothLeService.enableNotification(serviceUUID, characteristicUUID, enable);
+        return bluetoothLeService != null && bluetoothLeService.enableNotification(serviceUUID, characteristicUUID, enable);
     }
 
     /**
@@ -185,7 +183,7 @@ class BleServiceConnection implements ServiceConnection {
      * @return true表示成功
      */
     boolean getRssi() {
-        return bluetoothLeService.getRssi();
+        return bluetoothLeService != null && bluetoothLeService.getRssi();
     }
 
     /**
@@ -203,6 +201,9 @@ class BleServiceConnection implements ServiceConnection {
      * @return 服务列表
      */
     List<BluetoothGattService> getServices() {
+        if (bluetoothLeService == null) {
+            return null;
+        }
         return bluetoothLeService.getServices();
     }
 
@@ -245,6 +246,9 @@ class BleServiceConnection implements ServiceConnection {
      * @return BluetoothGatt
      */
     BluetoothGatt getBluetoothGatt() {
+        if (bluetoothLeService == null) {
+            return null;
+        }
         return bluetoothLeService.getBluetoothGatt();
     }
 }
