@@ -6,7 +6,7 @@ android {
     buildToolsVersion "27.0.3"
     defaultConfig {
         applicationId "cn.almsound.www.myblesample"
-        minSdkVersion 18
+        minSdkVersion 19
         //noinspection OldTargetApi
         targetSdkVersion 27
         versionCode 79
@@ -30,7 +30,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support:design:27.1.1'
-    implementation 'com.jackiepenghe:baselibrary:0.7.9'
+    implementation 'com.jackiepenghe:baselibrary:0.8.0'
     implementation 'com.yanzhenjie:permission:1.1.2'
     implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.30'
     implementation project(':blelibrary')
