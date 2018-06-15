@@ -6,7 +6,7 @@ android {
     buildToolsVersion "27.0.3"
     defaultConfig {
         applicationId "cn.almsound.www.myblesample"
-        minSdkVersion 19
+        minSdkVersion 18
         //noinspection OldTargetApi
         targetSdkVersion 27
         versionCode 79
