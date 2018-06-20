@@ -33,7 +33,7 @@ public class ServiceUuidItem extends AbstractExpandableItem<CharacteristicUuidIt
      */
     @Override
     public int getLevel() {
-        return ServicesCharacteristicsListAdapter.LEVEL_CHARACTERISTIC_UUID;
+        return ServicesCharacteristicsListAdapter.LEVEL_SERVICE_UUID;
     }
 
     @Override

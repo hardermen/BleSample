@@ -22,7 +22,7 @@ public class ServicesCharacteristicsListAdapter extends BaseMultiItemQuickAdapte
 
     public static final int TYPE_SERVICE_UUID = 0;
     public static final int TYPE_CHARACTERISTIC_UUID = 1;
-    public static final int LEVEL_CHARACTERISTIC_UUID = 1;
+    public static final int LEVEL_SERVICE_UUID = 1;
 
     private OnCharacteristicClickListener onCharacteristicClickListener;
 

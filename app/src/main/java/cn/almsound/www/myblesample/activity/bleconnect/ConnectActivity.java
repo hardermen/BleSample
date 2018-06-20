@@ -86,7 +86,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     private ArrayList<MultiItemEntity> adapterData = new ArrayList<>();
 
-    /**
+     /**
      * 用于显示服务UUID和特征UUID的Adapter
      */
     private ServicesCharacteristicsListAdapter servicesCharacteristicsListAdapter;
@@ -146,7 +146,6 @@ public class ConnectActivity extends BaseAppCompatActivity {
                     for (int j = 0; j < characteristics.size(); j++) {
                         BluetoothGattCharacteristic bluetoothGattCharacteristic = characteristics.get(j);
                         String characteristicUuidString = bluetoothGattCharacteristic.getUuid().toString();
-                        Tool.warnOut(TAG, "bluetoothGattCharacteristic UUID = " + characteristicUuidString);
                         boolean canRead = bleConnector.canRead(serviceUuidString, characteristicUuidString);
                         boolean canWrite = bleConnector.canWrite(serviceUuidString, characteristicUuidString);
                         boolean canNotify = bleConnector.canNotify(serviceUuidString, characteristicUuidString);
