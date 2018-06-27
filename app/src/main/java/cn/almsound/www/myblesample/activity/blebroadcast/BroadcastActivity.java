@@ -59,6 +59,11 @@ public class BroadcastActivity extends BaseAppCompatActivity {
             broadcastStatusTv.setText(R.string.open_broadcast_failed);
             Tool.warnOut(TAG, "errorCode = " + errorCode);
         }
+
+        @Override
+        protected void onBroadCastStopped() {
+            broadcastStatusTv.setText(R.string.broadcast_stopped);
+        }
     };
 
     /**
@@ -79,9 +84,14 @@ public class BroadcastActivity extends BaseAppCompatActivity {
             if (bleAdvertiser != null) {
                 //默认的初始化
 //            bleAdvertiser.init()
-
+                AdvertiseSettings advertiseSettings = new AdvertiseSettings.Builder()
+                        .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                        .setConnectable(false)
+                        .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+                        .setTimeout(6000)
+                        .build();
                 //带回调的初始化
-                if (!bleAdvertiser.init(advertiseCallback)) {
+                if (!bleAdvertiser.init(advertiseSettings, advertiseCallback)) {
                     Tool.warnOut(TAG, "初始化失败");
                 } else {
                     Tool.warnOut(TAG, "初始化成功");

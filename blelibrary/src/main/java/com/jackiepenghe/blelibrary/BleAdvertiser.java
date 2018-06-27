@@ -12,10 +12,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
 import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 
 import java.util.UUID;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * BLE广播实例
@@ -24,6 +26,8 @@ import java.util.UUID;
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class BleAdvertiser {
+
+    private static final String TAG = BleAdvertiser.class.getSimpleName();
 
     /*---------------------成员变量---------------------*/
 
@@ -43,6 +47,21 @@ public class BleAdvertiser {
      * 是否初始化并且初始化成功
      */
     private boolean initSuccess;
+
+    /**
+     * 线程池工厂
+     */
+    private ThreadFactory threadFactory = new ThreadFactory() {
+        @Override
+        public Thread newThread(@NonNull Runnable r) {
+            return new Thread(r);
+        }
+    };
+
+    /**
+     * Handler
+     */
+    private Handler handler = new Handler();
 
     /**
      * 默认的广播设置
@@ -115,6 +134,11 @@ public class BleAdvertiser {
         @Override
         protected void onBroadCastStartFailure(int errorCode) {
 
+        }
+
+        @Override
+        protected void onBroadCastStopped() {
+            Tool.warnOut(TAG, "advertise stopped");
         }
     };
 
@@ -350,6 +374,11 @@ public class BleAdvertiser {
             return false;
         }
         mBluetoothAdvertiser.startAdvertising(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+        int timeout = defaultAdvertiseSettings.getTimeout();
+        if (timeout > 0) {
+            long startTime = System.currentTimeMillis();
+            startThreadToCheckAdvertiserStatus(startTime, timeout);
+        }
         return true;
     }
 
@@ -412,5 +441,36 @@ public class BleAdvertiser {
         if (defaultBluetoothGattServerCallback != null) {
             defaultBluetoothGattServerCallback.setOnBluetoothGattServerCallbackListener(onBluetoothGattServerCallbackListener);
         }
+    }
+
+    /*---------------------自定义私有函数---------------------*/
+
+    /**
+     * 发起一个线程，检测广播状态，当广播停止是进行回调
+     *
+     * @param startTime 开始时间
+     * @param timeout   超时时间
+     */
+    private void startThreadToCheckAdvertiserStatus(final long startTime, final int timeout) {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    if (System.currentTimeMillis() - startTime > timeout) {
+                        break;
+                    }
+                }
+                if (defaultAdvertiseCallback != null) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            defaultAdvertiseCallback.onBroadCastStopped();
+                        }
+                    });
+                }
+            }
+        };
+        Thread thread = threadFactory.newThread(runnable);
+        thread.start();
     }
 }

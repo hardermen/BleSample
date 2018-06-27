@@ -47,15 +47,6 @@ public abstract class BaseAdvertiseCallback extends AdvertiseCallback {
     }
 
     /**
-     * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
-     * that the advertising has been started successfully.
-     *
-     * @param settingsInEffect The actual settings used for advertising, which may be different from
-     *                         what has been requested.
-     */
-    protected abstract void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect);
-
-    /**
      * Callback when advertising could not be started.
      *
      * @param errorCode Error code (see ADVERTISE_FAILED_* constants) for advertising start
@@ -81,10 +72,24 @@ public abstract class BaseAdvertiseCallback extends AdvertiseCallback {
     /*-------------------------抽象函数-------------------------*/
 
     /**
+     * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
+     * that the advertising has been started successfully.
+     *
+     * @param settingsInEffect The actual settings used for advertising, which may be different from
+     *                         what has been requested.
+     */
+    protected abstract void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect);
+
+    /**
      * Callback when advertising could not be started.
      *
      * @param errorCode Error code (see ADVERTISE_FAILED_* constants) for advertising start
      *                  failures.
      */
     protected abstract void onBroadCastStartFailure(int errorCode);
+
+    /**
+     * 如果设置了超时时间，在超时结束后，会执行此回调
+     */
+    protected abstract void onBroadCastStopped();
 }
