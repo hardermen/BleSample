@@ -52,7 +52,7 @@ public class BleConnector {
     /**
      * Handler
      */
-    private Handler handler = new Handler();
+    private static Handler handler = new Handler();
 
     /**
      * BLE连接的广播接收者

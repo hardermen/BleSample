@@ -35,7 +35,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
     /**
      * Handler
      */
-    private Handler handler = new Handler();
+    private static Handler handler = new Handler();
 
     /*------------------------重写父类函数----------------------------*/
 

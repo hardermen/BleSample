@@ -61,7 +61,7 @@ class CustomToast {
     /**
      * Handler
      */
-    private Handler mHandler = new Handler();
+    private static Handler mHandler = new Handler();
     /**
      * 隐藏吐司
      */

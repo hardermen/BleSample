@@ -61,7 +61,7 @@ public class BleAdvertiser {
     /**
      * Handler
      */
-    private Handler handler = new Handler();
+    private static Handler handler = new Handler();
 
     /**
      * 默认的广播设置

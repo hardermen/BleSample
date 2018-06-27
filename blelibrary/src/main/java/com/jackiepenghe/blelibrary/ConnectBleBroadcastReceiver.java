@@ -86,7 +86,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     /**
      * Handler
      */
-    private Handler handler = new Handler();
+    private static Handler handler = new Handler();
 
     /*------------------------实现父类函数----------------------------*/
 

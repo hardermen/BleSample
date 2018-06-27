@@ -62,7 +62,7 @@ public class BleScanner {
     /**
      * mHandler
      */
-    private Handler mHandler;
+    private static Handler mHandler = new Handler();
 
     /**
      * 安卓5.0以上的API才拥有的接口
@@ -153,7 +153,6 @@ public class BleScanner {
     BleScanner(Context context) {
         this.context = context;
         scanTimer = new ScanTimer(BleScanner.this);
-        mHandler = new Handler();
         if (!(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
             Tool.toastL(context, R.string.ble_not_supported);
             return;
@@ -549,7 +548,6 @@ public class BleScanner {
         mScanResults = null;
         bluetoothStateReceiver = null;
         this.context = null;
-        mHandler = null;
         mBluetoothAdapter = null;
         mLeScanCallback = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

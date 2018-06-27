@@ -76,7 +76,7 @@ class ScanTimer {
     /**
      * Handler
      */
-    private Handler handler = new Handler();
+    private static Handler handler = new Handler();
 
     /*------------------------构造函数----------------------------*/
 
