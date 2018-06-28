@@ -374,10 +374,15 @@ public class BleAdvertiser {
             return false;
         }
         mBluetoothAdvertiser.startAdvertising(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
-        int timeout = defaultAdvertiseSettings.getTimeout();
+        final int timeout = defaultAdvertiseSettings.getTimeout();
         if (timeout > 0) {
-            long startTime = System.currentTimeMillis();
-            startThreadToCheckAdvertiserStatus(startTime, timeout);
+            final long startTime = System.currentTimeMillis();
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    startThreadToCheckAdvertiserStatus(startTime, timeout);
+                }
+            });
         }
         return true;
     }
