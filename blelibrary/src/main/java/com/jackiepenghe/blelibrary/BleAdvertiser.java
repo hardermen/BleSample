@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
@@ -110,39 +111,6 @@ public class BleAdvertiser {
             .build();
 
     /**
-     * 默认的广播回调
-     */
-    private BaseAdvertiseCallback defaultAdvertiseCallback = new BaseAdvertiseCallback() {
-        /**
-         * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
-         * that the advertising has been started successfully.
-         *
-         * @param settingsInEffect The actual settings used for advertising, which may be different from
-         *                         what has been requested.
-         */
-        @Override
-        protected void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect) {
-
-        }
-
-        /**
-         * Callback when advertising could not be started.
-         *
-         * @param errorCode Error code (see ADVERTISE_FAILED_* constants) for advertising start
-         *                  failures.
-         */
-        @Override
-        protected void onBroadCastStartFailure(int errorCode) {
-
-        }
-
-        @Override
-        protected void onBroadCastStopped() {
-            Tool.warnOut(TAG, "advertise stopped");
-        }
-    };
-
-    /**
      * 蓝牙管理器
      */
     private BluetoothManager bluetoothManager;
@@ -156,6 +124,79 @@ public class BleAdvertiser {
      * BluetoothGattServer
      */
     private BluetoothGattServer bluetoothGattServer;
+
+    /**
+     * 广播的回调
+     */
+    private BaseAdvertiseCallback baseAdvertiseCallback;
+
+    /**
+     * 广播的回调
+     */
+    private AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
+
+        /**
+         * TAG
+         */
+        private final String TAG = DefaultAdvertiseCallback.class.getSimpleName();
+
+        /**
+         * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
+         * that the advertising has been started successfully.
+         *
+         * @param settingsInEffect The actual settings used for advertising, which may be different from
+         *                         what has been requested.
+         */
+        @Override
+        public void onStartSuccess(final AdvertiseSettings settingsInEffect) {
+            Tool.warnOut(TAG, "onStartSuccess");
+            if (settingsInEffect != null) {
+                Tool.warnOut(TAG, "onStartSuccess TxPowerLv=" + settingsInEffect.getTxPowerLevel() + " mode=" + settingsInEffect.getMode()
+                        + " timeout=" + settingsInEffect.getTimeout());
+            } else {
+                Tool.warnOut(TAG, "onStartSuccess, settingInEffect is null");
+            }
+            Tool.warnOut(TAG, "onStartSuccess settingsInEffect" + settingsInEffect);
+            if (baseAdvertiseCallback != null) {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        baseAdvertiseCallback.onBroadCastStartSuccess(settingsInEffect);
+                    }
+                });
+            }
+        }
+
+        /**
+         * Callback when advertising could not be started.
+         *
+         * @param errorCode Error code (see ADVERTISE_FAILED_* constants) for advertising start
+         *                  failures.
+         */
+        @Override
+        public void onStartFailure(final int errorCode) {
+            Tool.warnOut(TAG, "onStartFailure");
+            if (errorCode == ADVERTISE_FAILED_DATA_TOO_LARGE) {
+                Tool.errorOut(TAG, "Failed to start advertising as the advertise data to be broadcasted is larger than 31 bytes.");
+            } else if (errorCode == ADVERTISE_FAILED_TOO_MANY_ADVERTISERS) {
+                Tool.errorOut(TAG, "Failed to start advertising because no advertising instance is available.");
+            } else if (errorCode == ADVERTISE_FAILED_ALREADY_STARTED) {
+                Tool.errorOut(TAG, "Failed to start advertising as the advertising is already started");
+            } else if (errorCode == ADVERTISE_FAILED_INTERNAL_ERROR) {
+                Tool.errorOut(TAG, "Operation failed due to an internal error");
+            } else if (errorCode == ADVERTISE_FAILED_FEATURE_UNSUPPORTED) {
+                Tool.errorOut(TAG, "This feature is not supported on this platform");
+            }
+            if (baseAdvertiseCallback != null) {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        baseAdvertiseCallback.onBroadCastStartFailure(errorCode);
+                    }
+                });
+            }
+        }
+    };
 
     /*---------------------构造函数---------------------*/
 
@@ -212,7 +253,7 @@ public class BleAdvertiser {
      * @return true表示初始化成功
      */
     public boolean init() {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
     }
 
     /**
@@ -222,7 +263,7 @@ public class BleAdvertiser {
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseData defaultAdvertiseData) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
     }
 
     /**
@@ -242,7 +283,7 @@ public class BleAdvertiser {
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseSettings defaultAdvertiseSettings) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
     }
 
     /**
@@ -253,7 +294,7 @@ public class BleAdvertiser {
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseData defaultAdvertiseData) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
     }
 
     /**
@@ -275,7 +316,7 @@ public class BleAdvertiser {
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseData defaultAdvertiseData, AdvertiseData defaultScanResponse) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
     }
 
     /**
@@ -298,7 +339,7 @@ public class BleAdvertiser {
      * @return true表示初始化成功
      */
     public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseData defaultAdvertiseData, AdvertiseData defaultScanResponse) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
     }
 
     /**
@@ -313,18 +354,16 @@ public class BleAdvertiser {
         return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
     }
 
-
     /**
      * 初始化
      *
      * @param advertiseSettings 广播设置
      * @param advertiseData     广播数据
      * @param scanResponse      扫描回应数据
-     * @param advertiseCallback 广播回调
      * @return true表示初始化成功
      */
     @SuppressWarnings("WeakerAccess")
-    public boolean init(@NonNull AdvertiseSettings advertiseSettings, @NonNull AdvertiseData advertiseData, @NonNull AdvertiseData scanResponse, @NonNull BaseAdvertiseCallback advertiseCallback) {
+    public boolean init(@NonNull AdvertiseSettings advertiseSettings, @NonNull AdvertiseData advertiseData, @NonNull AdvertiseData scanResponse, BaseAdvertiseCallback defaultAdvertiseCallback) {
         if (mBluetoothAdapter == null) {
             initSuccess = false;
             return false;
@@ -346,7 +385,6 @@ public class BleAdvertiser {
         defaultAdvertiseSettings = advertiseSettings;
         defaultAdvertiseData = advertiseData;
         defaultScanResponse = scanResponse;
-        defaultAdvertiseCallback = advertiseCallback;
         boolean connectable = defaultAdvertiseSettings.isConnectable();
         if (connectable) {
             if (defaultBluetoothGattServerCallback == null) {
@@ -354,7 +392,7 @@ public class BleAdvertiser {
             }
             bluetoothGattServer = bluetoothManager.openGattServer(context, defaultBluetoothGattServerCallback);
         }
-
+        this.baseAdvertiseCallback = defaultAdvertiseCallback;
         initSuccess = true;
         return true;
     }
@@ -373,7 +411,16 @@ public class BleAdvertiser {
         if (!initSuccess) {
             return false;
         }
-        mBluetoothAdvertiser.startAdvertising(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
+
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            AdvertisingSetParameters advertisingSetParameters = getAdvertisingSetParameters();
+//            PeriodicAdvertisingParameters periodicAdvertisingParameters = getPeriodicAdvertisingParameters();
+//            AdvertiseData periodicData = getPeriodicData();
+//            AdvertisingSetCallback advertisingSetCallback = getAdvertisingSetCallback();
+//            mBluetoothAdvertiser.startAdvertisingSet(advertisingSetParameters, defaultAdvertiseData, defaultScanResponse, periodicAdvertisingParameters, periodicData, 0, 0, advertisingSetCallback, new Handler());
+//        }
+
+            mBluetoothAdvertiser.startAdvertising(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, advertiseCallback);
         final int timeout = defaultAdvertiseSettings.getTimeout();
         if (timeout > 0) {
             final long startTime = System.currentTimeMillis();
@@ -386,6 +433,183 @@ public class BleAdvertiser {
         }
         return true;
     }
+
+//    @RequiresApi(api = Build.VERSION_CODES.O)
+//    @TargetApi(Build.VERSION_CODES.O)
+//    private AdvertisingSetParameters getAdvertisingSetParameters() {
+//        return new AdvertisingSetParameters.Builder()
+//                //设置匿名
+//                .setAnonymous(true)
+//                //设置可连接
+//                .setConnectable(false)
+//                //设置是否包含TxPower到广播包
+//                .setIncludeTxPower(false)
+//                //设置每一包广播之间的间隔时长
+//                .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
+//                //设置传统模式
+//                .setLegacyMode(true)
+//                //设置主要的物理频段（primary physical channel）
+//                //                    .setPrimaryPhy()
+//                //设置是否可被扫描
+//                .setScannable(false)
+//                //设置次要的物理频段（secondary physical channel）
+//                //                    .setSecondaryPhy()
+//                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_HIGH)
+//                .build();
+//    }
+
+//    @RequiresApi(api = Build.VERSION_CODES.O)
+//    @TargetApi(Build.VERSION_CODES.O)
+//    private PeriodicAdvertisingParameters getPeriodicAdvertisingParameters() {
+//        return new PeriodicAdvertisingParameters.Builder()
+//                .setIncludeTxPower(false)
+//                .setInterval(80)
+//                .build();
+//    }
+//
+//    private AdvertiseData getPeriodicData() {
+//        return new AdvertiseData.Builder()
+//                .addServiceUuid(serviceUUID)
+//                .addServiceData(serviceUUID, serviceData)
+//                .addManufacturerData(20, manufacturerSpecificData)
+//                .setIncludeDeviceName(true)
+//                .setIncludeTxPowerLevel(true)
+//                .build();
+//    }
+
+//    /**
+//     * 获取广播设置的回调
+//     *
+//     * @return 广播设置的回调
+//     */
+//    @RequiresApi(api = Build.VERSION_CODES.O)
+//    @TargetApi(Build.VERSION_CODES.O)
+//    @NonNull
+//    private AdvertisingSetCallback getAdvertisingSetCallback() {
+//        return new AdvertisingSetCallback() {
+//            /**
+//             * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertisingSet}
+//             * indicating result of the operation. If status is ADVERTISE_SUCCESS, then advertisingSet
+//             * contains the started set and it is advertising. If error occured, advertisingSet is
+//             * null, and status will be set to proper error code.
+//             *
+//             * @param advertisingSet The advertising set that was started or null if error.
+//             * @param txPower        tx power that will be used for this set.
+//             * @param status         Status of the operation.
+//             */
+//            @Override
+//            public void onAdvertisingSetStarted(AdvertisingSet advertisingSet, int txPower, int status) {
+//                super.onAdvertisingSetStarted(advertisingSet, txPower, status);
+//                baseAdvertiseCallback.onAdvertisingSetStarted(advertisingSet, txPower, status);
+//            }
+//
+//            /**
+//             * Callback triggered in response to {@link BluetoothLeAdvertiser#stopAdvertisingSet}
+//             * indicating advertising set is stopped.
+//             *
+//             * @param advertisingSet The advertising set.
+//             */
+//            @Override
+//            public void onAdvertisingSetStopped(AdvertisingSet advertisingSet) {
+//                super.onAdvertisingSetStopped(advertisingSet);
+//                baseAdvertiseCallback.onAdvertisingSetStopped(advertisingSet);
+//            }
+//
+//            /**
+//             * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertisingSet} indicating
+//             * result of the operation. If status is ADVERTISE_SUCCESS, then advertising set is advertising.
+//             *
+//             * @param advertisingSet The advertising set.
+//             * @param enable
+//             * @param status         Status of the operation.
+//             */
+//            @Override
+//            public void onAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status) {
+//                super.onAdvertisingEnabled(advertisingSet, enable, status);
+//                baseAdvertiseCallback.onAdvertisingEnabled(advertisingSet, enable, status);
+//            }
+//
+//            /**
+//             * Callback triggered in response to {@link AdvertisingSet#setAdvertisingData} indicating
+//             * result of the operation. If status is ADVERTISE_SUCCESS, then data was changed.
+//             *
+//             * @param advertisingSet The advertising set.
+//             * @param status         Status of the operation.
+//             */
+//            @Override
+//            public void onAdvertisingDataSet(AdvertisingSet advertisingSet, int status) {
+//                super.onAdvertisingDataSet(advertisingSet, status);
+//                baseAdvertiseCallback.onAdvertisingDataSet(advertisingSet, status);
+//            }
+//
+//            /**
+//             * Callback triggered in response to {@link AdvertisingSet#setAdvertisingData} indicating
+//             * result of the operation.
+//             *
+//             * @param advertisingSet The advertising set.
+//             * @param status         Status of the operation.
+//             */
+//            @Override
+//            public void onScanResponseDataSet(AdvertisingSet advertisingSet, int status) {
+//                super.onScanResponseDataSet(advertisingSet, status);
+//                baseAdvertiseCallback.onScanResponseDataSet(advertisingSet, status);
+//            }
+//
+//            /**
+//             * Callback triggered in response to {@link AdvertisingSet#setAdvertisingParameters}
+//             * indicating result of the operation.
+//             *
+//             * @param advertisingSet The advertising set.
+//             * @param txPower        tx power that will be used for this set.
+//             * @param status         Status of the operation.
+//             */
+//            @Override
+//            public void onAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int txPower, int status) {
+//                super.onAdvertisingParametersUpdated(advertisingSet, txPower, status);
+//                baseAdvertiseCallback.onAdvertisingParametersUpdated(advertisingSet, txPower, status);
+//            }
+//
+//            /**
+//             * Callback triggered in response to {@link AdvertisingSet#setPeriodicAdvertisingParameters}
+//             * indicating result of the operation.
+//             *
+//             * @param advertisingSet The advertising set.
+//             * @param status         Status of the operation.
+//             */
+//            @Override
+//            public void onPeriodicAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int status) {
+//                super.onPeriodicAdvertisingParametersUpdated(advertisingSet, status);
+//                baseAdvertiseCallback.onPeriodicAdvertisingParametersUpdated(advertisingSet, status);
+//            }
+//
+//            /**
+//             * Callback triggered in response to {@link AdvertisingSet#setPeriodicAdvertisingData}
+//             * indicating result of the operation.
+//             *
+//             * @param advertisingSet The advertising set.
+//             * @param status         Status of the operation.
+//             */
+//            @Override
+//            public void onPeriodicAdvertisingDataSet(AdvertisingSet advertisingSet, int status) {
+//                super.onPeriodicAdvertisingDataSet(advertisingSet, status);
+//                baseAdvertiseCallback.onPeriodicAdvertisingDataSet(advertisingSet, status);
+//            }
+//
+//            /**
+//             * Callback triggered in response to {@link AdvertisingSet#setPeriodicAdvertisingEnabled}
+//             * indicating result of the operation.
+//             *
+//             * @param advertisingSet The advertising set.
+//             * @param enable
+//             * @param status         Status of the operation.
+//             */
+//            @Override
+//            public void onPeriodicAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status) {
+//                super.onPeriodicAdvertisingEnabled(advertisingSet, enable, status);
+//                baseAdvertiseCallback.onPeriodicAdvertisingEnabled(advertisingSet, enable, status);
+//            }
+//        };
+//    }
 
     /**
      * 停止广播
@@ -402,7 +626,7 @@ public class BleAdvertiser {
             return false;
         }
         try {
-            mBluetoothAdvertiser.stopAdvertising(defaultAdvertiseCallback);
+            mBluetoothAdvertiser.stopAdvertising(advertiseCallback);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -424,7 +648,7 @@ public class BleAdvertiser {
         defaultAdvertiseSettings = null;
         defaultAdvertiseData = null;
         defaultScanResponse = null;
-        defaultAdvertiseCallback = null;
+        advertiseCallback = null;
         BleManager.resetBleAdvertiser();
     }
 
@@ -465,11 +689,11 @@ public class BleAdvertiser {
                         break;
                     }
                 }
-                if (defaultAdvertiseCallback != null) {
+                if (baseAdvertiseCallback != null) {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            defaultAdvertiseCallback.onBroadCastStopped();
+                            baseAdvertiseCallback.onBroadCastStopped();
                         }
                     });
                 }

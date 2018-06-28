@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.baselibrary.Tool;
-import com.jackiepenghe.blelibrary.BaseAdvertiseCallback;
+import com.jackiepenghe.blelibrary.DefaultAdvertiseCallback;
 import com.jackiepenghe.blelibrary.BleAdvertiser;
 import com.jackiepenghe.blelibrary.BleManager;
 
@@ -33,7 +33,7 @@ public class BroadcastActivity extends BaseAppCompatActivity {
      */
     private TextView broadcastStatusTv;
 
-    private BaseAdvertiseCallback advertiseCallback = new BaseAdvertiseCallback() {
+    private DefaultAdvertiseCallback advertiseCallback = new DefaultAdvertiseCallback() {
 
 
         /**
@@ -44,7 +44,7 @@ public class BroadcastActivity extends BaseAppCompatActivity {
          *                         what has been requested.
          */
         @Override
-        protected void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect) {
+        public void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect) {
             broadcastStatusTv.setText(R.string.open_broadcast_success);
         }
 
@@ -55,13 +55,13 @@ public class BroadcastActivity extends BaseAppCompatActivity {
          *                  failures.
          */
         @Override
-        protected void onBroadCastStartFailure(int errorCode) {
+        public void onBroadCastStartFailure(int errorCode) {
             broadcastStatusTv.setText(R.string.open_broadcast_failed);
             Tool.warnOut(TAG, "errorCode = " + errorCode);
         }
 
         @Override
-        protected void onBroadCastStopped() {
+        public void onBroadCastStopped() {
             broadcastStatusTv.setText(R.string.broadcast_stopped);
         }
     };
