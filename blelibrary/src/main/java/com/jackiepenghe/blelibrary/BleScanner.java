@@ -159,10 +159,10 @@ public class BleScanner {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             //初始化扫描回调(API21及以上的设备)
-            initBLeScanCallBack21();
+            initBleScanCallBack21();
         } else {
             //初始化BLE扫描回调(API21以下且不包含API21)
-            initBLeScanCallBack18();
+            initBleScanCallBack18();
         }
 
         bluetoothStateReceiver = new BluetoothStateReceiver(BleScanner.this);
@@ -194,7 +194,7 @@ public class BleScanner {
     /**
      * 初始化BLE扫描回调(API21以下且不包含API21)
      */
-    private void initBLeScanCallBack18() {
+    private void initBleScanCallBack18() {
         mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
             @Override
             public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
@@ -210,29 +210,13 @@ public class BleScanner {
                     name = context.getString(R.string.un_named);
                 }
                 final BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, name);
-                if (mOnScanFindOneDeviceListener != null) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (mOnScanFindOneDeviceListener != null) {
-                                mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
-                            }
-                        }
-                    });
-                }
+                callOnScanFindOneDeviceListener(bleDevice);
                 if (mScanResults == null) {
                     mScanResults = new ArrayList<>();
                 }
                 if (!mScanResults.contains(bleDevice)) {
                     mScanResults.add(bleDevice);
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (onScanFindOneNewDeviceListener != null) {
-                                onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
-                            }
-                        }
-                    });
+                    callOnScanFindOneNewDeviceListener(bleDevice);
                 }
             }
         };
@@ -242,7 +226,7 @@ public class BleScanner {
      * 初始化扫描回调(API21及以上的设备)
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void initBLeScanCallBack21() {
+    private void initBleScanCallBack21() {
         mScanCallback = new ScanCallback() {
             /**
              * BaseConnectCallback when a BLE advertisement has been found.
@@ -255,52 +239,7 @@ public class BleScanner {
              */
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
-                Context context = BleScanner.this.context;
-                if (context == null) {
-                    return;
-                }
-                ScanRecord scanRecord = result.getScanRecord();
-
-                if (scanRecord == null) {
-                    return;
-                }
-
-                BluetoothDevice device = result.getDevice();
-                int rssi = result.getRssi();
-                byte[] scanRecordBytes;
-                String deviceName;
-                scanRecordBytes = scanRecord.getBytes();
-                deviceName = scanRecord.getDeviceName();
-                if (deviceName == null || "".equals(deviceName)) {
-                    deviceName = context.getString(R.string.un_named);
-                }
-                final BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
-                bleDevice.setScanRecord(scanRecord);
-
-                if (mOnScanFindOneDeviceListener != null) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
-                        }
-                    });
-                }
-                if (onScanFindOneNewDeviceListener != null) {
-                    if (mScanResults == null) {
-                        return;
-                    }
-                    if (!mScanResults.contains(bleDevice)) {
-                        mScanResults.add(bleDevice);
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (onScanFindOneNewDeviceListener != null) {
-                                    onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
-                                }
-                            }
-                        });
-                    }
-                }
+                onApi21ScanResultProcessor(result);
             }
 
             /**
@@ -310,14 +249,14 @@ public class BleScanner {
              */
             @Override
             public void onBatchScanResults(final List<ScanResult> results) {
-                if (on21ScanCallback != null) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (on21ScanCallback != null) {
                             on21ScanCallback.onBatchScanResults(results);
                         }
-                    });
-                }
+                    }
+                });
             }
 
             /**
@@ -327,16 +266,55 @@ public class BleScanner {
              */
             @Override
             public void onScanFailed(final int errorCode) {
-                if (on21ScanCallback != null) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (on21ScanCallback != null) {
                             on21ScanCallback.onScanFailed(errorCode);
                         }
-                    });
-                }
+                    }
+                });
             }
         };
+    }
+
+    /**
+     * API21以上扫描处理的方法
+     * @param result 扫描结果
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void onApi21ScanResultProcessor(ScanResult result) {
+        Context context = BleScanner.this.context;
+        if (context == null) {
+            return;
+        }
+        ScanRecord scanRecord = result.getScanRecord();
+
+        if (scanRecord == null) {
+            return;
+        }
+
+        BluetoothDevice device = result.getDevice();
+        int rssi = result.getRssi();
+        byte[] scanRecordBytes;
+        String deviceName;
+        scanRecordBytes = scanRecord.getBytes();
+        deviceName = scanRecord.getDeviceName();
+        if (deviceName == null || "".equals(deviceName)) {
+            deviceName = context.getString(R.string.un_named);
+        }
+        final BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
+        bleDevice.setScanRecord(scanRecord);
+
+        callOnScanFindOneDeviceListener(bleDevice);
+
+        if (mScanResults == null) {
+            return;
+        }
+        if (!mScanResults.contains(bleDevice)) {
+            mScanResults.add(bleDevice);
+            callOnScanFindOneNewDeviceListener(bleDevice);
+        }
     }
 
     /*------------------------库内函数----------------------------*/
@@ -372,7 +350,7 @@ public class BleScanner {
     /**
      * 打开扫描器
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "UnusedReturnValue"})
     public boolean init() {
         return init(new ArrayList<BleDevice>(), new DefaultOnScanFindOneNewDeviceListener(), 20000, false, new DefaultOnScanCompleteListener());
     }
@@ -473,7 +451,6 @@ public class BleScanner {
                         .build();
             }
             mBluetoothAdapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings, mScanCallback);
-
         } else {
             //noinspection deprecation,AliDeprecation
             mBluetoothAdapter.startLeScan(this.mLeScanCallback);
@@ -690,5 +667,39 @@ public class BleScanner {
      */
     public Context getContext() {
         return context;
+    }
+
+    /*------------------------私有函数----------------------------*/
+
+    /**
+     * 调用相关回调
+     *
+     * @param bleDevice BleDevice
+     */
+    private void callOnScanFindOneNewDeviceListener(final BleDevice bleDevice) {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (onScanFindOneNewDeviceListener != null) {
+                    onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
+                }
+            }
+        });
+    }
+
+    /**
+     * 调用相关回调
+     *
+     * @param bleDevice BleDevice
+     */
+    private void callOnScanFindOneDeviceListener(final BleDevice bleDevice) {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mOnScanFindOneDeviceListener != null) {
+                    mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
+                }
+            }
+        });
     }
 }

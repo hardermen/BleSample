@@ -10,8 +10,8 @@ android {
         minSdkVersion 18
         //noinspection OldTargetApi
         targetSdkVersion 27
-        versionCode 83
-        versionName "0.8.3"
+        versionCode 84
+        versionName "0.8.4"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -28,7 +28,7 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:27.1.1'
 }
 
-version = "0.8.3"
+version = "0.8.4"
 
 def siteUrl = 'https://github.com/JackiePenghe/BleSample'
 def gitUrl = 'git@github.com:JackiePenghe/BleSample.git'
