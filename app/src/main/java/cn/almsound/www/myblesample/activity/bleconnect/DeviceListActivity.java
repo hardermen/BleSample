@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -17,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
@@ -71,23 +73,6 @@ public class DeviceListActivity extends BaseAppCompatActivity {
             doListViewItemClick(position);
         }
     };
-//    /**
-//     * 发现一个新设备（在此之前该设备没有被发现过）时触发此回调
-//     */
-//    private BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
-//        @Override
-//        public void onScanFindOneNewDevice(BleDevice bleDevice) {
-////                byte[] manufacturerSpecificData = bleDevice.getManufacturerSpecificData(-1);\
-////                Tool.warnOut(TAG, Tool.bytesToHexStr(manufacturerSpecificData));\
-//            //可以在此处过滤一些不需要的设备
-//            /*if(bleDevice.getBluetoothDevice().getAddress().equalsIgnoreCase("00:00:00:AA:SS:BB")){
-//                return;
-//            }*/
-//
-////                adapterList.add(bleDevice);'
-////                adapter.notifyItemInserted(adapterList.size() - 1);'
-//        }
-//    };
 
     /**
      * 扫描结束后会触发此回调
@@ -154,6 +139,17 @@ public class DeviceListActivity extends BaseAppCompatActivity {
             Tool.warnOut(TAG, "onScanFailed:errorCode = " + errorCode);
         }
     };
+    /**
+     * 列表子选项被长按时进行的回调
+     */
+    private BaseQuickAdapter.OnItemLongClickListener onItemLongClickListener = new BaseQuickAdapter.OnItemLongClickListener() {
+        @Override
+        public boolean onItemLongClick(BaseQuickAdapter adapter, View view, int position) {
+            BleDevice bleDevice = adapterList.get(position);
+            showScanRecordDataDialog(bleDevice.getScanRecordBytes());
+            return true;
+        }
+    };
 
     /**
      * 标题栏的返回按钮被按下的时候回调此函数
@@ -211,6 +207,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         DefaultItemDecoration defaultItemDecoration = new DefaultItemDecoration(Color.GRAY, ViewGroup.LayoutParams.MATCH_PARENT, 2, -1);
         recyclerView.addItemDecoration(defaultItemDecoration);
         adapter.setOnItemClickListener(onItemClickListener);
+        adapter.setOnItemLongClickListener(onItemLongClickListener);
         recyclerView.setAdapter(adapter);
     }
 
@@ -324,78 +321,8 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             bleScanner.setOn21ScanCallback(on21ScanCallback);
         }
-
-//        //bleScanner进阶设置
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            bleScannerSettings();
-//        }
     }
 
-//    /**
-//     * 设置BleScanner的扫描参数与过滤条件
-//     */
-//    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-//    private void bleScannerSettings() {
-//        setScanFilters();
-//        setScanSettings();
-//    }
-
-//    /**
-//     * 设置扫描器的扫描参数
-//     */
-//    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-//    private void setScanSettings() {
-//        ScanSettings scanSettings = new ScanSettings.Builder()
-//                //设置回调触发方式（需要API23及以上）(set callback type(API 23 supported))
-////                    .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-//                //如果只有传统（我猜测是经典蓝牙，并不确定）的广播，是否回调callback函数(需要API26及以上)
-//                // Set whether only legacy advertisments should be returned in scan results.
-//                //Legacy advertisements include advertisements as specified by the
-//                //Bluetooth core specification 4.2 and below. This is true by default
-//                //for compatibility with older apps.
-//                //true if only legacy advertisements will be returned
-////                    .setLegacy(false)
-//                //设置扫描匹配方式（需要API23及以上）(set match mode(API 23 supported))
-////                    .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-//                //设置扫描匹配次数（需要API23及以上）(set num of matches(API 23 supported))
-////                    .setNumOfMatches(2)
-//                //在扫描过程中设置物理层(需要API23及以上)(set phy(API 23 supported))
-////                    .setPhy(BluetoothDevice.PHY_LE_1M)
-//                //设置报告延迟时间(set report delay)
-//                .setReportDelay(100)
-//                //设置扫描模式(set scan mode(default mode:ScanSettings.SCAN_MODE_LOW_LATENCY))
-//                .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
-//                //构建
-//                .build();
-//        //设置扫描参数(set scan settings)
-//        bleScanner.setScanSettings(scanSettings);
-//    }
-
-//    /**
-//     * 设置扫描器的过滤条件
-//     */
-//    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-//    private void setScanFilters() {
-//        //声明过滤集合,可同时设置多组过滤条件(Declaring a filter list to set multiple set of filtering conditions at the same time)
-//        ArrayList<ScanFilter> scanFilters = new ArrayList<>();
-//        //声明服务UUID(Declaring service uuid)
-//        String serviceUUID = "C3E6FEA0-E966-1000-8000-BE99C223DF6A";
-//        ScanFilter scanFilter = new ScanFilter.Builder()
-//                //设置过滤设备地址(Device address filtering setting)
-//                .setDeviceAddress("00:02:5B:00:15:AA")
-//                //设置过滤设备名称(Device name filtering setting)
-//                .setDeviceName("Y11-")
-//                //根据厂商自定义的广播id和广播内容过滤(Device manufacturer data filtering setting)
-//                .setManufacturerData(2, new byte[]{0, 2})
-//                //根据服务数据进行过滤(Device service uuid filtering setting)
-//                .setServiceUuid(new ParcelUuid(UUID.fromString(serviceUUID)))
-//                //构建(build filter)
-//                .build();
-//        //添加一个过滤到过滤集合中(add a filter to filter list)
-//        scanFilters.add(scanFilter);
-//        //设置过滤条件(set scanner filters)
-//        bleScanner.setScanFilters(scanFilters);
-//    }
 
 
     /**
@@ -447,5 +374,23 @@ public class DeviceListActivity extends BaseAppCompatActivity {
             bleScanner.stopScan();
         }
         clickCount++;
+    }
+
+    /**
+     * 显示广播包内容的对话框
+     * @param scanRecordBytes 广播包
+     */
+    private void showScanRecordDataDialog(byte[] scanRecordBytes) {
+        if (scanRecordBytes == null){
+            return;
+        }
+        EditText editText = (EditText) View.inflate(DeviceListActivity.this,R.layout.edit_text,null);
+        editText.setText(Tool.bytesToHexStr(scanRecordBytes));
+        new AlertDialog.Builder(DeviceListActivity.this)
+                .setTitle(R.string.scan_record)
+                .setView(editText)
+                .setNegativeButton(R.string.cancel,null)
+                .setCancelable(false)
+                .show();
     }
 }

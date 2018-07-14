@@ -1,6 +1,7 @@
 package cn.almsound.www.myblesample.activity.blemulticonnect;
 
 import android.bluetooth.BluetoothDevice;
+import android.support.annotation.NonNull;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -8,11 +9,13 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleMultiConnector;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.concurrent.ThreadFactory;
 
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.callback.Device1Callback;
@@ -28,7 +31,12 @@ import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
  */
 public class MultiConnectActivity extends BaseAppCompatActivity {
 
-    private static final String TAG = MultiConnectActivity.class.getSimpleName();
+    private static final ThreadFactory THREAD_FACTORY = new ThreadFactory() {
+        @Override
+        public Thread newThread(@NonNull Runnable runnable) {
+            return new Thread(runnable);
+        }
+    };
 
     private BleMultiConnector bleMultiConnector;
     private Button connectButton;
@@ -156,27 +164,27 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
     protected void initViewData() {
         if (device1 != null) {
             deviceAddressTv1.setText(device1.getAddress());
-        }else {
+        } else {
             deviceAddressTv1.setText(R.string.null_);
         }
         if (device2 != null) {
             deviceAddressTv2.setText(device2.getAddress());
-        }else {
+        } else {
             deviceAddressTv2.setText(R.string.null_);
         }
         if (device3 != null) {
             deviceAddressTv3.setText(device3.getAddress());
-        }else {
+        } else {
             deviceAddressTv3.setText(R.string.null_);
         }
         if (device4 != null) {
             deviceAddressTv4.setText(device4.getAddress());
-        }else {
+        } else {
             deviceAddressTv4.setText(R.string.null_);
         }
         if (device5 != null) {
             deviceAddressTv5.setText(device5.getAddress());
-        }else {
+        } else {
             deviceAddressTv5.setText(R.string.null_);
         }
     }
@@ -248,109 +256,32 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
         }
         first = false;
 
-        //使用默认的回调连接
-//        bleMultiConnector.connect(device1Address);
-//        bleMultiConnector.connect(device2Address);
+        /*        //使用默认的回调连接直接发起连接 */
+        /*bleMultiConnector.connect(device1Address);*/
 
-        //断开后自动连接（此函数调用的是系统的API，由系统自动连接设备)
-//        bleMultiConnector.connect(device1Address, device1BleCallback, true);
-//        bleMultiConnector.connect(device2Address, device2BleCallback, true);
-//        bleMultiConnector.connect(device3Address, device3BleCallback, true);
-//        bleMultiConnector.connect(device4Address, device4BleCallback, true);
-//        bleMultiConnector.connect(device5Address, device5BleCallback, true);
+        /* //断开后自动连接（此函数最终调用的是系统的API，由系统自动连接设备)*/
+        /*bleMultiConnector.connect(device1Address, device1BleCallback, true);*/
+        /*bleMultiConnector.connect(device2Address, device2BleCallback, true);*/
+        /*bleMultiConnector.connect(device3Address, device3BleCallback, true);*/
+        /*bleMultiConnector.connect(device4Address, device4BleCallback, true);*/
+        /*bleMultiConnector.connect(device5Address, device5BleCallback, true);*/
 
         //我在此处使用线程顺序发起连接
-        new Thread() {
+        Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                if (device1 != null) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    bleMultiConnector.connect(device1, device1BleCallback, true);
-                                }
-                            });
-                        }
-                    }).start();
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (device2 != null) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    bleMultiConnector.connect(device2, device2BleCallback, true);
-                                }
-                            });
-                        }
-                    }).start();
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (device3 != null) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    bleMultiConnector.connect(device3, device3BleCallback, true);
-                                }
-                            });
-                        }
-                    }).start();
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (device4 != null) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    bleMultiConnector.connect(device4, device4BleCallback, true);
-                                }
-                            });
-                        }
-                    }).start();
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (device5 != null) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    bleMultiConnector.connect(device5, device5BleCallback, true);
-                                }
-                            });
-                        }
-                    }).start();
-                }
+                connectDevice1();
+                Tool.sleep(1000);
+                connectDevice2();
+                Tool.sleep(1000);
+                connectDevice3();
+                Tool.sleep(1000);
+                connectDevice4();
+                Tool.sleep(1000);
+                connectDevice5();
             }
-        }.start();
-
+        };
+        THREAD_FACTORY.newThread(runnable).start();
 
         //连接时传入对应的回调，方便进行操作,通常使用这个就行了
 //        bleMultiConnector.connect(device1Address, device1BleCallback);
@@ -360,5 +291,110 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
         //连接时传入对应的回调，方便进行操作,并且在连接断开之后自动尝试连接（系统会默认自动去连接该设备，这是系统自身的重连参数，推荐用这个参数进行重连）
 //        bleMultiConnector.connect(device1Address,device1BleCallback,true);
 //        bleMultiConnector.connect(device2Address,device2BleCallback,true);
+    }
+
+    /**
+     * 连接第五个设备
+     */
+    private void connectDevice5() {
+        if (device5 == null) {
+            return;
+        }
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        bleMultiConnector.connect(device5, device5BleCallback, true);
+                    }
+                });
+            }
+        };
+        THREAD_FACTORY.newThread(runnable).start();
+    }
+
+    /**
+     * 连接第四个设备
+     */
+    private void connectDevice4() {
+        if (device4 == null) {
+            return;
+        }
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        bleMultiConnector.connect(device4, device4BleCallback, true);
+                    }
+                });
+            }
+        };
+        THREAD_FACTORY.newThread(runnable).start();
+    }
+
+    /**
+     * 连接第三个设备
+     */
+    private void connectDevice3() {
+        if (device3 == null) {
+            return;
+        }
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        bleMultiConnector.connect(device3, device3BleCallback, true);
+                    }
+                });
+            }
+        };
+        THREAD_FACTORY.newThread(runnable).start();
+    }
+
+    /**
+     * 连接第二个设备
+     */
+    private void connectDevice2() {
+        if (device2 == null) {
+            return;
+        }
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        bleMultiConnector.connect(device2, device2BleCallback, true);
+                    }
+                });
+            }
+        };
+        THREAD_FACTORY.newThread(runnable).start();
+    }
+
+    /**
+     * 连接第一个设备
+     */
+    private void connectDevice1() {
+        if (device1 == null) {
+            return;
+        }
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        bleMultiConnector.connect(device1, device1BleCallback, true);
+                    }
+                });
+            }
+        };
+        THREAD_FACTORY.newThread(runnable).start();
     }
 }

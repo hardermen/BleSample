@@ -208,6 +208,7 @@ public class BleScanner {
                 String name = device.getName();
                 if (null == name || "".equals(name)) {
                     name = parseScanRecord(scanRecord);
+                    Tool.warnOut(TAG,"  name = parseScanRecord(scanRecord) = " + name);
                 }
                 if (null == name || "".equals(name)) {
                     name = context.getString(R.string.un_named);
@@ -721,7 +722,7 @@ public class BleScanner {
         }
 
         String scanRecord = Tool.bytesToHexStr(scanRecordBytes);
-
+        scanRecord = scanRecord.replace(" ","");
         int end = 0;
         String name = null;
         String data = null;
