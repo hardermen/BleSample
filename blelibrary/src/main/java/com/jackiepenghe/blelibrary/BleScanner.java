@@ -121,7 +121,7 @@ public class BleScanner {
     /**
      * 发现一个设备进行的回调
      */
-    private BleInterface.OnScanFindOneDeviceListener mOnScanFindOneDeviceListener;
+    private BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener;
 
     /**
      * 发现一个新设备进行的回调
@@ -206,6 +206,9 @@ public class BleScanner {
                     return;
                 }
                 String name = device.getName();
+                if (null == name || "".equals(name)) {
+                    name = parseScanRecord(scanRecord);
+                }
                 if (null == name || "".equals(name)) {
                     name = context.getString(R.string.un_named);
                 }
@@ -300,7 +303,10 @@ public class BleScanner {
         String deviceName;
         scanRecordBytes = scanRecord.getBytes();
         deviceName = scanRecord.getDeviceName();
-        if (deviceName == null || "".equals(deviceName)) {
+        if (null == deviceName || "".equals(deviceName)) {
+            deviceName = parseScanRecord(scanRecordBytes);
+        }
+        if (null == deviceName || "".equals(deviceName)) {
             deviceName = context.getString(R.string.un_named);
         }
         final BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
@@ -531,7 +537,7 @@ public class BleScanner {
             on21ScanCallback = null;
         }
         mScanCallback = null;
-        mOnScanFindOneDeviceListener = null;
+        onScanFindOneDeviceListener = null;
         onScanFindOneNewDeviceListener = null;
         scanTimer = null;
         return true;
@@ -595,7 +601,7 @@ public class BleScanner {
      */
     public void setOnScanFindOneDeviceListener(BleInterface.OnScanFindOneDeviceListener
                                                        onScanFindOneDeviceListener) {
-        mOnScanFindOneDeviceListener = onScanFindOneDeviceListener;
+        this.onScanFindOneDeviceListener = onScanFindOneDeviceListener;
     }
 
     /**
@@ -696,10 +702,49 @@ public class BleScanner {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (mOnScanFindOneDeviceListener != null) {
-                    mOnScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
+                if (onScanFindOneDeviceListener != null) {
+                    onScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
                 }
             }
         });
+    }
+
+    /**
+     * 将广播包解析并转换,获取设备名
+     * @param scanRecordBytes 广播包
+     * @return 设备名
+     */
+    private static String parseScanRecord(byte[] scanRecordBytes) {
+
+        if (scanRecordBytes == null){
+            return null;
+        }
+
+        String scanRecord = Tool.bytesToHexStr(scanRecordBytes);
+
+        int end = 0;
+        String name = null;
+        String data = null;
+        String type = null;
+        while (end <= scanRecord.length()) {
+            String length = scanRecord.substring(end, end + 2);
+            int len = Integer.parseInt(length, 16) * 2;
+            if (len == 0) {
+                break;
+            }
+            if (end + 4 < scanRecord.length()) {
+                type = scanRecord.substring(end + 2, end + 4);
+            }
+            if (end + len + 2 < scanRecord.length()) {
+                data = scanRecord.substring(end + 4, end + 4 + len - 2);
+            }
+            if (("09").equals(type)) {
+                if (data != null) {
+                    name = Tool.hexStrToStr(data);
+                }
+            }
+            end = end + len + 2;
+        }
+        return name;
     }
 }

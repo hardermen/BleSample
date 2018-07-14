@@ -13,7 +13,7 @@
         android:layout_height="wrap_content" />
 
     <include
-        layout="@android:layout/simple_list_item_1"
+        layout="@android:layout/simple_list_item_2"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1" />

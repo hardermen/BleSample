@@ -49,8 +49,10 @@ public class ServicesCharacteristicsListAdapter extends BaseMultiItemQuickAdapte
         switch (holder.getItemViewType()) {
             case TYPE_SERVICE_UUID:
                 final ServiceUuidItem serviceUuidItem = (ServiceUuidItem) item;
-                holder.setText(android.R.id.text1, serviceUuidItem.getUuid())
+                holder.setText(android.R.id.text1,serviceUuidItem.getName())
+                        .setText(android.R.id.text2, serviceUuidItem.getUuid())
                         .setImageResource(R.id.expanded, serviceUuidItem.isExpanded() ? R.drawable.arrow_b : R.drawable.arrow_r);
+
                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -69,7 +71,8 @@ public class ServicesCharacteristicsListAdapter extends BaseMultiItemQuickAdapte
                 break;
             case TYPE_CHARACTERISTIC_UUID:
                 final CharacteristicUuidItem characteristicUuidItem = (CharacteristicUuidItem) item;
-                holder.setText(android.R.id.text1, characteristicUuidItem.getUuid())
+                holder .setText(android.R.id.text1, characteristicUuidItem.getName())
+                        .setText(android.R.id.text2, characteristicUuidItem.getUuid())
                 .setText(R.id.properties,getProperties(characteristicUuidItem.isCanRead(),characteristicUuidItem.isCanWrite(),characteristicUuidItem.isCanNotify()));
                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override

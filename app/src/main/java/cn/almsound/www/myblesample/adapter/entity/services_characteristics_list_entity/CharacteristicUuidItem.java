@@ -13,13 +13,15 @@ import cn.almsound.www.myblesample.adapter.ServicesCharacteristicsListAdapter;
 
 public class CharacteristicUuidItem implements MultiItemEntity {
 
+    private String name;
     private String uuid;
     private boolean canRead;
     private boolean canWrite;
     private boolean canNotify;
 
-    public CharacteristicUuidItem(String uuid, boolean canRead, boolean canWrite, boolean canNotify) {
+    public CharacteristicUuidItem(String name, String uuid, boolean canRead, boolean canWrite, boolean canNotify) {
         this.uuid = uuid;
+        this.name = name;
         this.canRead = canRead;
         this.canWrite = canWrite;
         this.canNotify = canNotify;
@@ -27,6 +29,14 @@ public class CharacteristicUuidItem implements MultiItemEntity {
 
     public String getUuid() {
         return uuid;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setBluetoothGattCharacteristic(String uuid) {

@@ -13,9 +13,11 @@ import cn.almsound.www.myblesample.adapter.ServicesCharacteristicsListAdapter;
 
 public class ServiceUuidItem extends AbstractExpandableItem<CharacteristicUuidItem> implements MultiItemEntity{
 
+    private String name;
     private String uuid;
 
-    public ServiceUuidItem(String uuid) {
+    public ServiceUuidItem(String name, String uuid) {
+        this.name = name;
         this.uuid = uuid;
     }
 
@@ -23,8 +25,8 @@ public class ServiceUuidItem extends AbstractExpandableItem<CharacteristicUuidIt
         return uuid;
     }
 
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
+    public String getName() {
+        return name;
     }
 
     /**

@@ -26,6 +26,7 @@ import com.jackiepenghe.blelibrary.BleConnector;
 import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
+import com.jackiepenghe.blelibrary.BleUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -141,7 +142,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                     String serviceUuidString = bluetoothGattService.getUuid().toString();
                     Tool.warnOut(TAG, "bluetoothGattService UUID = " + serviceUuidString);
 
-                    ServiceUuidItem serviceUuidItem = new ServiceUuidItem(serviceUuidString);
+                    ServiceUuidItem serviceUuidItem = new ServiceUuidItem(BleUtils.getServiceUuidName(serviceUuidString),serviceUuidString);
                     List<BluetoothGattCharacteristic> characteristics = bluetoothGattService.getCharacteristics();
                     for (int j = 0; j < characteristics.size(); j++) {
                         BluetoothGattCharacteristic bluetoothGattCharacteristic = characteristics.get(j);
@@ -149,7 +150,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                         boolean canRead = bleConnector.canRead(serviceUuidString, characteristicUuidString);
                         boolean canWrite = bleConnector.canWrite(serviceUuidString, characteristicUuidString);
                         boolean canNotify = bleConnector.canNotify(serviceUuidString, characteristicUuidString);
-                        CharacteristicUuidItem characteristicUuidItem = new CharacteristicUuidItem(characteristicUuidString, canRead, canWrite, canNotify);
+                        CharacteristicUuidItem characteristicUuidItem = new CharacteristicUuidItem(BleUtils.getServiceUuidName(characteristicUuidString),characteristicUuidString, canRead, canWrite, canNotify);
                         serviceUuidItem.addSubItem(characteristicUuidItem);
                     }
                     adapterData.add(serviceUuidItem);
@@ -474,12 +475,13 @@ public class ConnectActivity extends BaseAppCompatActivity {
             Tool.toastL(ConnectActivity.this, R.string.ble_not_supported);
             return;
         }
-        //bleConnector.setOnConnectingListener(onConnectingListener);//
+        bleConnector.setOnConnectingListener(onConnectingListener);
         //设置连接设备成功的回调
         bleConnector.setOnConnectedListener(onConnectedListener);
         //设置连接之后，服务发现完成的回调
         bleConnector.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
-        //bleConnector.setOnDisconnectingListener(onDisconnectingListener);//
+        //设置正在断开连接的回调
+        bleConnector.setOnDisconnectingListener(onDisconnectingListener);
         //设置连接被断开的回调
         bleConnector.setOnDisconnectedListener(onDisconnectedListener);
         //设置 读取到设备的数据时的回调
