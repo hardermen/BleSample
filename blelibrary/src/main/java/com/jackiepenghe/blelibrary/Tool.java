@@ -25,6 +25,7 @@ class Tool {
      *
      * @return 日志打印标志
      */
+    @SuppressWarnings("unused")
     public static boolean isDebug() {
         return mDebug;
     }
@@ -134,6 +135,7 @@ class Tool {
      * @param src Byte字符串，每个Byte之间没有分隔符
      * @return byte[]
      */
+    @SuppressWarnings("unused")
     public static byte[] hexStrToBytes(String src) {
         int m, n;
         int l = src.length() / 2;

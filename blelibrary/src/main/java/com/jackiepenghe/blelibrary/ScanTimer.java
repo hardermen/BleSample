@@ -1,5 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
+import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
@@ -45,7 +46,7 @@ class ScanTimer {
     private Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            BleScanner bleScanner = bleScannerWeakReference.get();
+            final BleScanner bleScanner = bleScannerWeakReference.get();
             if (bleScanner == null) {
                 return;
             }
@@ -54,14 +55,17 @@ class ScanTimer {
             if (bleScanner.isScanContinue()) {
                 bleScanner.startScan();
             } else {
-                if (mOnScanCompleteListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            bleScanner.flushPendingScanResults();
+                        }
+                        if (mOnScanCompleteListener != null) {
                             mOnScanCompleteListener.onScanComplete();
                         }
-                    });
-                }
+                    }
+                });
             }
         }
     };

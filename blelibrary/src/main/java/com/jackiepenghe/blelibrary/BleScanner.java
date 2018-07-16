@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanRecord;
@@ -19,8 +20,12 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * BLE扫描器
@@ -36,6 +41,16 @@ public class BleScanner {
      * TAG
      */
     private static final String TAG = BleScanner.class.getSimpleName();
+
+    private static final String SPACE = " ";
+
+    /**
+     * 剩余可用长度
+     */
+    private static final int REMAINING_LENGTH = 2;
+
+    private static final int MIN_LENGTH_TWO = 2;
+    private static final byte MIN_LENGTH_SIXTEEN = 16;
 
     /*------------------------成员变量----------------------------*/
 
@@ -142,6 +157,10 @@ public class BleScanner {
      * 扫描设置
      */
     private ScanSettings scanSettings;
+    /**
+     * 蓝牙扫描器
+     */
+    private BluetoothLeScanner bluetoothLeScanner;
 
     /*------------------------构造函数----------------------------*/
 
@@ -206,11 +225,10 @@ public class BleScanner {
                     return;
                 }
                 String name = device.getName();
-                if (null == name || "".equals(name)) {
-                    name = parseScanRecord(scanRecord);
-                    Tool.warnOut(TAG,"  name = parseScanRecord(scanRecord) = " + name);
+                if (null == name || "".equals(name) || name.startsWith(SPACE)) {
+                    name = parseAdvertiseData(scanRecord).getName();
                 }
-                if (null == name || "".equals(name)) {
+                if (null == name || "".equals(name) || name.startsWith(SPACE)) {
                     name = context.getString(R.string.un_named);
                 }
                 final BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, name);
@@ -284,6 +302,7 @@ public class BleScanner {
 
     /**
      * API21以上扫描处理的方法
+     *
      * @param result 扫描结果
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -304,10 +323,10 @@ public class BleScanner {
         String deviceName;
         scanRecordBytes = scanRecord.getBytes();
         deviceName = scanRecord.getDeviceName();
-        if (null == deviceName || "".equals(deviceName)) {
-            deviceName = parseScanRecord(scanRecordBytes);
+        if (null == deviceName || "".equals(deviceName) || deviceName.startsWith(SPACE)) {
+            deviceName = parseAdvertiseData(scanRecordBytes).getName();
         }
-        if (null == deviceName || "".equals(deviceName)) {
+        if (null == deviceName || "".equals(deviceName) || deviceName.startsWith(SPACE)) {
             deviceName = context.getString(R.string.un_named);
         }
         final BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
@@ -398,6 +417,13 @@ public class BleScanner {
         return true;
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    public void flushPendingScanResults() {
+        if (bluetoothLeScanner != null) {
+            bluetoothLeScanner.flushPendingScanResults(mScanCallback);
+        }
+    }
 
     /**
      * 开始扫描
@@ -457,7 +483,8 @@ public class BleScanner {
                         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                         .build();
             }
-            mBluetoothAdapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings, mScanCallback);
+            bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
+            bluetoothLeScanner.startScan(scanFilters, scanSettings, mScanCallback);
         } else {
             //noinspection deprecation,AliDeprecation
             mBluetoothAdapter.startLeScan(this.mLeScanCallback);
@@ -710,42 +737,75 @@ public class BleScanner {
         });
     }
 
-    /**
-     * 将广播包解析并转换,获取设备名
-     * @param scanRecordBytes 广播包
-     * @return 设备名
-     */
-    private static String parseScanRecord(byte[] scanRecordBytes) {
-
-        if (scanRecordBytes == null){
-            return null;
+    private static BleAdvertisedData parseAdvertiseData(byte[] advertisedData) {
+        List<UUID> uuids = new ArrayList<>();
+        if (advertisedData == null) {
+            return new BleAdvertisedData(uuids, null);
         }
-
-        String scanRecord = Tool.bytesToHexStr(scanRecordBytes);
-        scanRecord = scanRecord.replace(" ","");
-        int end = 0;
         String name = null;
-        String data = null;
-        String type = null;
-        while (end <= scanRecord.length()) {
-            String length = scanRecord.substring(end, end + 2);
-            int len = Integer.parseInt(length, 16) * 2;
-            if (len == 0) {
+        ByteBuffer buffer = ByteBuffer.wrap(advertisedData).order(ByteOrder.LITTLE_ENDIAN);
+        while (buffer.remaining() > REMAINING_LENGTH) {
+            byte length = buffer.get();
+            if (length == 0) {
                 break;
             }
-            if (end + 4 < scanRecord.length()) {
-                type = scanRecord.substring(end + 2, end + 4);
+
+            byte type = buffer.get();
+            switch (type) {
+                // Partial list of 16-bit UUIDs
+                case 0x02:
+                    // Complete list of 16-bit UUIDs
+                case 0x03:
+                    while (length >= MIN_LENGTH_TWO) {
+                        uuids.add(UUID.fromString(String.format(
+                                "%08x-0000-1000-8000-00805f9b34fb", buffer.getShort())));
+                        length -= 2;
+                    }
+                    break;
+                // Partial list of 128-bit UUIDs
+                case 0x06:
+                    // Complete list of 128-bit UUIDs
+                case 0x07:
+                    while (length >= MIN_LENGTH_SIXTEEN) {
+                        long lsb = buffer.getLong();
+                        long msb = buffer.getLong();
+                        uuids.add(new UUID(msb, lsb));
+                        length -= 16;
+                    }
+                    break;
+                case 0x09:
+                    byte[] nameBytes = new byte[length - 1];
+                    buffer.get(nameBytes);
+                    try {
+                        name = new String(nameBytes, "utf-8");
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                default:
+                    buffer.position(buffer.position() + length - 1);
+                    break;
             }
-            if (end + len + 2 < scanRecord.length()) {
-                data = scanRecord.substring(end + 4, end + 4 + len - 2);
-            }
-            if (("09").equals(type)) {
-                if (data != null) {
-                    name = Tool.hexStrToStr(data);
-                }
-            }
-            end = end + len + 2;
         }
-        return name;
+        return new BleAdvertisedData(uuids, name);
+    }
+
+    @SuppressWarnings("unused")
+    private static final class BleAdvertisedData {
+        private List<UUID> mUuids;
+        private String mName;
+
+        BleAdvertisedData(List<UUID> uuids, String name) {
+            mUuids = uuids;
+            mName = name;
+        }
+
+        List<UUID> getUuids() {
+            return mUuids;
+        }
+
+        String getName() {
+            return mName;
+        }
     }
 }
