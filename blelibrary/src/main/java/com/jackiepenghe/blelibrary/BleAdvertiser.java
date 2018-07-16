@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadFactory;
  *
  * @author jacke
  */
+@SuppressWarnings("unused")
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class BleAdvertiser {
 
@@ -412,14 +413,6 @@ public class BleAdvertiser {
             return false;
         }
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            AdvertisingSetParameters advertisingSetParameters = getAdvertisingSetParameters();
-//            PeriodicAdvertisingParameters periodicAdvertisingParameters = getPeriodicAdvertisingParameters();
-//            AdvertiseData periodicData = getPeriodicData();
-//            AdvertisingSetCallback advertisingSetCallback = getAdvertisingSetCallback();
-//            mBluetoothAdvertiser.startAdvertisingSet(advertisingSetParameters, defaultAdvertiseData, defaultScanResponse, periodicAdvertisingParameters, periodicData, 0, 0, advertisingSetCallback, new Handler());
-//        }
-
             mBluetoothAdvertiser.startAdvertising(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, advertiseCallback);
         final int timeout = defaultAdvertiseSettings.getTimeout();
         if (timeout > 0) {
@@ -433,183 +426,6 @@ public class BleAdvertiser {
         }
         return true;
     }
-
-//    @RequiresApi(api = Build.VERSION_CODES.O)
-//    @TargetApi(Build.VERSION_CODES.O)
-//    private AdvertisingSetParameters getAdvertisingSetParameters() {
-//        return new AdvertisingSetParameters.Builder()
-//                //设置匿名
-//                .setAnonymous(true)
-//                //设置可连接
-//                .setConnectable(false)
-//                //设置是否包含TxPower到广播包
-//                .setIncludeTxPower(false)
-//                //设置每一包广播之间的间隔时长
-//                .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
-//                //设置传统模式
-//                .setLegacyMode(true)
-//                //设置主要的物理频段（primary physical channel）
-//                //                    .setPrimaryPhy()
-//                //设置是否可被扫描
-//                .setScannable(false)
-//                //设置次要的物理频段（secondary physical channel）
-//                //                    .setSecondaryPhy()
-//                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_HIGH)
-//                .build();
-//    }
-
-//    @RequiresApi(api = Build.VERSION_CODES.O)
-//    @TargetApi(Build.VERSION_CODES.O)
-//    private PeriodicAdvertisingParameters getPeriodicAdvertisingParameters() {
-//        return new PeriodicAdvertisingParameters.Builder()
-//                .setIncludeTxPower(false)
-//                .setInterval(80)
-//                .build();
-//    }
-//
-//    private AdvertiseData getPeriodicData() {
-//        return new AdvertiseData.Builder()
-//                .addServiceUuid(serviceUUID)
-//                .addServiceData(serviceUUID, serviceData)
-//                .addManufacturerData(20, manufacturerSpecificData)
-//                .setIncludeDeviceName(true)
-//                .setIncludeTxPowerLevel(true)
-//                .build();
-//    }
-
-//    /**
-//     * 获取广播设置的回调
-//     *
-//     * @return 广播设置的回调
-//     */
-//    @RequiresApi(api = Build.VERSION_CODES.O)
-//    @TargetApi(Build.VERSION_CODES.O)
-//    @NonNull
-//    private AdvertisingSetCallback getAdvertisingSetCallback() {
-//        return new AdvertisingSetCallback() {
-//            /**
-//             * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertisingSet}
-//             * indicating result of the operation. If status is ADVERTISE_SUCCESS, then advertisingSet
-//             * contains the started set and it is advertising. If error occured, advertisingSet is
-//             * null, and status will be set to proper error code.
-//             *
-//             * @param advertisingSet The advertising set that was started or null if error.
-//             * @param txPower        tx power that will be used for this set.
-//             * @param status         Status of the operation.
-//             */
-//            @Override
-//            public void onAdvertisingSetStarted(AdvertisingSet advertisingSet, int txPower, int status) {
-//                super.onAdvertisingSetStarted(advertisingSet, txPower, status);
-//                baseAdvertiseCallback.onAdvertisingSetStarted(advertisingSet, txPower, status);
-//            }
-//
-//            /**
-//             * Callback triggered in response to {@link BluetoothLeAdvertiser#stopAdvertisingSet}
-//             * indicating advertising set is stopped.
-//             *
-//             * @param advertisingSet The advertising set.
-//             */
-//            @Override
-//            public void onAdvertisingSetStopped(AdvertisingSet advertisingSet) {
-//                super.onAdvertisingSetStopped(advertisingSet);
-//                baseAdvertiseCallback.onAdvertisingSetStopped(advertisingSet);
-//            }
-//
-//            /**
-//             * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertisingSet} indicating
-//             * result of the operation. If status is ADVERTISE_SUCCESS, then advertising set is advertising.
-//             *
-//             * @param advertisingSet The advertising set.
-//             * @param enable
-//             * @param status         Status of the operation.
-//             */
-//            @Override
-//            public void onAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status) {
-//                super.onAdvertisingEnabled(advertisingSet, enable, status);
-//                baseAdvertiseCallback.onAdvertisingEnabled(advertisingSet, enable, status);
-//            }
-//
-//            /**
-//             * Callback triggered in response to {@link AdvertisingSet#setAdvertisingData} indicating
-//             * result of the operation. If status is ADVERTISE_SUCCESS, then data was changed.
-//             *
-//             * @param advertisingSet The advertising set.
-//             * @param status         Status of the operation.
-//             */
-//            @Override
-//            public void onAdvertisingDataSet(AdvertisingSet advertisingSet, int status) {
-//                super.onAdvertisingDataSet(advertisingSet, status);
-//                baseAdvertiseCallback.onAdvertisingDataSet(advertisingSet, status);
-//            }
-//
-//            /**
-//             * Callback triggered in response to {@link AdvertisingSet#setAdvertisingData} indicating
-//             * result of the operation.
-//             *
-//             * @param advertisingSet The advertising set.
-//             * @param status         Status of the operation.
-//             */
-//            @Override
-//            public void onScanResponseDataSet(AdvertisingSet advertisingSet, int status) {
-//                super.onScanResponseDataSet(advertisingSet, status);
-//                baseAdvertiseCallback.onScanResponseDataSet(advertisingSet, status);
-//            }
-//
-//            /**
-//             * Callback triggered in response to {@link AdvertisingSet#setAdvertisingParameters}
-//             * indicating result of the operation.
-//             *
-//             * @param advertisingSet The advertising set.
-//             * @param txPower        tx power that will be used for this set.
-//             * @param status         Status of the operation.
-//             */
-//            @Override
-//            public void onAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int txPower, int status) {
-//                super.onAdvertisingParametersUpdated(advertisingSet, txPower, status);
-//                baseAdvertiseCallback.onAdvertisingParametersUpdated(advertisingSet, txPower, status);
-//            }
-//
-//            /**
-//             * Callback triggered in response to {@link AdvertisingSet#setPeriodicAdvertisingParameters}
-//             * indicating result of the operation.
-//             *
-//             * @param advertisingSet The advertising set.
-//             * @param status         Status of the operation.
-//             */
-//            @Override
-//            public void onPeriodicAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int status) {
-//                super.onPeriodicAdvertisingParametersUpdated(advertisingSet, status);
-//                baseAdvertiseCallback.onPeriodicAdvertisingParametersUpdated(advertisingSet, status);
-//            }
-//
-//            /**
-//             * Callback triggered in response to {@link AdvertisingSet#setPeriodicAdvertisingData}
-//             * indicating result of the operation.
-//             *
-//             * @param advertisingSet The advertising set.
-//             * @param status         Status of the operation.
-//             */
-//            @Override
-//            public void onPeriodicAdvertisingDataSet(AdvertisingSet advertisingSet, int status) {
-//                super.onPeriodicAdvertisingDataSet(advertisingSet, status);
-//                baseAdvertiseCallback.onPeriodicAdvertisingDataSet(advertisingSet, status);
-//            }
-//
-//            /**
-//             * Callback triggered in response to {@link AdvertisingSet#setPeriodicAdvertisingEnabled}
-//             * indicating result of the operation.
-//             *
-//             * @param advertisingSet The advertising set.
-//             * @param enable
-//             * @param status         Status of the operation.
-//             */
-//            @Override
-//            public void onPeriodicAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status) {
-//                super.onPeriodicAdvertisingEnabled(advertisingSet, enable, status);
-//                baseAdvertiseCallback.onPeriodicAdvertisingEnabled(advertisingSet, enable, status);
-//            }
-//        };
-//    }
 
     /**
      * 停止广播

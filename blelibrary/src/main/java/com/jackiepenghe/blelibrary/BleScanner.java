@@ -520,7 +520,10 @@ public class BleScanner {
         scanTimer.stopTimer();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mBluetoothAdapter.getBluetoothLeScanner().stopScan(mScanCallback);
+            if (bluetoothLeScanner == null) {
+                return false;
+            }
+            bluetoothLeScanner.stopScan(mScanCallback);
         } else {
             //noinspection deprecation
             this.mBluetoothAdapter.stopLeScan(this.mLeScanCallback);
