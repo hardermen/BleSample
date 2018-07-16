@@ -157,6 +157,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                 }
 
                 servicesCharacteristicsListAdapter.notifyDataSetChanged();
+                bleConnector.refreshGattCache();
             }
 
             //提取设备名与设备地址

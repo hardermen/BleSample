@@ -1,15 +1,12 @@
 package com.jackiepenghe.blelibrary;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Handler;
-
-import java.io.Serializable;
 
 
 /**
@@ -135,181 +132,54 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
         final String uuid = intent.getStringExtra(BleConstants.UUID);
         switch (action) {
             case BluetoothAdapter.ACTION_STATE_CHANGED:
-                int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -2147483648);
-                //如果蓝牙被关闭
-                if (state == BluetoothAdapter.STATE_OFF) {
-                    Tool.toastL(context, R.string.bluetooth_off);
-                    if (onBluetoothSwitchChangedListener != null) {
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                onBluetoothSwitchChangedListener.onBluetoothSwitchChanged(false);
-                            }
-                        });
-                    }
-                }
-                //如果蓝牙被打开
-                else if (state == BluetoothAdapter.STATE_ON) {
-                    Tool.toastL(context, R.string.bluetooth_on);
-                    if (onBluetoothSwitchChangedListener != null) {
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                onBluetoothSwitchChangedListener.onBluetoothSwitchChanged(true);
-                            }
-                        });
-                    }
-                }
+                processBluetoothStateChanged(context, intent);
                 break;
             case BleConstants.ACTION_GATT_CONNECTED:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTED");
-                if (onConnectedListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onConnectedListener.onConnected();
-                        }
-                    });
-                }
+                processGattConnect();
                 break;
             case BleConstants.ACTION_GATT_DISCONNECTED:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
-                if (onDisconnectedListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onDisconnectedListener.onDisconnected();
-                        }
-                    });
-                }
+                processGattDisconnect();
                 break;
             case BleConstants.ACTION_GATT_SERVICES_DISCOVERED:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
-                if (onServicesDiscoveredListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onServicesDiscoveredListener.onServicesDiscovered();
-                        }
-                    });
-                }
+                processGattServiceDiscovered();
                 break;
             case BleConstants.ACTION_GATT_NOT_SUCCESS:
-                final String methodName = intent.getStringExtra(LibraryConstants.METHOD);
-                final int errorStatus = intent.getIntExtra(LibraryConstants.STATUS, LibraryConstants.DEFAULT_STATUS);
-                if (onBluetoothGattOptionsNotSuccessListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onBluetoothGattOptionsNotSuccessListener.onBluetoothGattOptionsNotSuccess(methodName, errorStatus);
-                        }
-                    });
-                }
+                processGattNotSuccess(intent);
                 break;
             case BleConstants.ACTION_GATT_CONNECTING:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTING");
-                if (onConnectingListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onConnectingListener.onConnecting();
-                        }
-                    });
-                }
+                processGattConnecting();
                 break;
             case BleConstants.ACTION_GATT_DISCONNECTING:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_DISCONNECTING");
-                if (onDisconnectingListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onDisconnectingListener.onDisconnecting();
-                        }
-                    });
-                }
+                processGattDisconnecting();
                 break;
             case BleConstants.ACTION_CHARACTERISTIC_READ:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_READ,value = " + Tool.bytesToHexStr(values));
-                if (onCharacteristicReadListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onCharacteristicReadListener.onCharacteristicRead(uuid,values);
-                        }
-                    });
-                }
+                processCharacteristicRead(values, uuid);
                 break;
             case BleConstants.ACTION_CHARACTERISTIC_CHANGED:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_CHANGED,value = " + Tool.bytesToHexStr(values));
-                if (onReceiveNotificationListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onReceiveNotificationListener.onReceiveNotification(uuid,values);
-                        }
-                    });
-                }
+                processCharacteristicChanged(values, uuid);
                 break;
             case BleConstants.ACTION_CHARACTERISTIC_WRITE:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_WRITE,value = " + Tool.bytesToHexStr(values));
-                if (onCharacteristicWriteListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onCharacteristicWriteListener.onCharacteristicWrite(uuid,values);
-                        }
-                    });
-                }
+                processCharacteristicWrite(values, uuid);
                 break;
             case BleConstants.ACTION_DESCRIPTOR_READ:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_DESCRIPTOR_READ,value = " + Tool.bytesToHexStr(values));
-                if (onDescriptorReadListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onDescriptorReadListener.onDescriptorRead(uuid,values);
-                        }
-                    });
-                }
+                processGattDescriptorRead(values, uuid);
                 break;
             case BleConstants.ACTION_DESCRIPTOR_WRITE:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_DESCRIPTOR_WRITE,value = " + Tool.bytesToHexStr(values));
-                if (onDescriptorWriteListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onDescriptorWriteListener.onDescriptorWrite(uuid,values);
-                        }
-                    });
-                }
+                processDescriptorWrite(values, uuid);
                 break;
             case BleConstants.ACTION_RELIABLE_WRITE_COMPLETED:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_RELIABLE_WRITE_COMPLETED");
-                if (onReliableWriteCompletedListener != null) {
-                    onReliableWriteCompletedListener.onReliableWriteCompleted();
-                }
+                processReliableWriteCompleted();
                 break;
             case BleConstants.ACTION_READ_REMOTE_RSSI:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_READ_REMOTE_RSSI,rssi = " + values[0]);
-                if (onReadRemoteRssiListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onReadRemoteRssiListener.onReadRemoteRssi(values[0]);
-                        }
-                    });
-                }
+                processReadRemoteRssi(values);
                 break;
             case BleConstants.ACTION_MTU_CHANGED:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_MTU_CHANGED,mtu = " + values[0]);
-                if (onMtuChangedListener != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            onMtuChangedListener.onMtuChanged(values[0]);
-                        }
-                    });
-                }
+                processMtuChanged(values);
                 break;
             default:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "get other action" + action);
@@ -447,5 +317,254 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     void setOnBluetoothGattOptionsNotSuccessListener(BleInterface.OnBluetoothGattOptionsNotSuccessListener onBluetoothGattOptionsNotSuccessListener) {
         this.onBluetoothGattOptionsNotSuccessListener = onBluetoothGattOptionsNotSuccessListener;
+    }
+
+    /*------------------------库内函数----------------------------*/
+
+    /**
+     *蓝牙状态更改时的处理
+     * @param context 上下文
+     * @param intent intent对象
+     */
+    private void processBluetoothStateChanged(Context context, Intent intent) {
+        int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -2147483648);
+        //如果蓝牙被关闭
+        if (state == BluetoothAdapter.STATE_OFF) {
+            Tool.toastL(context, R.string.bluetooth_off);
+            if (onBluetoothSwitchChangedListener != null) {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        onBluetoothSwitchChangedListener.onBluetoothSwitchChanged(false);
+                    }
+                });
+            }
+        }
+        //如果蓝牙被打开
+        else if (state == BluetoothAdapter.STATE_ON) {
+            Tool.toastL(context, R.string.bluetooth_on);
+            if (onBluetoothSwitchChangedListener != null) {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        onBluetoothSwitchChangedListener.onBluetoothSwitchChanged(true);
+                    }
+                });
+            }
+        }
+    }
+
+    /**
+     * 与远程设备建立连接时进行的处理
+     */
+    private void processGattConnect() {
+        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTED");
+        if (onConnectedListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onConnectedListener.onConnected();
+                }
+            });
+        }
+    }
+
+    /**
+     * 与远程设备断开连接时进行的处理
+     */
+    private void processGattDisconnect() {
+        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
+        if (onDisconnectedListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onDisconnectedListener.onDisconnected();
+                }
+            });
+        }
+    }
+
+    /**
+     * 发现远程设备服务时进行的处理
+     */
+    private void processGattServiceDiscovered() {
+        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (onServicesDiscoveredListener != null) {
+                    onServicesDiscoveredListener.onServicesDiscovered();
+                }
+            }
+        });
+    }
+
+    /**
+     * GATT处理数据失败时进行的处理
+     * @param intent intent
+     */
+    private void processGattNotSuccess(Intent intent) {
+        final String methodName = intent.getStringExtra(LibraryConstants.METHOD);
+        final int errorStatus = intent.getIntExtra(LibraryConstants.STATUS, LibraryConstants.DEFAULT_STATUS);
+        if (onBluetoothGattOptionsNotSuccessListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onBluetoothGattOptionsNotSuccessListener.onBluetoothGattOptionsNotSuccess(methodName, errorStatus);
+                }
+            });
+        }
+    }
+
+    /**
+     * GATT正在进行连接时进行的处理
+     */
+    private void processGattConnecting() {
+        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTING");
+        if (onConnectingListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onConnectingListener.onConnecting();
+                }
+            });
+        }
+    }
+
+    /**
+     * GATT正在断开连接时进行的处理
+     */
+    private void processGattDisconnecting() {
+        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_DISCONNECTING");
+        if (onDisconnectingListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onDisconnectingListener.onDisconnecting();
+                }
+            });
+        }
+    }
+
+    /**
+     * GATT读取到远端设备数据时进行的处理
+     * @param values 数据内容
+     * @param uuid 数据来源uuid
+     */
+    private void processCharacteristicRead(final byte[] values, final String uuid) {
+        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_READ,value = " + Tool.bytesToHexStr(values));
+        if (onCharacteristicReadListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onCharacteristicReadListener.onCharacteristicRead(uuid, values);
+                }
+            });
+        }
+    }
+
+    /**
+     * GATT发现远端设备特征数据发生改变时(接收到通知时)进行的处理
+     * @param values 数据内容
+     * @param uuid 数据来源uuid
+     */
+    private void processCharacteristicChanged(final byte[] values, final String uuid) {
+        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_CHANGED,value = " + Tool.bytesToHexStr(values));
+        if (onReceiveNotificationListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onReceiveNotificationListener.onReceiveNotification(uuid, values);
+                }
+            });
+        }
+    }
+
+    /**
+     * GATT向远端设备特征写入数据时的处理
+     * @param values 数据内容
+     * @param uuid 数据目标uuid
+     */
+    private void processCharacteristicWrite(final byte[] values, final String uuid) {
+        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_WRITE,value = " + Tool.bytesToHexStr(values));
+        if (onCharacteristicWriteListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onCharacteristicWriteListener.onCharacteristicWrite(uuid, values);
+                }
+            });
+        }
+    }
+
+    /**
+     * GATT读取到远端设备描述数据时的处理
+     * @param values 数据内容
+     * @param uuid 数据来源uuid
+     */
+    private void processGattDescriptorRead(final byte[] values, final String uuid) {
+        if (onDescriptorReadListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onDescriptorReadListener.onDescriptorRead(uuid, values);
+                }
+            });
+        }
+    }
+
+    /**
+     * GATT向远端设备描述写入数据时的处理
+     * @param values 数据内容
+     * @param uuid 数据目标uuid
+     */
+    private void processDescriptorWrite(final byte[] values, final String uuid) {
+        if (onDescriptorWriteListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onDescriptorWriteListener.onDescriptorWrite(uuid, values);
+                }
+            });
+        }
+    }
+
+    /**
+     * GATT向远端设备写入可靠数据完成时的处理
+     */
+    private void processReliableWriteCompleted() {
+        if (onReliableWriteCompletedListener != null) {
+            onReliableWriteCompletedListener.onReliableWriteCompleted();
+        }
+    }
+
+    /**
+     * GATT读取到远端设备RSSI时的处理
+     * @param values 数据内容
+     */
+    private void processReadRemoteRssi(final byte[] values) {
+        if (onReadRemoteRssiListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onReadRemoteRssiListener.onReadRemoteRssi(values[0]);
+                }
+            });
+        }
+    }
+
+    /**
+     * 与远端设备的MTU(单包最大读写数据长度)改变时的处理
+     * @param values 数据内容
+     */
+    private void processMtuChanged(final byte[] values) {
+        if (onMtuChangedListener != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onMtuChangedListener.onMtuChanged(values[0]);
+                }
+            });
+        }
     }
 }
