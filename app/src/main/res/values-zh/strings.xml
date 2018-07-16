@@ -60,4 +60,5 @@
     <string name="nothing_selected">没有选中任何设备</string>
     <string name="selected_more_than">选中设备数量不能超过5个</string>
     <string name="broadcast_stopped">已停止广播</string>
+    <string name="scan_record">广播包</string>
 </resources>
