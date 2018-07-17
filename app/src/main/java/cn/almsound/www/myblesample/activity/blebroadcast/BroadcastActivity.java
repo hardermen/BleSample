@@ -64,7 +64,6 @@ public class BroadcastActivity extends BaseAppCompatActivity {
         public void onBroadCastStopped() {
             broadcastStatusTv.setText(R.string.broadcast_stopped);
         }
-
     };
 
     /**
@@ -168,7 +167,6 @@ public class BroadcastActivity extends BaseAppCompatActivity {
                 Tool.warnOut(TAG, "广播请求发起失败（这是真的失败了，连请求都没有发起成功）");
             }
             Tool.warnOut(TAG, "startAdvertising = " + b);
-
         }
     }
 
