@@ -505,15 +505,15 @@ public class BleAdvertiser {
                         break;
                     }
                 }
-                stopAdvertising();
-                if (baseAdvertiseCallback != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        stopAdvertising();
+                        if (baseAdvertiseCallback != null) {
                             baseAdvertiseCallback.onBroadCastStopped();
                         }
-                    });
-                }
+                    }
+                });
             }
         };
         Thread thread = threadFactory.newThread(runnable);
