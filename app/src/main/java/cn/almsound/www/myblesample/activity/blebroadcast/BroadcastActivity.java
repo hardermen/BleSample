@@ -97,10 +97,10 @@ public class BroadcastActivity extends BaseAppCompatActivity {
                     Tool.warnOut(TAG, "初始化成功");
                 }
             }
+        } else {
+            Tool.toastL(BroadcastActivity.this, "系统版本过低，不支持蓝牙广播");
         }
         Tool.warnOut(TAG, "bleAdvertiser = " + bleAdvertiser);
-
-
     }
 
     /**
@@ -159,10 +159,8 @@ public class BroadcastActivity extends BaseAppCompatActivity {
     @Override
     protected void doAfterAll() {
         if (bleAdvertiser != null) {
-            boolean b = false;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                b = bleAdvertiser.startAdvertising();
-            }
+            boolean b;
+            b = bleAdvertiser.startAdvertising();
             if (b) {
                 Tool.warnOut(TAG, "广播请求发起成功（是否真的成功，在init的advertiseCallback回调中查看）");
             } else {
