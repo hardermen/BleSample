@@ -7,16 +7,14 @@
 
     <application android:allowBackup="true" android:label="@string/app_name"
         android:supportsRtl="true">
-
-
-        <service
-            android:name="com.jackiepenghe.blelibrary.BluetoothLeService"
-            android:enabled="true"
-            android:exported="false" />
-        <service
-            android:name="com.jackiepenghe.blelibrary.BluetoothMultiService"
-            android:enabled="true"
-            android:exported="false" />
+        <!--<service-->
+            <!--android:name="com.jackiepenghe.blelibrary.BluetoothLeService"-->
+            <!--android:enabled="true"-->
+            <!--android:exported="false" />-->
+        <!--<service-->
+            <!--android:name="com.jackiepenghe.blelibrary.BluetoothMultiService"-->
+            <!--android:enabled="true"-->
+            <!--android:exported="false" />-->
     </application>
 
 </manifest>

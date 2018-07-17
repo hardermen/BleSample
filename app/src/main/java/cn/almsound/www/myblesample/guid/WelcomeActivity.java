@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 
 import com.jackiepenghe.baselibrary.BaseWelcomeActivity;
+import com.jackiepenghe.baselibrary.CrashHandler;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.Permission;
 import com.yanzhenjie.permission.PermissionListener;
@@ -103,7 +104,7 @@ public class WelcomeActivity extends BaseWelcomeActivity {
     private void requestPermission() {
         AndPermission.with(this)
                 .requestCode(REQUEST_CODE)
-                .permission(Permission.LOCATION)
+                .permission(Permission.LOCATION,Permission.STORAGE)
                 .callback(permissionListener)
                 .rationale(rationaleListener)
                 .start();

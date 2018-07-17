@@ -416,13 +416,7 @@ public class BleAdvertiser {
         mBluetoothAdvertiser.startAdvertising(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, advertiseCallback);
         final int timeout = defaultAdvertiseSettings.getTimeout();
         if (timeout > 0) {
-            final long startTime = System.currentTimeMillis();
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    startThreadToCheckAdvertiserStatus(startTime, timeout);
-                }
-            });
+            startThreadToCheckAdvertiserStatus(timeout);
         }
         return true;
     }
@@ -493,22 +487,23 @@ public class BleAdvertiser {
     /**
      * 发起一个线程，检测广播状态，当广播停止是进行回调
      *
-     * @param startTime 开始时间
      * @param timeout   超时时间
      */
-    private void startThreadToCheckAdvertiserStatus(final long startTime, final int timeout) {
+    private void startThreadToCheckAdvertiserStatus(final int timeout) {
+        final long startTime = System.currentTimeMillis();
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 while (true) {
                     if (System.currentTimeMillis() - startTime > timeout) {
+                        Tool.warnOut(TAG,"wait until timeout");
                         break;
                     }
                 }
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        stopAdvertising();
+                        Tool.warnOut(TAG,"advertise timeout:stopAdvertising()");
                         if (baseAdvertiseCallback != null) {
                             baseAdvertiseCallback.onBroadCastStopped();
                         }

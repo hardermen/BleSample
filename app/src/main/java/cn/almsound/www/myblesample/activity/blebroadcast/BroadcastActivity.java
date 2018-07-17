@@ -64,6 +64,7 @@ public class BroadcastActivity extends BaseAppCompatActivity {
         public void onBroadCastStopped() {
             broadcastStatusTv.setText(R.string.broadcast_stopped);
         }
+
     };
 
     /**
