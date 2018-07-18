@@ -114,6 +114,9 @@ public class WelcomeActivity extends BaseWelcomeActivity {
      * 进入主界面
      */
     private void toNext() {
+        //权限完全请求并获取完毕后，初始化全局异常捕获类
+        CrashHandler crashHandler = CrashHandler.getInstance();
+        crashHandler.init(this.getApplicationContext());
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         onBackPressed();

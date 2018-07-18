@@ -499,6 +499,7 @@ public class BleAdvertiser {
                         break;
                     }
                 }
+                stopAdvertising();
                 if (baseAdvertiseCallback != null) {
                     baseAdvertiseCallback.onBroadCastStopped();
                 }
