@@ -29,6 +29,7 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        //打开debug信息开关
         Tool.setDebugFlag(true);
         //初始化文件工具类
         FileUtil.init(this.getApplicationContext());
