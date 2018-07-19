@@ -179,7 +179,7 @@ public class BluetoothLeService extends Service {
         }
 
         bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback);
-        return autoReconnect || bluetoothGatt != null && bluetoothGatt.connect();
+        return bluetoothGatt != null && (autoReconnect || bluetoothGatt.connect());
 
     }
 

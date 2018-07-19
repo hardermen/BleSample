@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Intent;
+import android.os.Handler;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +25,8 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      * TAG
      */
     private static final String TAG = BleBluetoothGattCallback.class.getSimpleName();
+
+    private static final Handler HANDLER = new Handler();
 
     /*-------------------------成员变量-------------------------*/
 
@@ -60,7 +63,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         //创建intent对象
-        Intent intent = new Intent();
+        final Intent intent = new Intent();
         //判断当前的连接状态
         switch (newState) {
             //连接断开
@@ -91,8 +94,13 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
                 Tool.warnOut(TAG, "other state");
                 break;
         }
-        //发送广播
-        bluetoothLeService.sendBroadcast(intent);
+        HANDLER.post(new Runnable() {
+            @Override
+            public void run() {
+                //发送广播
+                bluetoothLeService.sendBroadcast(intent);
+            }
+        });
     }
 
     /**
@@ -132,7 +140,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         //BluetoothGatt客户端配置成功
         else {
             byte[] value = characteristic.getValue();
-            broadcastUpdate(characteristic.getUuid().toString(),BleConstants.ACTION_CHARACTERISTIC_READ, value);
+            broadcastUpdate(characteristic.getUuid().toString(), BleConstants.ACTION_CHARACTERISTIC_READ, value);
         }
     }
 
@@ -153,7 +161,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         //BluetoothGatt客户端配置成功
         else {
             byte[] value = characteristic.getValue();
-            broadcastUpdate(characteristic.getUuid().toString(),BleConstants.ACTION_CHARACTERISTIC_WRITE, value);
+            broadcastUpdate(characteristic.getUuid().toString(), BleConstants.ACTION_CHARACTERISTIC_WRITE, value);
         }
     }
 
@@ -167,7 +175,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         Tool.warnOut(TAG, "onReceivedNotification");
         byte[] value = characteristic.getValue();
-        broadcastUpdate(characteristic.getUuid().toString(),BleConstants.ACTION_CHARACTERISTIC_CHANGED, value);
+        broadcastUpdate(characteristic.getUuid().toString(), BleConstants.ACTION_CHARACTERISTIC_CHANGED, value);
     }
 
     /**
@@ -187,7 +195,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         //BluetoothGatt客户端配置成功
         else {
             byte[] value = descriptor.getValue();
-            broadcastUpdate(descriptor.getUuid().toString(),BleConstants.ACTION_DESCRIPTOR_READ, value);
+            broadcastUpdate(descriptor.getUuid().toString(), BleConstants.ACTION_DESCRIPTOR_READ, value);
         }
     }
 
@@ -208,7 +216,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         //BluetoothGatt客户端配置成功
         else {
             byte[] value = descriptor.getValue();
-            broadcastUpdate(descriptor.getUuid().toString(),BleConstants.ACTION_DESCRIPTOR_WRITE, value);
+            broadcastUpdate(descriptor.getUuid().toString(), BleConstants.ACTION_DESCRIPTOR_WRITE, value);
         }
 
     }
@@ -280,9 +288,15 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      * @param action 广播中需要包含的action
      */
     private void broadcastUpdate(String action) {
-        Intent intent = new Intent();
+        final Intent intent = new Intent();
         intent.setAction(action);
-        bluetoothLeService.sendBroadcast(intent);
+        HANDLER.post(new Runnable() {
+            @Override
+            public void run() {
+                //发送广播
+                bluetoothLeService.sendBroadcast(intent);
+            }
+        });
     }
 
     /**
@@ -291,12 +305,18 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      * @param action 广播中需要包含的action
      * @param value  广播中需要包含的数据
      */
-    private void broadcastUpdate( String uuid,String action, byte[] value) {
-        Intent intent = new Intent();
-        intent.putExtra(BleConstants.UUID,uuid);
+    private void broadcastUpdate(String uuid, String action, byte[] value) {
+        final Intent intent = new Intent();
+        intent.putExtra(BleConstants.UUID, uuid);
         intent.setAction(action);
         intent.putExtra(LibraryConstants.VALUE, value);
-        bluetoothLeService.sendBroadcast(intent);
+        HANDLER.post(new Runnable() {
+            @Override
+            public void run() {
+                //发送广播
+                bluetoothLeService.sendBroadcast(intent);
+            }
+        });
     }
 
     /**
@@ -306,10 +326,16 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      * @param value  广播中需要包含的数据
      */
     private void broadcastUpdate(String action, byte[] value) {
-        Intent intent = new Intent();
+        final Intent intent = new Intent();
         intent.setAction(action);
         intent.putExtra(LibraryConstants.VALUE, value);
-        bluetoothLeService.sendBroadcast(intent);
+        HANDLER.post(new Runnable() {
+            @Override
+            public void run() {
+                //发送广播
+                bluetoothLeService.sendBroadcast(intent);
+            }
+        });
     }
 
     /**
@@ -319,11 +345,17 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      * @param method 广播中需要包含的数据
      */
     private void broadcastUpdate(String action, String method, int status) {
-        Intent intent = new Intent();
+        final Intent intent = new Intent();
         intent.setAction(action);
         intent.putExtra(LibraryConstants.METHOD, method);
         intent.putExtra(LibraryConstants.STATUS, status);
-        bluetoothLeService.sendBroadcast(intent);
+        HANDLER.post(new Runnable() {
+            @Override
+            public void run() {
+                //发送广播
+                bluetoothLeService.sendBroadcast(intent);
+            }
+        });
     }
 
     /*-------------------------库内可使用函数-------------------------*/

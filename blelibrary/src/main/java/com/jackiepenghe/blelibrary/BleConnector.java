@@ -72,10 +72,6 @@ public class BleConnector {
      * 如果发起绑定，会记录下绑定设备的地址
      */
     private String bondAddress;
-    /**
-     * 发起连接的设备
-     */
-    private BluetoothDevice bluetoothDevice;
 
     /*-------------------------构造函数-------------------------*/
 

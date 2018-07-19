@@ -31,7 +31,7 @@ class BleServiceConnection implements ServiceConnection {
     /**
      * 设备
      */
-    private BluetoothDevice mBluetoothDevice;
+    private BluetoothDevice bluetoothDevice;
     /**
      * 设备地址
      */
@@ -57,7 +57,7 @@ class BleServiceConnection implements ServiceConnection {
     }
 
     BleServiceConnection(BluetoothDevice bluetoothDevice) {
-        mBluetoothDevice = bluetoothDevice;
+        this.bluetoothDevice = bluetoothDevice;
     }
 
     /*------------------------实现接口函数----------------------------*/
@@ -83,15 +83,15 @@ class BleServiceConnection implements ServiceConnection {
             Tool.warnOut(TAG, "bluetoothLeService initialize failed!");
             return;
         }
-        if (mAddress == null && mBluetoothDevice == null) {
-            Tool.warnOut(TAG, "address and mBluetoothDevice is null!");
+        if (mAddress == null && bluetoothDevice == null) {
+            Tool.warnOut(TAG, "address and bluetoothDevice is null!");
             return;
         }
         boolean connect;
         if (mAddress != null) {
             connect = bluetoothLeService.connect(mAddress, autoConnect);
         } else {
-            connect = bluetoothLeService.connect(mBluetoothDevice, autoConnect);
+            connect = bluetoothLeService.connect(bluetoothDevice, autoConnect);
         }
         Tool.warnOut(TAG, "connect " + connect);
     }
