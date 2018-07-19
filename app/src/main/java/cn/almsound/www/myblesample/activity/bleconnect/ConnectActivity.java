@@ -542,7 +542,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         //先设置要连接的设备
         if (bleConnector.checkAndSetDevice(bluetoothDevice)) {
             //发起连接
-            if (bleConnector.startConnect()) {
+            if (bleConnector.startConnect(true)) {
                 Tool.warnOut("开始连接");
                 Tool.toastL(ConnectActivity.this, "发起连接");
                 customTextCircleView.setColor(Color.YELLOW);
