@@ -12,7 +12,7 @@ import com.jackiepenghe.baselibrary.Tool;
 import com.jackiepenghe.blelibrary.BleManager;
 
 import cn.almsound.www.myblesample.R;
-import cn.almsound.www.myblesample.activity.blebroadcast.BroadcastActivity;
+import cn.almsound.www.myblesample.activity.bleadvertisement.BleAdvertiseActivity;
 import cn.almsound.www.myblesample.activity.bleconnect.DeviceListActivity;
 import cn.almsound.www.myblesample.activity.blemulticonnect.MultiConnectDeviceListActivity;
 
@@ -189,7 +189,7 @@ public class MainActivity extends BaseAppCompatActivity {
             return;
         }
 
-        Intent intent = new Intent(MainActivity.this,BroadcastActivity.class);
+        Intent intent = new Intent(MainActivity.this,BleAdvertiseActivity.class);
         startActivity(intent);
     }
 }

@@ -67,7 +67,7 @@
         <activity
             android:name=".guid.WelcomeActivity"
             android:theme="@style/AppTheme.NoActionBar.FullScreen" />
-        <activity android:name=".activity.blebroadcast.BroadcastActivity" />
+        <activity android:name=".activity.bleadvertisement.BleAdvertiseActivity" />
         <activity android:name=".activity.blemulticonnect.MultiConnectDeviceListActivity"/>
     </application>
 

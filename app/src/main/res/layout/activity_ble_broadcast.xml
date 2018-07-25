@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="cn.almsound.www.myblesample.activity.blebroadcast.BroadcastActivity">
+    tools:context="cn.almsound.www.myblesample.activity.bleadvertisement.BleAdvertiseActivity">
 
     <TextView
         android:id="@+id/broad_cast_status_tv"
