@@ -1,25 +1,27 @@
 [API文档](http://penghe.xyz/blelibraryAPIs/index.html)
 
+由于更新维护会经常修改代码，下方的配置以及依极有可能未及时更新，有需要可下载代码查看
+
 配置：(Configure)
 
 1.直接将library依赖到项目中（Download and copy library "blelibrary" to your project）
 
 2.gradle配置依赖(gradle dependency)
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.6.8'
+compile 'com.jackiepenghe:blelibrary:0.0.5'
 ```
 3.maven配置依赖(maven dependency)
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.6.8</version>
+  <version>0.0.5</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖(vy dependency)
 ```xml
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.6.8'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.0.5'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
