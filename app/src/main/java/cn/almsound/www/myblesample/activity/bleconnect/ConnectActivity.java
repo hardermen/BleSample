@@ -87,7 +87,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     private ArrayList<MultiItemEntity> adapterData = new ArrayList<>();
 
-     /**
+    /**
      * 用于显示服务UUID和特征UUID的Adapter
      */
     private ServicesCharacteristicsListAdapter servicesCharacteristicsListAdapter;
@@ -142,7 +142,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                     String serviceUuidString = bluetoothGattService.getUuid().toString();
                     Tool.warnOut(TAG, "bluetoothGattService UUID = " + serviceUuidString);
 
-                    ServiceUuidItem serviceUuidItem = new ServiceUuidItem(BleUtils.getServiceUuidName(serviceUuidString),serviceUuidString);
+                    ServiceUuidItem serviceUuidItem = new ServiceUuidItem(BleUtils.getServiceUuidName(serviceUuidString), serviceUuidString);
                     List<BluetoothGattCharacteristic> characteristics = bluetoothGattService.getCharacteristics();
                     for (int j = 0; j < characteristics.size(); j++) {
                         BluetoothGattCharacteristic bluetoothGattCharacteristic = characteristics.get(j);
@@ -150,7 +150,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                         boolean canRead = bleConnector.canRead(serviceUuidString, characteristicUuidString);
                         boolean canWrite = bleConnector.canWrite(serviceUuidString, characteristicUuidString);
                         boolean canNotify = bleConnector.canNotify(serviceUuidString, characteristicUuidString);
-                        CharacteristicUuidItem characteristicUuidItem = new CharacteristicUuidItem(BleUtils.getServiceUuidName(characteristicUuidString),characteristicUuidString, canRead, canWrite, canNotify);
+                        CharacteristicUuidItem characteristicUuidItem = new CharacteristicUuidItem(BleUtils.getServiceUuidName(characteristicUuidString), characteristicUuidString, canRead, canWrite, canNotify);
                         serviceUuidItem.addSubItem(characteristicUuidItem);
                     }
                     adapterData.add(serviceUuidItem);
@@ -175,6 +175,14 @@ public class ConnectActivity extends BaseAppCompatActivity {
             } else {
                 Tool.warnOut(TAG, "系统版本过低，无法请求更新MTU");
             }
+        }
+
+        /**
+         * 远端设备服务列表扫描失败
+         */
+        @Override
+        public void onDiscoverServiceFailed() {
+            Tool.warnOut(TAG, "远端设备服务列表扫描失败");
         }
     };
     /**
@@ -221,7 +229,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     private BleInterface.OnReceiveNotificationListener onReceiveNotificationListener = new BleInterface.OnReceiveNotificationListener() {
         @Override
-        public void onReceiveNotification(String uuid,byte[] values) {
+        public void onReceiveNotification(String uuid, byte[] values) {
             String hexStr = Tool.bytesToHexStr(values);
             String str = new String(values);
             Tool.warnOut("ConnectActivity", "value = " + hexStr);
@@ -292,6 +300,15 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onDisconnecting() {
             Tool.warnOut(TAG, "onDisconnecting");
+        }
+    };
+    private BleInterface.OnStatusErrorListener onStatusErrorListener = new BleInterface.OnStatusErrorListener() {
+        @Override
+        public void onStatusError(int status) {
+            Tool.warnOut(TAG,"连接出错，状态码：" + status);
+            Tool.toastL(ConnectActivity.this,"连接出错，状态码：" + status);
+            bleConnector.close();
+            onBackPressed();
         }
     };
 
@@ -476,6 +493,13 @@ public class ConnectActivity extends BaseAppCompatActivity {
             Tool.toastL(ConnectActivity.this, R.string.ble_not_supported);
             return;
         }
+        setConnectListener();
+    }
+
+    /**
+     * 设置相关的回调
+     */
+    private void setConnectListener() {
         bleConnector.setOnConnectingListener(onConnectingListener);
         //设置连接设备成功的回调
         bleConnector.setOnConnectedListener(onConnectedListener);
@@ -497,6 +521,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
         bleConnector.setOnBondStateChangedListener(onBondStateChangedListener);
         //设置 Mtu参数被更改时的回调
         bleConnector.setOnMtuChangedListener(onMtuChangedListener);
+        //设置 连接时，错误状态码接收的处理
+        bleConnector.setOnStatusErrorListener(onStatusErrorListener);
     }
 
     /**

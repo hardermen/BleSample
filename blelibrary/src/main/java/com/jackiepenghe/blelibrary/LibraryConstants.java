@@ -10,4 +10,5 @@ class LibraryConstants {
     static final String METHOD = "METHOD";
     static final String STATUS = "STATUS";
     static final int DEFAULT_STATUS = Integer.MAX_VALUE;
+    public static final String STATUS_ERROR = "STATUS_ERROR";
 }

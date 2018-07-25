@@ -21,20 +21,22 @@ public class BleConstants {
 
     /*库内ACTION定义区域*/
 
-    static final String ACTION_GATT_CONNECTED = "ACTION_GATT_CONNECTED";
-    static final String ACTION_GATT_DISCONNECTED = "ACTION_GATT_DISCONNECTED";
-    static final String ACTION_GATT_SERVICES_DISCOVERED = "ACTION_GATT_SERVICES_DISCOVERED";
-    static final String ACTION_GATT_CONNECTING = "ACTION_GATT_CONNECTING";
-    static final String ACTION_GATT_DISCONNECTING = "ACTION_GATT_DISCONNECTING";
-    static final String ACTION_CHARACTERISTIC_READ = "ACTION_CHARACTERISTIC_READ";
-    static final String ACTION_CHARACTERISTIC_CHANGED = "ACTION_CHARACTERISTIC_CHANGED";
-    static final String ACTION_CHARACTERISTIC_WRITE = "ACTION_CHARACTERISTIC_WRITE";
-    static final String ACTION_DESCRIPTOR_READ = "ACTION_DESCRIPTOR_READ";
-    static final String ACTION_DESCRIPTOR_WRITE = "ACTION_DESCRIPTOR_WRITE";
-    static final String ACTION_RELIABLE_WRITE_COMPLETED = "ACTION_RELIABLE_WRITE_COMPLETED";
-    static final String ACTION_READ_REMOTE_RSSI = "ACTION_READ_REMOTE_RSSI";
-    static final String ACTION_MTU_CHANGED = "ACTION_MTU_CHANGED";
-    static final String ACTION_GATT_NOT_SUCCESS = "ACTION_GATT_NOT_SUCCESS";
+    static final String ACTION_GATT_CONNECTED = "com.jackiepenghe.blelibrary.ACTION_GATT_CONNECTED";
+    static final String ACTION_GATT_DISCONNECTED = "com.jackiepenghe.blelibrary.ACTION_GATT_DISCONNECTED";
+    static final String ACTION_GATT_SERVICES_DISCOVERED = "com.jackiepenghe.blelibrary.ACTION_GATT_SERVICES_DISCOVERED";
+    static final String ACTION_GATT_CONNECTING = "com.jackiepenghe.blelibrary.ACTION_GATT_CONNECTING";
+    static final String ACTION_GATT_DISCONNECTING = "com.jackiepenghe.blelibrary.ACTION_GATT_DISCONNECTING";
+    static final String ACTION_CHARACTERISTIC_READ = "com.jackiepenghe.blelibrary.ACTION_CHARACTERISTIC_READ";
+    static final String ACTION_CHARACTERISTIC_CHANGED = "com.jackiepenghe.blelibrary.ACTION_CHARACTERISTIC_CHANGED";
+    static final String ACTION_CHARACTERISTIC_WRITE = "com.jackiepenghe.blelibrary.ACTION_CHARACTERISTIC_WRITE";
+    static final String ACTION_DESCRIPTOR_READ = "com.jackiepenghe.blelibrary.ACTION_DESCRIPTOR_READ";
+    static final String ACTION_DESCRIPTOR_WRITE = "com.jackiepenghe.blelibrary.ACTION_DESCRIPTOR_WRITE";
+    static final String ACTION_RELIABLE_WRITE_COMPLETED = "com.jackiepenghe.blelibrary.ACTION_RELIABLE_WRITE_COMPLETED";
+    static final String ACTION_READ_REMOTE_RSSI = "com.jackiepenghe.blelibrary.ACTION_READ_REMOTE_RSSI";
+    static final String ACTION_MTU_CHANGED = "com.jackiepenghe.blelibrary.ACTION_MTU_CHANGED";
+    static final String ACTION_GATT_NOT_SUCCESS = "com.jackiepenghe.blelibrary.ACTION_GATT_NOT_SUCCESS";
+    public static final String ACTION_GATT_DISCOVER_SERVICES_FAILED = "com.jackiepenghe.blelibrary.ACTION_GATT_DISCOVER_SERVICES_FAILED";
+    public static final String ACTION_GATT_STATUS_ERROR = "com.jackiepenghe.blelibrary.ACTION_GATT_STATUS_ERROR";
 
     /*开放常量定义区*/
 

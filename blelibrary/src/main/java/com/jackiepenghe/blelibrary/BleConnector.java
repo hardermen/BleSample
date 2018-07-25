@@ -197,6 +197,8 @@ public class BleConnector {
         intentFilter.addAction(BleConstants.ACTION_READ_REMOTE_RSSI);
         intentFilter.addAction(BleConstants.ACTION_MTU_CHANGED);
         intentFilter.addAction(BleConstants.ACTION_GATT_NOT_SUCCESS);
+        intentFilter.addAction(BleConstants.ACTION_GATT_DISCOVER_SERVICES_FAILED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_STATUS_ERROR);
         intentFilter.setPriority(Integer.MAX_VALUE);
         return intentFilter;
     }
@@ -439,6 +441,10 @@ public class BleConnector {
      */
     public void setOnDisconnectedListener(BleInterface.OnDisconnectedListener onDisconnectedListener) {
         connectBleBroadcastReceiver.setOnDisconnectedListener(onDisconnectedListener);
+    }
+
+    public void  setOnStatusErrorListener(BleInterface.OnStatusErrorListener onStatusErrorListener){
+        connectBleBroadcastReceiver.setOnStatusErrorListener(onStatusErrorListener);
     }
 
     /**

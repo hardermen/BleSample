@@ -155,6 +155,11 @@ public class BleInterface {
          * 远端设备服务列表扫描完成
          */
         void onServicesDiscovered();
+
+        /**
+         * 远端设备服务列表扫描失败
+         */
+        void onDiscoverServiceFailed();
     }
 
     /**
@@ -435,5 +440,16 @@ public class BleInterface {
          *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
          */
         void onPhyRead(BluetoothDevice device, int txPhy, int rxPhy, int status);
+    }
+
+    /**
+     * 状态码错误监听
+     */
+    public interface OnStatusErrorListener {
+        /**
+         * 状态码错误
+         * @param status 状态码
+         */
+        void onStatusError(int status);
     }
 }

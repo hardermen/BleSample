@@ -30,7 +30,11 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     /**
      * 服务发现完成的回调
      */
-    private BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener;
+    private BleInterface.OnServicesDiscoveredListener onServicesDiscoveedListener;
+    /**
+     * 状态码错误的回调
+     */
+    private BleInterface.OnStatusErrorListener onStatusErrorListener;
     /**
      * BluetoothGatt客户端配置失败的回调
      */
@@ -181,6 +185,15 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                 Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_MTU_CHANGED,mtu = " + values[0]);
                 processMtuChanged(values);
                 break;
+            case BleConstants.ACTION_GATT_DISCOVER_SERVICES_FAILED:
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_DISCOVER_SERVICES_FAILED");
+                processDiscoverServiceFailed();
+                break;
+            case BleConstants.ACTION_GATT_STATUS_ERROR:
+                int status = intent.getIntExtra(LibraryConstants.STATUS_ERROR, -1);
+                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_STATUS_ERROR,status = " + status);
+                processGattStatusError(status);
+                break;
             default:
                 Tool.warnOut("ConnectBleBroadcastReceiver", "get other action" + action);
                 break;
@@ -208,12 +221,20 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     }
 
     /**
+     * 设置状态码错误的回调
+     * @param onStatusErrorListener 状态码错误的回调
+     */
+    void setOnStatusErrorListener(BleInterface.OnStatusErrorListener onStatusErrorListener) {
+        this.onStatusErrorListener = onStatusErrorListener;
+    }
+
+    /**
      * 设置服务扫描完成的回调
      *
      * @param onServicesDiscoveredListener 服务扫描完成的回调
      */
     void setOnServicesDiscoveredListener(BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener) {
-        this.onServicesDiscoveredListener = onServicesDiscoveredListener;
+        this.onServicesDiscoveedListener = onServicesDiscoveredListener;
     }
 
     /**
@@ -392,8 +413,8 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
         HANDLER.post(new Runnable() {
             @Override
             public void run() {
-                if (onServicesDiscoveredListener != null) {
-                    onServicesDiscoveredListener.onServicesDiscovered();
+                if (onServicesDiscoveedListener != null) {
+                    onServicesDiscoveedListener.onServicesDiscovered();
                 }
             }
         });
@@ -563,6 +584,35 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                 @Override
                 public void run() {
                     onMtuChangedListener.onMtuChanged(values[0]);
+                }
+            });
+        }
+    }
+
+    /**
+     * 发现远端设备的服务失败时的处理
+     */
+    private void processDiscoverServiceFailed() {
+        if (onServicesDiscoveedListener != null) {
+            HANDLER.post(new Runnable() {
+                @Override
+                public void run() {
+                    onServicesDiscoveedListener.onDiscoverServiceFailed();
+                }
+            });
+        }
+    }
+
+    /**
+     * 状态码错误的处理
+     * @param status 状态码
+     */
+    private void processGattStatusError(final int status) {
+        if (onStatusErrorListener != null) {
+            HANDLER.post(new Runnable() {
+                @Override
+                public void run() {
+                    onStatusErrorListener.onStatusError(status);
                 }
             });
         }

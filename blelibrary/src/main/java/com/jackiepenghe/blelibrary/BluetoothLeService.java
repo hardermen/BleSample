@@ -160,7 +160,11 @@ public class BluetoothLeService extends Service {
             return false;
         }
 
-        bluetoothGatt = remoteDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            bluetoothGatt = remoteDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback);
+        }else {
+            bluetoothGatt = remoteDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback,BluetoothDevice.TRANSPORT_LE);
+        }
 
         return autoReconnect || bluetoothGatt != null && bluetoothGatt.connect();
 

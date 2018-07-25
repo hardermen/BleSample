@@ -28,14 +28,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
 
-      <!--  <service
-            android:name="com.jackiepenghe.blelibrary.BluetoothLeService"
-            android:enabled="true"
-            android:exported="false" />
-        <service
-            android:name="com.jackiepenghe.blelibrary.BluetoothMultiService"
-            android:enabled="true"
-            android:exported="false" />-->
+        <!--<service-->
+            <!--android:name="com.jackiepenghe.blelibrary.BluetoothLeService"-->
+            <!--android:enabled="true"-->
+            <!--android:exported="false" />-->
+        <!--<service-->
+            <!--android:name="com.jackiepenghe.blelibrary.BluetoothMultiService"-->
+            <!--android:enabled="true"-->
+            <!--android:exported="false" />-->
 
         <activity android:name=".guid.SplashActivity">
             <intent-filter>

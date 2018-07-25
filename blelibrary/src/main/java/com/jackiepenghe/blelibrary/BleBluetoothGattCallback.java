@@ -1,5 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -68,8 +69,14 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         switch (newState) {
             //连接断开
             case BluetoothGatt.STATE_DISCONNECTED:
-                Tool.warnOut(TAG, "STATE_DISCONNECTED");
-                intent.setAction(BleConstants.ACTION_GATT_DISCONNECTED);
+                Tool.warnOut(TAG, "status = " + status);
+                if (status == BluetoothGatt.STATE_CONNECTED || status == BluetoothGatt.STATE_CONNECTING || status == BluetoothGatt.STATE_DISCONNECTED || status == BluetoothGatt.STATE_DISCONNECTING) {
+                    Tool.warnOut(TAG, "STATE_DISCONNECTED");
+                    intent.setAction(BleConstants.ACTION_GATT_DISCONNECTED);
+                } else {
+                    intent.putExtra(LibraryConstants.STATUS_ERROR, status);
+                    intent.setAction(BleConstants.ACTION_GATT_STATUS_ERROR);
+                }
                 break;
             //正在连接
             case BluetoothGatt.STATE_CONNECTING:
@@ -82,6 +89,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
                 intent.setAction(BleConstants.ACTION_GATT_CONNECTED);
                 if (!gatt.discoverServices()) {
                     Tool.warnOut(TAG, "无法进行服务发现");
+                    intent.setAction(BleConstants.ACTION_GATT_DISCOVER_SERVICES_FAILED);
                 }
                 break;
             //正在断开连接
