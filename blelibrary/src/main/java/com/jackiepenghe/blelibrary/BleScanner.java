@@ -320,9 +320,12 @@ public class BleScanner {
         BluetoothDevice device = result.getDevice();
         int rssi = result.getRssi();
         byte[] scanRecordBytes;
-        String deviceName;
         scanRecordBytes = scanRecord.getBytes();
-        deviceName = scanRecord.getDeviceName();
+        String deviceName;
+        deviceName = result.getDevice().getName();
+        if (null == deviceName || "".equals(deviceName) || deviceName.startsWith(SPACE)) {
+            deviceName = scanRecord.getDeviceName();
+        }
         if (null == deviceName || "".equals(deviceName) || deviceName.startsWith(SPACE)) {
             deviceName = parseAdvertiseData(scanRecordBytes).getName();
         }
