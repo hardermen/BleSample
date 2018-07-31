@@ -133,8 +133,9 @@ public class BleDevice implements Serializable, Parcelable {
      * @return 设备名称
      */
     public String getDeviceName() {
-        if (mDeviceName == null) {
-            return mBluetoothDevice.getName();
+        String deviceName = mBluetoothDevice.getName();
+        if (deviceName != null) {
+            return deviceName;
         } else {
             return mDeviceName;
         }
