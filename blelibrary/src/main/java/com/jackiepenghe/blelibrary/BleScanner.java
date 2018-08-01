@@ -20,12 +20,8 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * BLE扫描器
@@ -33,6 +29,7 @@ import java.util.UUID;
  * @author alm
  */
 
+@SuppressWarnings("ALL")
 public class BleScanner {
 
     /*------------------------静态常量----------------------------*/
@@ -225,12 +222,12 @@ public class BleScanner {
                     return;
                 }
                 String name = device.getName();
+
                 if (null == name || "".equals(name) || name.startsWith(SPACE)) {
-                    name = parseAdvertiseData(scanRecord).getName();
+                    com.jackiepenghe.blelibrary.ScanRecord scanRecordParseFromBytes = com.jackiepenghe.blelibrary.ScanRecord.parseFromBytes(scanRecord);
+                    name = scanRecordParseFromBytes.getDeviceName();
                 }
-                if (null == name || "".equals(name) || name.startsWith(SPACE)) {
-                    name = context.getString(R.string.un_named);
-                }
+
                 final BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, name);
                 callOnScanFindOneDeviceListener(bleDevice);
                 if (mScanResults == null) {
@@ -326,12 +323,7 @@ public class BleScanner {
         if (null == deviceName || "".equals(deviceName) || deviceName.startsWith(SPACE)) {
             deviceName = scanRecord.getDeviceName();
         }
-        if (null == deviceName || "".equals(deviceName) || deviceName.startsWith(SPACE)) {
-            deviceName = parseAdvertiseData(scanRecordBytes).getName();
-        }
-        if (null == deviceName || "".equals(deviceName) || deviceName.startsWith(SPACE)) {
-            deviceName = context.getString(R.string.un_named);
-        }
+
         final BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
         bleDevice.setScanRecord(scanRecord);
 
@@ -741,77 +733,5 @@ public class BleScanner {
                 }
             }
         });
-    }
-
-    private static BleAdvertisedData parseAdvertiseData(byte[] advertisedData) {
-        List<UUID> uuids = new ArrayList<>();
-        if (advertisedData == null) {
-            return new BleAdvertisedData(uuids, null);
-        }
-        String name = null;
-        ByteBuffer buffer = ByteBuffer.wrap(advertisedData).order(ByteOrder.LITTLE_ENDIAN);
-        while (buffer.remaining() > REMAINING_LENGTH) {
-            byte length = buffer.get();
-            if (length == 0) {
-                break;
-            }
-
-            byte type = buffer.get();
-            switch (type) {
-                // Partial list of 16-bit UUIDs
-                case 0x02:
-                    // Complete list of 16-bit UUIDs
-                case 0x03:
-                    while (length >= MIN_LENGTH_TWO) {
-                        uuids.add(UUID.fromString(String.format(
-                                "%08x-0000-1000-8000-00805f9b34fb", buffer.getShort())));
-                        length -= 2;
-                    }
-                    break;
-                // Partial list of 128-bit UUIDs
-                case 0x06:
-                    // Complete list of 128-bit UUIDs
-                case 0x07:
-                    while (length >= MIN_LENGTH_SIXTEEN) {
-                        long lsb = buffer.getLong();
-                        long msb = buffer.getLong();
-                        uuids.add(new UUID(msb, lsb));
-                        length -= 16;
-                    }
-                    break;
-                case 0x09:
-                    byte[] nameBytes = new byte[length - 1];
-                    buffer.get(nameBytes);
-                    try {
-                        name = new String(nameBytes, "utf-8");
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                default:
-                    buffer.position(buffer.position() + length - 1);
-                    break;
-            }
-        }
-        return new BleAdvertisedData(uuids, name);
-    }
-
-    @SuppressWarnings("unused")
-    private static final class BleAdvertisedData {
-        private List<UUID> mUuids;
-        private String mName;
-
-        BleAdvertisedData(List<UUID> uuids, String name) {
-            mUuids = uuids;
-            mName = name;
-        }
-
-        List<UUID> getUuids() {
-            return mUuids;
-        }
-
-        String getName() {
-            return mName;
-        }
     }
 }

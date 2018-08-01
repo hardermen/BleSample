@@ -8,6 +8,7 @@ import java.util.Arrays;
  *
  * @author jacke
  */
+@SuppressWarnings("unused")
 public class AdRecord {
 
     /*-------------------------成员变量-------------------------*/
