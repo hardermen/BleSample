@@ -61,4 +61,6 @@
     <string name="selected_more_than">选中设备数量不能超过5个</string>
     <string name="broadcast_stopped">已停止广播</string>
     <string name="scan_record">Scan Record</string>
+    <string name="uuid_refresh_success">Device UUID refresh success</string>
+    <string name="uuid_refresh_failed">Devuce UUID refresh failed</string>
 </resources>

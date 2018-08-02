@@ -25,6 +25,7 @@ import java.util.UUID;
  * @author alm
  */
 
+@SuppressWarnings("unused")
 public class BleConnector {
 
     /*-------------------------静态常量-------------------------*/
@@ -245,7 +246,6 @@ public class BleConnector {
      * @param address 设备地址
      * @return true表示成功设置地址
      */
-    @Deprecated
     public boolean checkAndSetAddress(String address) {
         if (address == null || !BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
@@ -581,7 +581,7 @@ public class BleConnector {
      *
      * @return true表示成功
      */
-    @SuppressWarnings("WeakerAccess")
+    @SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
     public boolean refreshGattCache() {
         return bleServiceConnection != null && bleServiceConnection.refreshGattCache();
     }

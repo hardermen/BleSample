@@ -157,7 +157,11 @@ public class ConnectActivity extends BaseAppCompatActivity {
                 }
 
                 servicesCharacteristicsListAdapter.notifyDataSetChanged();
-                bleConnector.refreshGattCache();
+                if (bleConnector.refreshGattCache()){
+                    Tool.toastL(ConnectActivity.this ,R.string.uuid_refresh_success);
+                }else {
+                    Tool.toastL(ConnectActivity.this ,R.string.uuid_refresh_failed);
+                }
             }
 
             //提取设备名与设备地址
