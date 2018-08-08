@@ -223,7 +223,7 @@ public class BleScanner {
                 }
                 String name = device.getName();
 
-                if (null == name || "".equals(name) || name.startsWith(SPACE)) {
+                if (null == name || "".equals(name)) {
                     com.jackiepenghe.blelibrary.ScanRecord scanRecordParseFromBytes = com.jackiepenghe.blelibrary.ScanRecord.parseFromBytes(scanRecord);
                     name = scanRecordParseFromBytes.getDeviceName();
                 }
@@ -320,10 +320,13 @@ public class BleScanner {
         scanRecordBytes = scanRecord.getBytes();
         String deviceName;
         deviceName = result.getDevice().getName();
-        if (null == deviceName || "".equals(deviceName) || deviceName.startsWith(SPACE)) {
+        if (null == deviceName || "".equals(deviceName)) {
             deviceName = scanRecord.getDeviceName();
         }
-
+        if (null == deviceName || "".equals(deviceName)) {
+            com.jackiepenghe.blelibrary.ScanRecord scanRecordParseFromBytes = com.jackiepenghe.blelibrary.ScanRecord.parseFromBytes(scanRecordBytes);
+            deviceName = scanRecordParseFromBytes.getDeviceName();
+        }
         final BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
         bleDevice.setScanRecord(scanRecord);
 
