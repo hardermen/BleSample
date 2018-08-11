@@ -1,5 +1,7 @@
 [API文档](http://penghe.xyz/blelibrary/index.html)
 
+如果API显示为乱码，请切换网页编码为：UTF-8
+
 由于更新维护会经常修改代码，下方的配置以及依极有可能未及时更新，有需要可下载代码查看
 
 配置：(Configure)
