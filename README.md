@@ -1,4 +1,4 @@
-[API文档](http://penghe.xyz/blelibraryAPIs/index.html)
+[API文档](http://penghe.xyz/blelibrary/index.html)
 
 由于更新维护会经常修改代码，下方的配置以及依极有可能未及时更新，有需要可下载代码查看
 
@@ -8,20 +8,20 @@
 
 2.gradle配置依赖(gradle dependency)
 ```xml
-compile 'com.jackiepenghe:blelibrary:0.0.5'
+compile 'com.jackiepenghe:blelibrary:0.1.0'
 ```
 3.maven配置依赖(maven dependency)
 ```xml
 <dependency>
   <groupId>com.jackiepenghe</groupId>
   <artifactId>blelibrary</artifactId>
-  <version>0.0.5</version>
+  <version>0.1.0</version>
   <type>pom</type>
 </dependency
 ```
 4.vy配置依赖(vy dependency)
 ```xml
-<dependency org='com.jackiepenghe' name='blelibrary' rev='0.0.5'>
+<dependency org='com.jackiepenghe' name='blelibrary' rev='0.1.0'>
   <artifact name='blelibrary' ext='pom' ></artifact>
 </dependency>
 ```
