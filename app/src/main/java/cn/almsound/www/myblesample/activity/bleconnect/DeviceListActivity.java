@@ -328,7 +328,6 @@ public class DeviceListActivity extends BaseAppCompatActivity {
     }
 
 
-
     /**
      * 判断安卓版本执行权限请求
      */
@@ -382,18 +381,34 @@ public class DeviceListActivity extends BaseAppCompatActivity {
 
     /**
      * 显示广播包内容的对话框
+     *
      * @param scanRecordBytes 广播包
      */
     private void showScanRecordDataDialog(byte[] scanRecordBytes) {
-        if (scanRecordBytes == null){
+        if (scanRecordBytes == null) {
             return;
         }
-        EditText editText = (EditText) View.inflate(DeviceListActivity.this,R.layout.edit_text,null);
-        editText.setText(Tool.bytesToHexStr(scanRecordBytes));
+            View view = View.inflate(DeviceListActivity.this, R.layout.dialog_scan_record, null);
+        if (scanRecordBytes.length > 31) {
+            EditText scanRecordEditText = view.findViewById(R.id.scan_record);
+            byte[] scanRecord = new byte[31];
+            System.arraycopy(scanRecordBytes,0,scanRecord,0,scanRecord.length);
+            scanRecordEditText.setText(Tool.bytesToHexStr(scanRecord));
+            EditText responseEditText = view.findViewById(R.id.response_record);
+            byte[] responseRecord = new byte[scanRecordBytes.length - 31];
+            System.arraycopy(scanRecordBytes,31,responseRecord,0,responseRecord.length);
+            responseEditText.setText(Tool.bytesToHexStr(responseRecord));
+        }else {
+            EditText scanRecordEditText = view.findViewById(R.id.scan_record);
+            scanRecordEditText.setText(Tool.bytesToHexStr(scanRecordBytes));
+            EditText responseEditText = view.findViewById(R.id.response_record);
+            responseEditText.setText(R.string.no_response_recrod);
+        }
+
         new AlertDialog.Builder(DeviceListActivity.this)
                 .setTitle(R.string.scan_record)
-                .setView(editText)
-                .setNegativeButton(R.string.cancel,null)
+                .setView(view)
+                .setNegativeButton(R.string.cancel, null)
                 .setCancelable(false)
                 .show();
     }

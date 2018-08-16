@@ -536,7 +536,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * @param str    收到的通知
      */
     private void showReceiveNotificationDialog(String hexStr, String str) {
-        EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
+        EditText editText = (EditText) View.inflate(this, R.layout.dialog_scan_record, null);
         String s = hexStr + "(" + str + ")";
         editText.setText(s);
         new AlertDialog.Builder(this)
@@ -554,7 +554,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * @param str    读到的数据
      */
     private void showReadDataResultDialog(String hexStr, String str) {
-        EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
+        EditText editText = (EditText) View.inflate(this, R.layout.dialog_scan_record, null);
         String s = hexStr + "(" + str + ")";
         editText.setText(s);
         new AlertDialog.Builder(this)
@@ -649,7 +649,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
     }
 
     private void showWriteDataDialog(final String serviceUUID, final String characteristicUUID) {
-        final EditText editText = (EditText) View.inflate(this, R.layout.edit_text, null);
+        final EditText editText = (EditText) View.inflate(this, R.layout.dialog_scan_record, null);
         EditTextWatcherForHexData editTextWatcherForHexData = new EditTextWatcherForHexData(editText);
         editText.addTextChangedListener(editTextWatcherForHexData);
         new AlertDialog.Builder(this)
