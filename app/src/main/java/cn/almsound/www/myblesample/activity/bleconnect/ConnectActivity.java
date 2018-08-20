@@ -491,7 +491,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     private void initBleConnector() {
         //创建BLE连接器实例
-        bleConnector = BleManager.getBleConnectorInstance(ConnectActivity.this);
+        bleConnector = BleManager.getBleConnectorInstance();
         //如果手机不支持蓝牙的话，这里得到的是null,所以需要进行判空
         if (bleConnector == null) {
             Tool.toastL(ConnectActivity.this, R.string.ble_not_supported);

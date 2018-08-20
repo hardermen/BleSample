@@ -55,7 +55,7 @@ class ScanTimer {
             if (bleScanner.isScanContinue()) {
                 bleScanner.startScan();
             } else {
-                handler.post(new Runnable() {
+                BleManager.getHandler().post(new Runnable() {
                     @Override
                     public void run() {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -77,10 +77,6 @@ class ScanTimer {
      * 扫描完成时执行的回调
      */
     private BleInterface.OnScanCompleteListener mOnScanCompleteListener;
-    /**
-     * Handler
-     */
-    private static Handler handler = new Handler();
 
     /*------------------------构造函数----------------------------*/
 

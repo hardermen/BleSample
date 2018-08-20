@@ -296,7 +296,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
     private void initBleScanner() {
 
         //创建扫描器实例
-        bleScanner = BleManager.getBleScannerInstance(DeviceListActivity.this);
+        bleScanner = BleManager.getBleScannerInstance();
         //如果手机不支持蓝牙的话，这里得到的是null,所以需要进行判空
         if (bleScanner == null) {
             Tool.toastL(DeviceListActivity.this, R.string.ble_not_supported);

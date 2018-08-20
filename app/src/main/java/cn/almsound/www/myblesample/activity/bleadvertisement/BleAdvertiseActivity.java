@@ -80,7 +80,7 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
     @Override
     protected void doBeforeSetLayout() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            bleAdvertiser = BleManager.getBleAdvertiserInstance(this);
+            bleAdvertiser = BleManager.getBleAdvertiserInstance();
             if (bleAdvertiser != null) {
                 //默认的初始化
 //            bleAdvertiser.init()

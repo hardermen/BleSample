@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 
 /**
@@ -16,6 +18,13 @@ import android.support.annotation.RequiresApi;
  */
 
 public class BleManager {
+
+    /*------------------------静态常量----------------------------*/
+
+    /**
+     * Handler
+     */
+    private static final Handler HANDLER = new Handler();
 
     /*------------------------静态变量----------------------------*/
 
@@ -43,7 +52,11 @@ public class BleManager {
      * 重置Ble广播实例的标志（避免无限循环调用）
      */
     private static boolean resetBleAdvertiserFlag;
-
+    /**
+     * 上下文
+     */
+    @SuppressLint("StaticFieldLeak")
+    private static Context context;
     /*------------------------库内静态函数----------------------------*/
 
     /**
@@ -73,28 +86,44 @@ public class BleManager {
         resetBleAdvertiserFlag = false;
     }
 
+    /**
+     * @return Handler
+     */
+    static Handler getHandler() {
+        return HANDLER;
+    }
+
     /*------------------------公开静态函数----------------------------*/
 
     /**
      * 判断手机是否支持BLE
      *
-     * @param context 上下文
      * @return true表示支持BLE
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public static boolean isSupportBle(Context context) {
+    public static boolean isSupportBle() {
+        checkInitStatus();
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+    }
+
+    /**
+     * 初始化
+     *
+     * @param context 上下文
+     */
+    public static void init(@NonNull Context context) {
+        BleManager.context = context.getApplicationContext();
     }
 
     /**
      * 创建一个新的BLE连接实例
      *
-     * @param context 上下文
      * @return BleConnector
      */
     @Deprecated
-    public static BleConnector newBleConnector(Context context) {
-        if (!isSupportBle(context)) {
+    public static BleConnector newBleConnector() {
+        checkInitStatus();
+        if (!isSupportBle()) {
             return null;
         }
         return new BleConnector(context);
@@ -103,11 +132,11 @@ public class BleManager {
     /**
      * 获取BLE连接实例的单例
      *
-     * @param context 上下文
      * @return BleConnector单例
      */
-    public static BleConnector getBleConnectorInstance(Context context) {
-        if (!isSupportBle(context)) {
+    public static BleConnector getBleConnectorInstance() {
+        checkInitStatus();
+        if (!isSupportBle()) {
             return null;
         }
 
@@ -136,12 +165,12 @@ public class BleManager {
     /**
      * 创建一个新的BLE扫描实例
      *
-     * @param context 上下文
      * @return BleScanner
      */
     @Deprecated
-    public static BleScanner newBleScanner(Context context) {
-        if (!isSupportBle(context)) {
+    public static BleScanner newBleScanner() {
+        checkInitStatus();
+        if (!isSupportBle()) {
             return null;
         }
         return new BleScanner(context);
@@ -150,11 +179,11 @@ public class BleManager {
     /**
      * 获取BLE扫描实例的单例
      *
-     * @param context 上下文
      * @return BleScanner单例
      */
-    public static BleScanner getBleScannerInstance(Context context) {
-        if (!isSupportBle(context)) {
+    public static BleScanner getBleScannerInstance() {
+        checkInitStatus();
+        if (!isSupportBle()) {
             return null;
         }
         if (bleScanner == null) {
@@ -163,8 +192,8 @@ public class BleManager {
                     bleScanner = new BleScanner(context);
                 }
             }
-        }else {
-            if (bleScanner.getContext() == null){
+        } else {
+            if (bleScanner.getContext() == null) {
                 bleScanner = null;
             }
 
@@ -182,13 +211,13 @@ public class BleManager {
     /**
      * 获取蓝牙广播单例实例
      *
-     * @param context 上下文
      * @return BleAdvertiser
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public static BleAdvertiser getBleAdvertiserInstance(Context context) {
-        if (!isSupportBle(context)) {
+    public static BleAdvertiser getBleAdvertiserInstance() {
+        checkInitStatus();
+        if (!isSupportBle()) {
             return null;
         }
         if (bleAdvertiser == null) {
@@ -204,14 +233,14 @@ public class BleManager {
     /**
      * 获取蓝牙广播单例实例
      *
-     * @param context 上下文
      * @return BleAdvertiser
      */
     @Deprecated
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public static BleAdvertiser newBleAdvertiser(Context context) {
-        if (!isSupportBle(context)) {
+    public static BleAdvertiser newBleAdvertiser() {
+        checkInitStatus();
+        if (!isSupportBle()) {
             return null;
         }
 
@@ -222,11 +251,11 @@ public class BleManager {
     /**
      * 获取BLE多连接单例
      *
-     * @param context 上下文
      * @return BleMultiConnector
      */
-    public static BleMultiConnector getBleMultiConnectorInstance(Context context) {
-        if (!isSupportBle(context)) {
+    public static BleMultiConnector getBleMultiConnectorInstance() {
+        checkInitStatus();
+        if (!isSupportBle()) {
             return null;
         }
         if (bleMultiConnector == null) {
@@ -240,17 +269,15 @@ public class BleManager {
     }
 
 
-
-
     /**
      * 获取BLE多连接单例
      *
-     * @param context 上下文
      * @return BleMultiConnector
      */
     @Deprecated
-    public static BleMultiConnector newBleMultiConnector(Context context) {
-        if (!isSupportBle(context)) {
+    public static BleMultiConnector newBleMultiConnector() {
+        checkInitStatus();
+        if (!isSupportBle()) {
             return null;
         }
         return new BleMultiConnector(context);
@@ -259,12 +286,12 @@ public class BleManager {
     /**
      * 判断当前手机蓝牙是否打开
      *
-     * @param context 上下文
      * @return true表示蓝牙已打开
      */
     @SuppressWarnings("unused")
-    public static boolean isBluetoothOpened(Context context) {
-        if (!isSupportBle(context)) {
+    public static boolean isBluetoothOpened() {
+        checkInitStatus();
+        if (!isSupportBle()) {
             return false;
         }
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -278,12 +305,12 @@ public class BleManager {
     /**
      * 请求打开蓝牙
      *
-     * @param context 上下文
      * @return true表示请求发起成功（只是发起打开蓝牙的请求成功，并不是开启蓝牙成功）
      */
     @SuppressWarnings("unused")
-    public static boolean openBluetooth(Context context) {
-        if (!isSupportBle(context)) {
+    public static boolean openBluetooth() {
+        checkInitStatus();
+        if (!isSupportBle()) {
             return false;
         }
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -304,7 +331,8 @@ public class BleManager {
      */
     @SuppressWarnings("unused")
     public static boolean closeBluetooth(Context context) {
-        if (!isSupportBle(context)) {
+        checkInitStatus();
+        if (!isSupportBle()) {
             return false;
         }
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -321,6 +349,7 @@ public class BleManager {
      */
     @SuppressWarnings("WeakerAccess")
     public static void releaseBleConnector() {
+        checkInitStatus();
         if (bleConnector != null) {
             if (bleConnector.getContext() != null) {
                 bleConnector.close();
@@ -334,6 +363,7 @@ public class BleManager {
      */
     @SuppressWarnings("WeakerAccess")
     public static void releaseBleScanner() {
+        checkInitStatus();
         if (bleScanner != null) {
             bleScanner.close();
             bleScanner = null;
@@ -345,6 +375,7 @@ public class BleManager {
      */
     @SuppressWarnings("WeakerAccess")
     public static void releaseBleMultiConnector() {
+        checkInitStatus();
         if (bleMultiConnector != null) {
             bleMultiConnector.closeAll();
             bleConnector = null;
@@ -357,6 +388,7 @@ public class BleManager {
     @SuppressWarnings("WeakerAccess")
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static void releaseBleAdvertiser() {
+        checkInitStatus();
         if (bleAdvertiser != null) {
             bleAdvertiser.close();
             bleAdvertiser = null;
@@ -367,6 +399,7 @@ public class BleManager {
      * 释放全部实例的资源
      */
     public static void releaseAll() {
+        checkInitStatus();
         releaseBleConnector();
         releaseBleScanner();
         releaseBleMultiConnector();
@@ -377,9 +410,21 @@ public class BleManager {
 
     /**
      * 设置是否要打印出调式信息
+     *
      * @param debugFlag true表示要打印
      */
     public static void setDebugFlag(boolean debugFlag) {
         Tool.setDebugFlag(debugFlag);
+    }
+
+    /*------------------------私有静态函数----------------------------*/
+
+    /**
+     * 校验是否初始化成功
+     */
+    private static void checkInitStatus(){
+        if (context == null){
+            throw new IllegalStateException("Please invoke method \"init(Context context)\" in your Applications class");
+        }
     }
 }

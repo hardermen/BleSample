@@ -275,7 +275,7 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
      * 初始化BLE扫描器
      */
     private void initBleScanner() {
-        bleScanner = BleManager.getBleScannerInstance(this);
+        bleScanner = BleManager.getBleScannerInstance();
         if (bleScanner == null) {
             return;
         }

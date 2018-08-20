@@ -155,7 +155,7 @@ public class MainActivity extends BaseAppCompatActivity {
      */
     private void toDeviceListActivity() {
 
-        if (!BleManager.isSupportBle(this)) {
+        if (!BleManager.isSupportBle()) {
             Tool.toastL(this, R.string.ble_not_supported);
             return;
         }
@@ -168,7 +168,7 @@ public class MainActivity extends BaseAppCompatActivity {
      */
     private void toMultiConnectActivity() {
 
-        if (!BleManager.isSupportBle(this)) {
+        if (!BleManager.isSupportBle()) {
             Tool.toastL(this, R.string.ble_not_supported);
             return;
         }
@@ -180,7 +180,7 @@ public class MainActivity extends BaseAppCompatActivity {
      * 跳转到BLE蓝牙广播界面
      */
     private void toBroadcastActivity() {
-        if (!BleManager.isSupportBle(this)) {
+        if (!BleManager.isSupportBle()) {
             Tool.toastL(this, R.string.ble_not_supported);
             return;
         }

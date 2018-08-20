@@ -33,6 +33,7 @@ public class MyApplication extends Application {
         Tool.setDebugFlag(true);
         //初始化文件工具类
         FileUtil.init(this.getApplicationContext());
+        BleManager.init(MyApplication.this);
         BleManager.setDebugFlag(true);
     }
 }
