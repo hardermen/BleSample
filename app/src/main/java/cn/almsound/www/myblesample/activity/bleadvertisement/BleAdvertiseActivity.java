@@ -201,7 +201,9 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
         super.onBackPressed();
         if (bleAdvertiser != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                bleAdvertiser.stopAdvertising();
+                if (bleAdvertiser.isAdvertising()) {
+                    bleAdvertiser.stopAdvertising();
+                }
                 bleAdvertiser.close();
                 bleAdvertiser = null;
             }
