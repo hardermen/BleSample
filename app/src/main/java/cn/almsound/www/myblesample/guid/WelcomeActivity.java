@@ -119,6 +119,6 @@ public class WelcomeActivity extends BaseWelcomeActivity {
         crashHandler.init(this.getApplicationContext());
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
-        onBackPressed();
+        finish();
     }
 }

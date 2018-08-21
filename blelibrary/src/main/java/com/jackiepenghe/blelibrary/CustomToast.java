@@ -2,7 +2,6 @@ package com.jackiepenghe.blelibrary;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Handler;
 import android.support.annotation.StringRes;
 import android.widget.Toast;
 
@@ -57,10 +56,6 @@ class CustomToast {
      * 系统吐司的hide方法（反射获取）
      */
     private Method hideMethod;
-    /**
-     * Handler
-     */
-    private static Handler mHandler = new Handler();
     /**
      * 隐藏吐司
      */
@@ -161,9 +156,9 @@ class CustomToast {
         }
 
         if (mDuration > 0){
-            mHandler.postDelayed(mHide,mDuration);
+            BleManager.getHandler().postDelayed(mHide,mDuration);
         }else if(mDuration < 0){
-            mHandler.postDelayed(mHide,LENGTH_LONG);
+            BleManager.getHandler().postDelayed(mHide,LENGTH_LONG);
         }
     }
 }

@@ -13,7 +13,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Handler;
 import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 
@@ -59,11 +58,6 @@ public class BleAdvertiser {
             return new Thread(r);
         }
     };
-
-    /**
-     * Handler
-     */
-    private static final Handler HANDLER = new Handler();
 
     /**
      * 默认的广播设置
@@ -163,14 +157,14 @@ public class BleAdvertiser {
                 Tool.warnOut(TAG, "onStartSuccess, settingInEffect is null");
             }
             Tool.warnOut(TAG, "onStartSuccess settingsInEffect" + settingsInEffect);
-            if (baseAdvertiseCallback != null) {
-                HANDLER.post(new Runnable() {
-                    @Override
-                    public void run() {
+            BleManager.getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    if (baseAdvertiseCallback != null) {
                         baseAdvertiseCallback.onBroadCastStartSuccess(settingsInEffect);
                     }
-                });
-            }
+                }
+            });
         }
 
         /**
@@ -193,14 +187,14 @@ public class BleAdvertiser {
             } else if (errorCode == ADVERTISE_FAILED_FEATURE_UNSUPPORTED) {
                 Tool.errorOut(TAG, "This feature is not supported on this platform");
             }
-            if (baseAdvertiseCallback != null) {
-                HANDLER.post(new Runnable() {
-                    @Override
-                    public void run() {
+            BleManager.getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    if (baseAdvertiseCallback != null) {
                         baseAdvertiseCallback.onBroadCastStartFailure(errorCode);
                     }
-                });
-            }
+                }
+            });
         }
     };
 
@@ -451,9 +445,15 @@ public class BleAdvertiser {
             e.printStackTrace();
             return false;
         }
-        if (baseAdvertiseCallback != null) {
-            baseAdvertiseCallback.onBroadCastStopped();
-        }
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseAdvertiseCallback != null) {
+                    baseAdvertiseCallback.onBroadCastStopped();
+                }
+            }
+        });
+
         isAdvertising = false;
         return true;
     }

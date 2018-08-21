@@ -15,6 +15,6 @@ public class SplashActivity extends BaseSplashActivity {
     protected void onCreate() {
         Intent intent = new Intent(this,WelcomeActivity.class);
         startActivity(intent);
-        onBackPressed();
+        finish();
     }
 }

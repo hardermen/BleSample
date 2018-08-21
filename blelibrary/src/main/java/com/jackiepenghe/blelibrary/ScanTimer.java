@@ -1,7 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
 import android.os.Build;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 
 import java.lang.ref.WeakReference;
