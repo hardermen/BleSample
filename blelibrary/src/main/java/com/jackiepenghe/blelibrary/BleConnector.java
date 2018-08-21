@@ -51,11 +51,6 @@ public class BleConnector {
     private BleServiceConnection bleServiceConnection;
 
     /**
-     * Handler
-     */
-    private static Handler handler = new Handler();
-
-    /**
      * BLE连接的广播接收者
      */
     private ConnectBleBroadcastReceiver connectBleBroadcastReceiver;
@@ -168,7 +163,7 @@ public class BleConnector {
     private void checkCloseStatus() {
         mClosed = true;
         if (onCloseCompleteListener != null) {
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onCloseCompleteListener.onCloseComplete();

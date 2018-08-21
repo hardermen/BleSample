@@ -27,8 +27,6 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      */
     private static final String TAG = BleBluetoothGattCallback.class.getSimpleName();
 
-    private static final Handler HANDLER = new Handler();
-
     /*-------------------------成员变量-------------------------*/
 
     /**
@@ -102,7 +100,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
                 Tool.warnOut(TAG, "other state");
                 break;
         }
-        HANDLER.post(new Runnable() {
+        BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 //发送广播
@@ -298,7 +296,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
     private void broadcastUpdate(String action) {
         final Intent intent = new Intent();
         intent.setAction(action);
-        HANDLER.post(new Runnable() {
+        BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 //发送广播
@@ -318,7 +316,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         intent.putExtra(BleConstants.UUID, uuid);
         intent.setAction(action);
         intent.putExtra(LibraryConstants.VALUE, value);
-        HANDLER.post(new Runnable() {
+        BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 //发送广播
@@ -337,7 +335,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         final Intent intent = new Intent();
         intent.setAction(action);
         intent.putExtra(LibraryConstants.VALUE, value);
-        HANDLER.post(new Runnable() {
+        BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 //发送广播
@@ -357,7 +355,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         intent.setAction(action);
         intent.putExtra(LibraryConstants.METHOD, method);
         intent.putExtra(LibraryConstants.STATUS, status);
-        HANDLER.post(new Runnable() {
+        BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 //发送广播

@@ -34,7 +34,7 @@ public class BleAdvertiser {
     /*---------------------成员变量---------------------*/
 
     /**
-     * 上下文对象弱引用
+     * 上下文
      */
     private Context context;
     /**

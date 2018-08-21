@@ -24,10 +24,6 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
      /*-------------------------成员变量-------------------------*/
 
     HashMap<String, BaseConnectCallback> callbackHashMap = new HashMap<>();
-    /**
-     * Handler
-     */
-    private Handler handler = new Handler();
 
      /*-------------------------构造函数-------------------------*/
 
@@ -52,7 +48,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
         if (callbackHashMap.containsKey(gattAddress)) {
 
             final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     if (BluetoothGatt.GATT_SUCCESS != status) {
@@ -82,7 +78,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
         String gattAddress = gatt.getDevice().getAddress();
         if (callbackHashMap.containsKey(gattAddress)) {
             final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     if (BluetoothGatt.GATT_SUCCESS != status) {
@@ -118,7 +114,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
                 gattAddress = gatt.getDevice().getAddress();
                 if (callbackHashMap.containsKey(gattAddress)) {
                     baseConnectCallback = callbackHashMap.get(gattAddress);
-                    handler.post(new Runnable() {
+                    BleManager.getHandler().post(new Runnable() {
                         @Override
                         public void run() {
                             baseConnectCallback.setConnected(false);
@@ -131,7 +127,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
                 gattAddress = gatt.getDevice().getAddress();
                 if (callbackHashMap.containsKey(gattAddress)) {
                     baseConnectCallback = callbackHashMap.get(gattAddress);
-                    handler.post(new Runnable() {
+                    BleManager.getHandler().post(new Runnable() {
                         @Override
                         public void run() {
                             baseConnectCallback.onConnecting(gatt);
@@ -144,7 +140,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
                 if (callbackHashMap.containsKey(gattAddress)) {
                     baseConnectCallback = callbackHashMap.get(gattAddress);
                     if (!gatt.discoverServices()) {
-                        handler.post(new Runnable() {
+                        BleManager.getHandler().post(new Runnable() {
                             @Override
                             public void run() {
                                 baseConnectCallback.onDiscoverServicesFailed(gatt);
@@ -152,7 +148,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
                         });
                         return;
                     }
-                    handler.post(new Runnable() {
+                    BleManager.getHandler().post(new Runnable() {
                         @Override
                         public void run() {
                             baseConnectCallback.setConnected(true);
@@ -165,7 +161,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
                 gattAddress = gatt.getDevice().getAddress();
                 if (callbackHashMap.containsKey(gattAddress)) {
                     baseConnectCallback = callbackHashMap.get(gattAddress);
-                    handler.post(new Runnable() {
+                    BleManager.getHandler().post(new Runnable() {
                         @Override
                         public void run() {
                             baseConnectCallback.onDisconnecting(gatt);
@@ -191,7 +187,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
         String gattAddress = gatt.getDevice().getAddress();
         if (callbackHashMap.containsKey(gattAddress)) {
             final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     if (BluetoothGatt.GATT_SUCCESS != status) {
@@ -218,7 +214,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
         if (callbackHashMap.containsKey(gattAddress)) {
             final byte[] values = characteristic.getValue();
             final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     if (BluetoothGatt.GATT_SUCCESS != status) {
@@ -252,7 +248,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
         if (callbackHashMap.containsKey(gattAddress)) {
             final byte[] values = characteristic.getValue();
             final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     if (BluetoothGatt.GATT_SUCCESS != status) {
@@ -277,7 +273,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
         if (callbackHashMap.containsKey(gattAddress)) {
             final byte[] values = characteristic.getValue();
             final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     baseConnectCallback.onReceivedNotification(gatt, values);
@@ -300,7 +296,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
         if (callbackHashMap.containsKey(gattAddress)) {
             final byte[] values = descriptor.getValue();
             final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     if (BluetoothGatt.GATT_SUCCESS != status) {
@@ -328,7 +324,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
         if (callbackHashMap.containsKey(gattAddress)) {
             final byte[] values = descriptor.getValue();
             final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     if (BluetoothGatt.GATT_SUCCESS != status) {
@@ -352,7 +348,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
         String gattAddress = gatt.getDevice().getAddress();
         if (callbackHashMap.containsKey(gattAddress)) {
             final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     if (BluetoothGatt.GATT_SUCCESS != status) {
@@ -380,7 +376,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
         String gattAddress = gatt.getDevice().getAddress();
         if (callbackHashMap.containsKey(gattAddress)) {
             final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     if (BluetoothGatt.GATT_SUCCESS != status) {
@@ -409,7 +405,7 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
         String gattAddress = gatt.getDevice().getAddress();
         if (callbackHashMap.containsKey(gattAddress)) {
             final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            handler.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     if (BluetoothGatt.GATT_SUCCESS != status) {

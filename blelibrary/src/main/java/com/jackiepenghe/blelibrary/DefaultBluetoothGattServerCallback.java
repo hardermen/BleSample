@@ -8,14 +8,12 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
-import android.os.Handler;
 
 /**
  * 默认的蓝牙服务端回调
  *
  * @author jacke
  */
-
 class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
 
     /*------------------------静态常量----------------------------*/
@@ -31,11 +29,6 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      * 蓝牙服务端回调
      */
     private BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallbackListener;
-
-    /**
-     * Handler
-     */
-    private static Handler handler = new Handler();
 
     /*------------------------重写父类函数----------------------------*/
 
@@ -57,7 +50,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     onBluetoothGattServerCallbackListener.onConnectionStateChange(device, status, newState);
                 }
             };
-            handler.post(runnable);
+            BleManager.getHandler().post(runnable);
         } else {
             Tool.warnOut(TAG, "onConnectionStateChange:device name = " +
                     device.getName() + ",device address = " + device.getAddress() + ",status = " +
@@ -81,7 +74,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     onBluetoothGattServerCallbackListener.onServiceAdded(status, service);
                 }
             };
-            handler.post(runnable);
+            BleManager.getHandler().post(runnable);
         } else {
             Tool.warnOut(TAG, "onServiceAdded:status = " + status + ",serviceUUID = " +
                     service.getUuid().toString());
@@ -108,7 +101,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     onBluetoothGattServerCallbackListener.onCharacteristicReadRequest(device, requestId, offset, characteristic);
                 }
             };
-            handler.post(runnable);
+            BleManager.getHandler().post(runnable);
         } else {
             Tool.warnOut(TAG, "onCharacteristicReadRequest:device name = " +
                     device.getName() + ",device address = " + device.getAddress() +
@@ -141,7 +134,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     onBluetoothGattServerCallbackListener.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
                 }
             };
-            handler.post(runnable);
+            BleManager.getHandler().post(runnable);
         } else {
             Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
                     device.getName() + ",device address = " + device.getAddress() +
@@ -172,7 +165,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     onBluetoothGattServerCallbackListener.onDescriptorReadRequest(device, requestId, offset, descriptor);
                 }
             };
-            handler.post(runnable);
+            BleManager.getHandler().post(runnable);
         } else {
             Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
                     device.getName() + ",device address = " + device.getAddress() +
@@ -204,7 +197,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     onBluetoothGattServerCallbackListener.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
                 }
             };
-            handler.post(runnable);
+            BleManager.getHandler().post(runnable);
         } else {
             Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
                     device.getName() + ",device address = " + device.getAddress() +
@@ -234,7 +227,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     onBluetoothGattServerCallbackListener.onExecuteWrite(device, requestId, execute);
                 }
             };
-            handler.post(runnable);
+            BleManager.getHandler().post(runnable);
         } else {
             Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
                     device.getName() + ",device address = " + device.getAddress() +
@@ -262,7 +255,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     onBluetoothGattServerCallbackListener.onNotificationSent(device, status);
                 }
             };
-            handler.post(runnable);
+            BleManager.getHandler().post(runnable);
         } else {
             Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
                     device.getName() + ",device address = " + device.getAddress() + ",status = " + status);
@@ -287,7 +280,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     onBluetoothGattServerCallbackListener.onMtuChanged(device, mtu);
                 }
             };
-            handler.post(runnable);
+            BleManager.getHandler().post(runnable);
         } else {
             Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
                     device.getName() + ",device address = " + device.getAddress() + ",mtu = " + mtu);
@@ -315,7 +308,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     onBluetoothGattServerCallbackListener.onPhyUpdate(device, txPhy, rxPhy, status);
                 }
             };
-            handler.post(runnable);
+            BleManager.getHandler().post(runnable);
         } else {
             Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
                     device.getName() + ",device address = " + device.getAddress() + ",txPhy = " +
@@ -343,7 +336,7 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
                     onBluetoothGattServerCallbackListener.onPhyRead(device, txPhy, rxPhy, status);
                 }
             };
-            handler.post(runnable);
+            BleManager.getHandler().post(runnable);
         } else {
             Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
                     device.getName() + ",device address = " + device.getAddress() + ",txPhy = " +

@@ -72,11 +72,6 @@ public class BleScanner {
     private Context context;
 
     /**
-     * mHandler
-     */
-    private static Handler mHandler = new Handler();
-
-    /**
      * 安卓5.0以上的API才拥有的接口
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -268,7 +263,7 @@ public class BleScanner {
              */
             @Override
             public void onBatchScanResults(final List<ScanResult> results) {
-                mHandler.post(new Runnable() {
+                BleManager.getHandler().post(new Runnable() {
                     @Override
                     public void run() {
                         if (on21ScanCallback != null) {
@@ -285,7 +280,7 @@ public class BleScanner {
              */
             @Override
             public void onScanFailed(final int errorCode) {
-                mHandler.post(new Runnable() {
+                BleManager.getHandler().post(new Runnable() {
                     @Override
                     public void run() {
                         if (on21ScanCallback != null) {
@@ -712,7 +707,7 @@ public class BleScanner {
      * @param bleDevice BleDevice
      */
     private void callOnScanFindOneNewDeviceListener(final BleDevice bleDevice) {
-        mHandler.post(new Runnable() {
+        BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 if (onScanFindOneNewDeviceListener != null) {
@@ -728,7 +723,7 @@ public class BleScanner {
      * @param bleDevice BleDevice
      */
     private void callOnScanFindOneDeviceListener(final BleDevice bleDevice) {
-        mHandler.post(new Runnable() {
+        BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 if (onScanFindOneDeviceListener != null) {

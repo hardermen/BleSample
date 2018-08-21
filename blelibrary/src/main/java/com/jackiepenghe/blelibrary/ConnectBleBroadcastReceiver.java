@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.os.Handler;
 
 
 /**
@@ -84,10 +83,6 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * 蓝牙开关状态被改变时的回调
      */
     private BleInterface.OnBluetoothSwitchChangedListener onBluetoothSwitchChangedListener;
-    /**
-     * Handler
-     */
-    private static final Handler HANDLER = new Handler();
 
     /*------------------------实现父类函数----------------------------*/
 
@@ -97,7 +92,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * BroadcastReceiver to view/modify the current result values.  This method
      * is always called within the main thread of its process, unless you
      * explicitly asked for it to be scheduled on a different thread using
-     * {@link Context#registerReceiver(BroadcastReceiver, * IntentFilter , String, Handler)}. When it runs on the main
+     * {@link Context#registerReceiver(BroadcastReceiver, * IntentFilter , String, BleManager.getHandler())}. When it runs on the main
      * thread you should
      * never perform long-running operations in it (there is a timeout of
      * 10 seconds that the system allows before considering the receiver to
@@ -353,7 +348,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
         if (state == BluetoothAdapter.STATE_OFF) {
             Tool.toastL(context, R.string.bluetooth_off);
             if (onBluetoothSwitchChangedListener != null) {
-                HANDLER.post(new Runnable() {
+                BleManager.getHandler().post(new Runnable() {
                     @Override
                     public void run() {
                         onBluetoothSwitchChangedListener.onBluetoothSwitchChanged(false);
@@ -365,7 +360,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
         else if (state == BluetoothAdapter.STATE_ON) {
             Tool.toastL(context, R.string.bluetooth_on);
             if (onBluetoothSwitchChangedListener != null) {
-                HANDLER.post(new Runnable() {
+                BleManager.getHandler().post(new Runnable() {
                     @Override
                     public void run() {
                         onBluetoothSwitchChangedListener.onBluetoothSwitchChanged(true);
@@ -381,7 +376,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     private void processGattConnect() {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTED");
         if (onConnectedListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onConnectedListener.onConnected();
@@ -396,7 +391,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     private void processGattDisconnect() {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
         if (onDisconnectedListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onDisconnectedListener.onDisconnected();
@@ -410,7 +405,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     private void processGattServiceDiscovered() {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
-        HANDLER.post(new Runnable() {
+        BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 if (onServicesDiscoveedListener != null) {
@@ -428,7 +423,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
         final String methodName = intent.getStringExtra(LibraryConstants.METHOD);
         final int errorStatus = intent.getIntExtra(LibraryConstants.STATUS, LibraryConstants.DEFAULT_STATUS);
         if (onBluetoothGattOptionsNotSuccessListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onBluetoothGattOptionsNotSuccessListener.onBluetoothGattOptionsNotSuccess(methodName, errorStatus);
@@ -443,7 +438,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     private void processGattConnecting() {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTING");
         if (onConnectingListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onConnectingListener.onConnecting();
@@ -458,7 +453,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     private void processGattDisconnecting() {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_DISCONNECTING");
         if (onDisconnectingListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onDisconnectingListener.onDisconnecting();
@@ -475,7 +470,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     private void processCharacteristicRead(final byte[] values, final String uuid) {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_READ,value = " + Tool.bytesToHexStr(values));
         if (onCharacteristicReadListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onCharacteristicReadListener.onCharacteristicRead(uuid, values);
@@ -492,7 +487,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     private void processCharacteristicChanged(final byte[] values, final String uuid) {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_CHANGED,value = " + Tool.bytesToHexStr(values));
         if (onReceiveNotificationListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onReceiveNotificationListener.onReceiveNotification(uuid, values);
@@ -509,7 +504,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     private void processCharacteristicWrite(final byte[] values, final String uuid) {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_WRITE,value = " + Tool.bytesToHexStr(values));
         if (onCharacteristicWriteListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onCharacteristicWriteListener.onCharacteristicWrite(uuid, values);
@@ -525,7 +520,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     private void processGattDescriptorRead(final byte[] values, final String uuid) {
         if (onDescriptorReadListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onDescriptorReadListener.onDescriptorRead(uuid, values);
@@ -541,7 +536,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     private void processDescriptorWrite(final byte[] values, final String uuid) {
         if (onDescriptorWriteListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onDescriptorWriteListener.onDescriptorWrite(uuid, values);
@@ -565,7 +560,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     private void processReadRemoteRssi(final byte[] values) {
         if (onReadRemoteRssiListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onReadRemoteRssiListener.onReadRemoteRssi(values[0]);
@@ -580,7 +575,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     private void processMtuChanged(final byte[] values) {
         if (onMtuChangedListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onMtuChangedListener.onMtuChanged(values[0]);
@@ -594,7 +589,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     private void processDiscoverServiceFailed() {
         if (onServicesDiscoveedListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onServicesDiscoveedListener.onDiscoverServiceFailed();
@@ -609,7 +604,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     private void processGattStatusError(final int status) {
         if (onStatusErrorListener != null) {
-            HANDLER.post(new Runnable() {
+            BleManager.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     onStatusErrorListener.onStatusError(status);

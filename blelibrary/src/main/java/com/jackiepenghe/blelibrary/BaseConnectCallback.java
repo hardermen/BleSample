@@ -8,7 +8,6 @@ import android.bluetooth.BluetoothGatt;
  * @author alm
  */
 
-@SuppressWarnings({"WeakerAccess", "unused"})
 public abstract class BaseConnectCallback {
 
     /*-------------------------静态常量-------------------------*/
@@ -18,6 +17,9 @@ public abstract class BaseConnectCallback {
      */
     private static final String TAG = BaseConnectCallback.class.getSimpleName();
 
+    /**
+     * 是否已经连接成功的标志
+     */
     private boolean isConnected;
 
     /*-------------------------库内函数-------------------------*/

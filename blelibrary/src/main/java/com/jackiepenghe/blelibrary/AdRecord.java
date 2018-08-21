@@ -8,8 +8,7 @@ import java.util.Arrays;
  *
  * @author jacke
  */
-@SuppressWarnings("unused")
-public class AdRecord {
+class AdRecord {
 
     /*-------------------------成员变量-------------------------*/
 
@@ -48,7 +47,7 @@ public class AdRecord {
      *
      * @return 数据长度
      */
-    public int getLength() {
+    int getLength() {
         return length;
     }
 
@@ -57,7 +56,7 @@ public class AdRecord {
      *
      * @return 数据类型
      */
-    public int getType() {
+    int getType() {
         return type;
     }
 
@@ -66,7 +65,7 @@ public class AdRecord {
      *
      * @return 数据内容
      */
-    public byte[] getData() {
+    byte[] getData() {
         return data;
     }
 

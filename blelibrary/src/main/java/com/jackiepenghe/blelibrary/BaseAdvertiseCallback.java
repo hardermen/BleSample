@@ -7,11 +7,8 @@ import android.bluetooth.le.BluetoothLeAdvertiser;
 /**
  * @author jackie
  */
+@SuppressWarnings("ALL")
 public abstract class BaseAdvertiseCallback {
-
-    /*-------------------------静态常量-------------------------*/
-
-    private static final String TAG = BaseAdvertiseCallback.class.getSimpleName();
 
     /*-------------------------抽象函数-------------------------*/
 

@@ -17,6 +17,7 @@ import android.support.annotation.RequiresApi;
  * @author alm
  */
 
+@SuppressWarnings("unused")
 public class BleManager {
 
     /*------------------------静态常量----------------------------*/
@@ -120,7 +121,6 @@ public class BleManager {
      *
      * @return BleConnector
      */
-    @Deprecated
     public static BleConnector newBleConnector() {
         checkInitStatus();
         if (!isSupportBle()) {
@@ -167,7 +167,6 @@ public class BleManager {
      *
      * @return BleScanner
      */
-    @Deprecated
     public static BleScanner newBleScanner() {
         checkInitStatus();
         if (!isSupportBle()) {
@@ -235,7 +234,6 @@ public class BleManager {
      *
      * @return BleAdvertiser
      */
-    @Deprecated
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static BleAdvertiser newBleAdvertiser() {
@@ -274,7 +272,6 @@ public class BleManager {
      *
      * @return BleMultiConnector
      */
-    @Deprecated
     public static BleMultiConnector newBleMultiConnector() {
         checkInitStatus();
         if (!isSupportBle()) {
