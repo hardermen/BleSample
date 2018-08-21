@@ -132,6 +132,11 @@ public class BleAdvertiser {
     private BaseAdvertiseCallback baseAdvertiseCallback;
 
     /**
+     * 记录当前是否正在广播
+     */
+    private boolean isAdvertising;
+
+    /**
      * 广播的回调
      */
     private AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
@@ -398,6 +403,10 @@ public class BleAdvertiser {
         return true;
     }
 
+    public boolean isAdvertising() {
+        return isAdvertising;
+    }
+
     /**
      * 开始广播
      */
@@ -418,6 +427,7 @@ public class BleAdvertiser {
         if (timeout > 0) {
             startThreadToCheckAdvertiserStatus(timeout);
         }
+        isAdvertising = true;
         return true;
     }
 
@@ -444,8 +454,10 @@ public class BleAdvertiser {
         if (baseAdvertiseCallback != null) {
             baseAdvertiseCallback.onBroadCastStopped();
         }
+        isAdvertising = false;
         return true;
     }
+
 
     /**
      * 关闭广播实例
