@@ -8,8 +8,8 @@ android {
         applicationId "cn.almsound.www.myblesample"
         minSdkVersion 18
         targetSdkVersion 28
-        versionCode 12
-        versionName "0.1.2"
+        versionCode 13
+        versionName "0.1.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }

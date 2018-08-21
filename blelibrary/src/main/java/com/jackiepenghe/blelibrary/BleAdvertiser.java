@@ -441,6 +441,9 @@ public class BleAdvertiser {
             e.printStackTrace();
             return false;
         }
+        if (baseAdvertiseCallback != null) {
+            baseAdvertiseCallback.onBroadCastStopped();
+        }
         return true;
     }
 
@@ -500,9 +503,6 @@ public class BleAdvertiser {
                     }
                 }
                 stopAdvertising();
-                if (baseAdvertiseCallback != null) {
-                    baseAdvertiseCallback.onBroadCastStopped();
-                }
             }
         };
         Thread thread = threadFactory.newThread(runnable);
