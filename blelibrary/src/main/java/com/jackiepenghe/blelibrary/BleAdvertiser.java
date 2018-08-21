@@ -415,7 +415,9 @@ public class BleAdvertiser {
         if (!initSuccess) {
             return false;
         }
-
+        if (isAdvertising){
+            return false;
+        }
         mBluetoothAdvertiser.startAdvertising(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, advertiseCallback);
         final int timeout = defaultAdvertiseSettings.getTimeout();
         if (timeout > 0) {
@@ -437,6 +439,9 @@ public class BleAdvertiser {
         }
 
         if (mBluetoothAdvertiser == null) {
+            return false;
+        }
+        if (!isAdvertising){
             return false;
         }
         try {
