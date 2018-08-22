@@ -81,7 +81,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         @Override
         public void onScanComplete() {
             button.setText(R.string.start_scan);
-            clickCount--;
+            clickCount++;
         }
     };
     /**
@@ -318,7 +318,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         //设置扫描周期，扫描会在自动在一段时间后自动停止
         bleScanner.setScanPeriod(10000);
         //设置是否一直持续扫描，true表示一直扫描，false表示在扫描结束后不再进行扫描
-        bleScanner.setScanContinue(false);
+        bleScanner.setScanContinue(true);
         //设置其他回调
         bleScanner.setOnScanFindOneDeviceListener(onScanFindOneDeviceListener);
         bleScanner.setOnScanCompleteListener(onScanCompleteListener);
@@ -353,7 +353,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         if (bleScanner.isScanning()) {
             bleScanner.stopScan();
             button.setText(R.string.start_scan);
-            clickCount--;
+            clickCount++;
         }
         BleDevice bleDevice = adapterList.get(position);
         Intent intent = new Intent(DeviceListActivity.this, ConnectActivity.class);
