@@ -1,7 +1,9 @@
 package cn.almsound.www.myblesample.activity.bleconnect;
 
 import android.Manifest;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -35,6 +37,7 @@ import java.util.List;
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.adapter.DeviceListAdapter;
 import cn.almsound.www.myblesample.utils.Constants;
+import cn.almsound.www.myblesample.watcher.EditTextWatcherForMacAddress;
 
 /**
  * 扫描设备列表的界面
@@ -53,6 +56,14 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      * 权限请求的requestCode
      */
     private static final int REQUEST_CODE_ASK_ACCESS_COARSE_LOCATION = 1;
+    /**
+     * 要过滤的设备名
+     */
+    private String filterName;
+    /**
+     * 要过滤的设备地址
+     */
+    private String filterAddress;
 
     /**
      * 适配器添加的设备列表
@@ -90,6 +101,23 @@ public class DeviceListActivity extends BaseAppCompatActivity {
     private BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener = new BleInterface.OnScanFindOneDeviceListener() {
         @Override
         public void onScanFindOneDevice(BleDevice bleDevice) {
+            String deviceName = bleDevice.getDeviceName();
+            String deviceAddress = bleDevice.getDeviceAddress();
+            if (filterName != null) {
+                if (deviceName == null || deviceName.isEmpty()) {
+                    return;
+                }
+                if (!deviceName.startsWith(filterName)) {
+                    return;
+                }
+            }
+
+            if (filterAddress != null){
+                if (!deviceAddress.equals(filterAddress)) {
+                    return;
+                }
+            }
+
             //只要发现一个设备就会回调此函数
             if (!adapterList.contains(bleDevice)) {
                 adapterList.add(bleDevice);
@@ -101,6 +129,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
             }
         }
     };
+
 
     /**
      * 点击事件的监听
@@ -243,7 +272,8 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      */
     @Override
     protected boolean createOptionsMenu(Menu menu) {
-        return false;
+        getMenuInflater().inflate(R.menu.activity_device_list, menu);
+        return true;
     }
 
     /**
@@ -254,7 +284,16 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      */
     @Override
     protected boolean optionsItemSelected(MenuItem item) {
-        return false;
+        switch (item.getItemId()) {
+            case R.id.filter_name:
+                showSetFilterNameDialog();
+                return true;
+            case R.id.filter_address:
+                showSetFilterAddressDialog();
+                return true;
+            default:
+                return false;
+        }
     }
 
     @Override
@@ -388,26 +427,75 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         if (scanRecordBytes == null) {
             return;
         }
-            View view = View.inflate(DeviceListActivity.this, R.layout.dialog_scan_record, null);
+        View view = View.inflate(DeviceListActivity.this, R.layout.dialog_scan_record, null);
         if (scanRecordBytes.length > 31) {
             EditText scanRecordEditText = view.findViewById(R.id.scan_record);
             byte[] scanRecord = new byte[31];
-            System.arraycopy(scanRecordBytes,0,scanRecord,0,scanRecord.length);
+            System.arraycopy(scanRecordBytes, 0, scanRecord, 0, scanRecord.length);
             scanRecordEditText.setText(Tool.bytesToHexStr(scanRecord));
             EditText responseEditText = view.findViewById(R.id.response_record);
             byte[] responseRecord = new byte[scanRecordBytes.length - 31];
-            System.arraycopy(scanRecordBytes,31,responseRecord,0,responseRecord.length);
+            System.arraycopy(scanRecordBytes, 31, responseRecord, 0, responseRecord.length);
             responseEditText.setText(Tool.bytesToHexStr(responseRecord));
-        }else {
+        } else {
             EditText scanRecordEditText = view.findViewById(R.id.scan_record);
             scanRecordEditText.setText(Tool.bytesToHexStr(scanRecordBytes));
             EditText responseEditText = view.findViewById(R.id.response_record);
-            responseEditText.setText(R.string.no_response_recrod);
+            responseEditText.setText(R.string.no_response_record);
         }
 
         new AlertDialog.Builder(DeviceListActivity.this)
                 .setTitle(R.string.scan_record)
                 .setView(view)
+                .setNegativeButton(R.string.cancel, null)
+                .setCancelable(false)
+                .show();
+    }
+
+    /**
+     * 显示设置过滤设备名的对话框
+     */
+    private void showSetFilterNameDialog() {
+        final EditText editText = (EditText) View.inflate(DeviceListActivity.this, R.layout.dialog_set_filter_name, null);
+        editText.setText(filterName);
+        new AlertDialog.Builder(DeviceListActivity.this)
+                .setTitle(R.string.filter_name)
+                .setView(editText)
+                .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String text = editText.getText().toString();
+                        if (text.isEmpty()) {
+                            filterName = null;
+                        } else {
+                            filterName = text;
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .setCancelable(false)
+                .show();
+    }
+
+    private void showSetFilterAddressDialog() {
+        final EditText editText = (EditText) View.inflate(DeviceListActivity.this, R.layout.dialog_set_filter_address, null);
+        EditTextWatcherForMacAddress editTextWatcherForMacAddress = new EditTextWatcherForMacAddress(editText);
+        editText.addTextChangedListener(editTextWatcherForMacAddress);
+        editText.setText(filterAddress);
+        new AlertDialog.Builder(DeviceListActivity.this)
+                .setTitle(R.string.filter_address)
+                .setView(editText)
+                .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String text = editText.getText().toString();
+                        if (text.isEmpty()) {
+                            filterAddress = null;
+                        } else {
+                            filterAddress = text;
+                        }
+                    }
+                })
                 .setNegativeButton(R.string.cancel, null)
                 .setCancelable(false)
                 .show();

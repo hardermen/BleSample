@@ -64,5 +64,7 @@
     <string name="uuid_refresh_success">设备UUID更新成功</string>
     <string name="uuid_refresh_failed">设备UUID更新失败</string>
     <string name="response_record">响应包</string>
-    <string name="no_response_recrod">没有响应包</string>
+    <string name="no_response_record">没有响应包</string>
+    <string name="filter_name">过滤设备名</string>
+    <string name="filter_address">过滤设备地址</string>
 </resources>
