@@ -300,34 +300,11 @@ public class BleManager {
     }
 
     /**
-     * 请求打开蓝牙
-     *
-     * @return true表示请求发起成功（只是发起打开蓝牙的请求成功，并不是开启蓝牙成功）
-     */
-    @SuppressWarnings("unused")
-    public static boolean openBluetooth() {
-        checkInitStatus();
-        if (!isSupportBle()) {
-            return false;
-        }
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        if (bluetoothManager == null) {
-            return false;
-        }
-        BluetoothAdapter adapter = bluetoothManager.getAdapter();
-
-        return adapter != null && adapter.enable();
-
-    }
-
-    /**
      * 请求关闭蓝牙
      *
-     * @param context 上下文
      * @return true表示请求发起成功（只是发起关闭蓝牙的请求成功，并不是关闭蓝牙成功）
      */
-    @SuppressWarnings("unused")
-    public static boolean closeBluetooth(Context context) {
+    public static boolean enableBluetooth(boolean enable) {
         checkInitStatus();
         if (!isSupportBle()) {
             return false;
@@ -337,8 +314,14 @@ public class BleManager {
             return false;
         }
         BluetoothAdapter adapter = bluetoothManager.getAdapter();
-
-        return adapter != null && adapter.disable();
+        if (adapter == null) {
+            return false;
+        }
+        if (enable) {
+            return adapter.enable();
+        } else {
+            return adapter.disable();
+        }
     }
 
     /**
@@ -419,8 +402,8 @@ public class BleManager {
     /**
      * 校验是否初始化成功
      */
-    private static void checkInitStatus(){
-        if (context == null){
+    private static void checkInitStatus() {
+        if (context == null) {
             throw new IllegalStateException("Please invoke method \"init(Context context)\" in your Applications class");
         }
     }
