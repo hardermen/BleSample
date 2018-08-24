@@ -89,7 +89,9 @@ class BluetoothStateReceiver extends BroadcastReceiver {
                         if (bleScanner != null) {
                             bleScanner.stopScan();
                         }
-                        onBluetoothStateChangedListener.onBluetoothSwitchChanged(false);
+                        if (onBluetoothStateChangedListener != null) {
+                            onBluetoothStateChangedListener.onBluetoothSwitchChanged(false);
+                        }
                         break;
                     case BluetoothAdapter.STATE_ON:
                         Tool.toastL(context, R.string.bluetooth_on);
@@ -100,7 +102,9 @@ class BluetoothStateReceiver extends BroadcastReceiver {
                         if (bleScanner != null) {
                             bleScanner.setBluetoothAdapter(bluetoothManager.getAdapter());
                         }
-                        onBluetoothStateChangedListener.onBluetoothSwitchChanged(true);
+                        if (onBluetoothStateChangedListener != null) {
+                            onBluetoothStateChangedListener.onBluetoothSwitchChanged(true);
+                        }
                         break;
                     default:
                         break;
