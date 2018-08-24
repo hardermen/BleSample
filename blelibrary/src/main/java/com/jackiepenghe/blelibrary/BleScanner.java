@@ -478,7 +478,6 @@ public class BleScanner {
             bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
             bluetoothLeScanner.startScan(scanFilters, scanSettings, mScanCallback);
         } else {
-            //noinspection deprecation,AliDeprecation
             mBluetoothAdapter.startLeScan(this.mLeScanCallback);
         }
         scanning = true;
@@ -515,10 +514,17 @@ public class BleScanner {
             if (bluetoothLeScanner == null) {
                 return false;
             }
-            bluetoothLeScanner.stopScan(mScanCallback);
+            try {
+                bluetoothLeScanner.stopScan(mScanCallback);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else {
-            //noinspection deprecation
-            this.mBluetoothAdapter.stopLeScan(this.mLeScanCallback);
+            try {
+                this.mBluetoothAdapter.stopLeScan(this.mLeScanCallback);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         scanning = false;
         return true;
@@ -543,6 +549,7 @@ public class BleScanner {
         }
 
         if (bluetoothStateReceiver != null) {
+            bluetoothStateReceiver.setOnBluetoothSwitchChangedListener(null);
             bluetoothStateReceiver.releaseData();
             context.unregisterReceiver(bluetoothStateReceiver);
         }
@@ -696,6 +703,13 @@ public class BleScanner {
      */
     public Context getContext() {
         return context;
+    }
+
+    /**
+     * 设置蓝牙状态更改时进行的回调
+     */
+    public void setOnBluetoothSwitchChangedListener(BleInterface.OnBluetoothSwitchChangedListener onBluetoothStateChangedListener) {
+        bluetoothStateReceiver.setOnBluetoothSwitchChangedListener(onBluetoothStateChangedListener);
     }
 
     /*------------------------私有函数----------------------------*/

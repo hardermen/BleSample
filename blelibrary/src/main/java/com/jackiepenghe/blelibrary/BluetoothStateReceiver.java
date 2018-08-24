@@ -21,6 +21,11 @@ class BluetoothStateReceiver extends BroadcastReceiver {
      */
     private BleScanner bleScanner;
 
+    /**
+     * 蓝牙状态更改时进行的回调
+     */
+    private BleInterface.OnBluetoothSwitchChangedListener onBluetoothStateChangedListener;
+
     /*------------------------构造函数----------------------------*/
 
     /**
@@ -84,6 +89,7 @@ class BluetoothStateReceiver extends BroadcastReceiver {
                         if (bleScanner != null) {
                             bleScanner.stopScan();
                         }
+                        onBluetoothStateChangedListener.onBluetoothSwitchChanged(false);
                         break;
                     case BluetoothAdapter.STATE_ON:
                         Tool.toastL(context, R.string.bluetooth_on);
@@ -94,6 +100,7 @@ class BluetoothStateReceiver extends BroadcastReceiver {
                         if (bleScanner != null) {
                             bleScanner.setBluetoothAdapter(bluetoothManager.getAdapter());
                         }
+                        onBluetoothStateChangedListener.onBluetoothSwitchChanged(true);
                         break;
                     default:
                         break;
@@ -111,5 +118,12 @@ class BluetoothStateReceiver extends BroadcastReceiver {
      */
     void releaseData() {
         bleScanner = null;
+    }
+
+    /**
+     * 设置蓝牙状态更改时进行的回调
+     */
+    void setOnBluetoothSwitchChangedListener(BleInterface.OnBluetoothSwitchChangedListener onBluetoothStateChangedListener) {
+        this.onBluetoothStateChangedListener = onBluetoothStateChangedListener;
     }
 }

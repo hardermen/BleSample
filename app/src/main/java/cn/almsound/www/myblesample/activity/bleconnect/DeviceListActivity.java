@@ -1,7 +1,6 @@
 package cn.almsound.www.myblesample.activity.bleconnect;
 
 import android.Manifest;
-import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -112,7 +111,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
                 }
             }
 
-            if (filterAddress != null){
+            if (filterAddress != null) {
                 if (!deviceAddress.equals(filterAddress)) {
                     return;
                 }
@@ -177,6 +176,28 @@ public class DeviceListActivity extends BaseAppCompatActivity {
             BleDevice bleDevice = adapterList.get(position);
             showScanRecordDataDialog(bleDevice.getScanRecordBytes());
             return true;
+        }
+    };
+    /**
+     * 蓝牙的开关状态被改变时进行的回调
+     */
+    private BleInterface.OnBluetoothSwitchChangedListener onBluetoothSwitchChangedListener = new BleInterface.OnBluetoothSwitchChangedListener() {
+        @Override
+        public void onBluetoothSwitchChanged(boolean switchStatus) {
+            if (!switchStatus) {
+                if (clickCount % TWO != 0) {
+                    clickCount++;
+                    button.setText(R.string.start_scan);
+                }
+            } else {
+                if (clickCount % TWO == 0) {
+                    clickCount++;
+                    button.setText(R.string.stop_scan);
+                    adapterList.clear();
+                    adapter.notifyDataSetChanged();
+                    bleScanner.startScan(true);
+                }
+            }
         }
     };
 
@@ -361,6 +382,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         //设置其他回调
         bleScanner.setOnScanFindOneDeviceListener(onScanFindOneDeviceListener);
         bleScanner.setOnScanCompleteListener(onScanCompleteListener);
+        bleScanner.setOnBluetoothSwitchChangedListener(onBluetoothSwitchChangedListener);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             bleScanner.setOn21ScanCallback(on21ScanCallback);
         }
@@ -406,6 +428,10 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      * 扫描/停止扫描
      */
     private void doButtonClick() {
+        if (!BleManager.isBluetoothOpened()) {
+            BleManager.enableBluetooth(true);
+            return;
+        }
         if (clickCount % TWO == 0) {
             button.setText(R.string.stop_scan);
             adapterList.clear();
