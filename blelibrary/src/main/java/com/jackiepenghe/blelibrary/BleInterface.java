@@ -13,7 +13,6 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 接口定义区
@@ -448,8 +447,55 @@ public class BleInterface {
     public interface OnStatusErrorListener {
         /**
          * 状态码错误
+         *
          * @param status 状态码
          */
         void onStatusError(int status);
+    }
+
+    /**
+     * 在大数据传输时进行的相关回调
+     */
+    public interface OnBigDataSendStateChangedListener {
+
+        /**
+         * 传输开始
+         */
+        void sendStarted();
+
+        /**
+         * 传输完成
+         */
+        void sendFinished();
+
+        /**
+         * 数据发送成功
+         *
+         * @param currentPackageCount 当前发送成功的包数
+         * @param pageCount           总包数
+         * @param tryCount            尝试次数
+         * @param data                本包发送的数据
+         */
+        void packageSendSuccess(int currentPackageCount, int pageCount, int tryCount, byte[] data);
+
+        /**
+         * 数据发送失败
+         *
+         * @param currentPackageCount 当前发送失败的包数
+         * @param pageCount           总包数
+         * @param tryCount            尝试次数
+         * @param data                本包发送的数据
+         */
+        void packageSendFailed(int currentPackageCount, int pageCount, int tryCount, byte[] data);
+
+        /**
+         * 本包数据发送失败，正在重新发送
+         *
+         * @param currentPackageCount 当前发送失败的包数
+         * @param pageCount           总包数
+         * @param tryCount            尝试次数
+         * @param data                本包发送的数据
+         */
+        void packageSendFailedAndRetry(int currentPackageCount, int pageCount, int tryCount, byte[] data);
     }
 }

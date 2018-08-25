@@ -33,6 +33,18 @@ public class BleConnector {
      * TAG
      */
     private static final String TAG = BleConnector.class.getSimpleName();
+    /**
+     * 数据连接传输时，每一包数据的最大长度
+     */
+    private static final int PACKAGE_MAX_LENGTH = 20;
+    /**
+     * 分包传输时，每一包传输的有效数据的最大长度
+     */
+    private static final int LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH = 18;
+    /**
+     * 大数据的最大字节长度
+     */
+    private static final int LARGE_DATA_MAX_LENGTH = 255 * 18;
 
     /**
      * 上下文弱引用
@@ -81,7 +93,25 @@ public class BleConnector {
         boundBleBroadcastReceiver = new BoundBleBroadcastReceiver();
     }
 
-    /*-------------------------私有函数-------------------------*/
+    /*-------------------------公开函数-------------------------*/
+
+    /**
+     * 检查设备地址并设置地址
+     *
+     * @param bluetoothDevice 设备
+     * @return true表示成功设置地址
+     */
+    public boolean checkAndSetDevice(BluetoothDevice bluetoothDevice) {
+        if (bluetoothDevice == null) {
+            return false;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setAddress(bluetoothDevice.getAddress());
+        } else {
+            setDevice(bluetoothDevice);
+        }
+        return true;
+    }
 
     /**
      * 通过设备地址直接解绑某个设备
@@ -143,98 +173,6 @@ public class BleConnector {
     }
 
     /**
-     * 设置连接地址
-     *
-     * @param address 连接地址
-     */
-    private void setAddress(String address) {
-        //将地址传入服务连接工具并初始化
-        bleServiceConnection = new BleServiceConnection(address);
-    }
-
-    private void setDevice(BluetoothDevice bluetoothDevice) {
-        bleServiceConnection = new BleServiceConnection(bluetoothDevice);
-    }
-
-    /**
-     * 检查关闭状况（用于调用回调）
-     */
-    private void checkCloseStatus() {
-        mClosed = true;
-        if (onCloseCompleteListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    onCloseCompleteListener.onCloseComplete();
-                }
-            });
-        }
-    }
-
-    /**
-     * 广播接收者Action过滤器
-     *
-     * @return 接收者Action过滤器
-     */
-    private IntentFilter makeConnectBLEIntentFilter() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTING);
-        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTING);
-        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_READ);
-        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_CHANGED);
-        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_WRITE);
-        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_READ);
-        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_WRITE);
-        intentFilter.addAction(BleConstants.ACTION_RELIABLE_WRITE_COMPLETED);
-        intentFilter.addAction(BleConstants.ACTION_READ_REMOTE_RSSI);
-        intentFilter.addAction(BleConstants.ACTION_MTU_CHANGED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_NOT_SUCCESS);
-        intentFilter.addAction(BleConstants.ACTION_GATT_DISCOVER_SERVICES_FAILED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_STATUS_ERROR);
-        intentFilter.setPriority(Integer.MAX_VALUE);
-        return intentFilter;
-    }
-
-    /**
-     * 广播接收者Action过滤器
-     *
-     * @return 接收者Action过滤器
-     */
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    private IntentFilter makeBoundBLEIntentFilter() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
-        intentFilter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-        intentFilter.setPriority(Integer.MAX_VALUE);
-        return intentFilter;
-    }
-
-    /*-------------------------公开函数-------------------------*/
-
-    /**
-     * 检查设备地址并设置地址
-     *
-     * @param bluetoothDevice 设备
-     * @return true表示成功设置地址
-     */
-    public boolean checkAndSetDevice(BluetoothDevice bluetoothDevice) {
-        if (bluetoothDevice == null) {
-            return false;
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            setAddress(bluetoothDevice.getAddress());
-        } else {
-            setDevice(bluetoothDevice);
-        }
-        return true;
-    }
-
-    /*-------------------------公开函数-------------------------*/
-
-    /**
      * 检查设备地址并设置地址
      *
      * @param address 设备地址
@@ -284,7 +222,7 @@ public class BleConnector {
             return false;
         }
 
-        if (context == null){
+        if (context == null) {
             return false;
         }
         mClosed = false;
@@ -437,7 +375,7 @@ public class BleConnector {
         connectBleBroadcastReceiver.setOnDisconnectedListener(onDisconnectedListener);
     }
 
-    public void  setOnStatusErrorListener(BleInterface.OnStatusErrorListener onStatusErrorListener){
+    public void setOnStatusErrorListener(BleInterface.OnStatusErrorListener onStatusErrorListener) {
         connectBleBroadcastReceiver.setOnStatusErrorListener(onStatusErrorListener);
     }
 
@@ -547,6 +485,29 @@ public class BleConnector {
      */
     public void setOnMtuChangedListener(BleInterface.OnMtuChangedListener onMtuChangedListener) {
         connectBleBroadcastReceiver.setOnMtuChangedListener(onMtuChangedListener);
+    }
+
+    public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData) {
+        writeBigData(serviceUuid, characteristicUuid, bigData, 100, new DefaultBigDataSendStateChangedListener());
+    }
+
+    /**
+     * 发送大量数据到远端设备（超过20字节的数据）
+     *
+     * @param serviceUuid                       服务UUID
+     * @param characteristicUuid                特征UUID
+     * @param bigData                           大量数据
+     * @param packageDelayTime                  每一包数据之间的时间间隔
+     * @param onBigDataSendStateChangedListener 数据发送的相关回调
+     */
+    public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, int packageDelayTime, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+        int dataLength = bigData.length;
+
+        if (dataLength <= PACKAGE_MAX_LENGTH || dataLength > LARGE_DATA_MAX_LENGTH) {
+            throw new WrongLargeDataArrayException();
+        }
+
+        startThreadToStartWriteBigData(serviceUuid, characteristicUuid, bigData, dataLength, packageDelayTime, onBigDataSendStateChangedListener);
     }
 
     /**
@@ -753,5 +714,222 @@ public class BleConnector {
 
         int properties = characteristic.getProperties();
         return (properties & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0;
+    }
+
+    /*-------------------------私有函数-------------------------*/
+
+    /**
+     * 设置连接地址
+     *
+     * @param address 连接地址
+     */
+    private void setAddress(String address) {
+        //将地址传入服务连接工具并初始化
+        bleServiceConnection = new BleServiceConnection(address);
+    }
+
+    private void setDevice(BluetoothDevice bluetoothDevice) {
+        bleServiceConnection = new BleServiceConnection(bluetoothDevice);
+    }
+
+    /**
+     * 检查关闭状况（用于调用回调）
+     */
+    private void checkCloseStatus() {
+        mClosed = true;
+        if (onCloseCompleteListener != null) {
+            BleManager.getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    onCloseCompleteListener.onCloseComplete();
+                }
+            });
+        }
+    }
+
+    /**
+     * 广播接收者Action过滤器
+     *
+     * @return 接收者Action过滤器
+     */
+    private IntentFilter makeConnectBLEIntentFilter() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTING);
+        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTING);
+        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_READ);
+        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_CHANGED);
+        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_WRITE);
+        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_READ);
+        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_WRITE);
+        intentFilter.addAction(BleConstants.ACTION_RELIABLE_WRITE_COMPLETED);
+        intentFilter.addAction(BleConstants.ACTION_READ_REMOTE_RSSI);
+        intentFilter.addAction(BleConstants.ACTION_MTU_CHANGED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_NOT_SUCCESS);
+        intentFilter.addAction(BleConstants.ACTION_GATT_DISCOVER_SERVICES_FAILED);
+        intentFilter.addAction(BleConstants.ACTION_GATT_STATUS_ERROR);
+        intentFilter.setPriority(Integer.MAX_VALUE);
+        return intentFilter;
+    }
+
+    /**
+     * 广播接收者Action过滤器
+     *
+     * @return 接收者Action过滤器
+     */
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private IntentFilter makeBoundBLEIntentFilter() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
+        intentFilter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        intentFilter.setPriority(Integer.MAX_VALUE);
+        return intentFilter;
+    }
+
+    /**
+     * 获取分包传输时，要传输的总包数
+     *
+     * @param dataLength 有效数据的总长度
+     */
+    private int getPageCount(int dataLength) {
+        if (dataLength % LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH == 0) {
+            return dataLength / LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH;
+        } else {
+            return (dataLength / LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH) + 1;
+        }
+    }
+
+    /**
+     * 根据当前需要第几包，获取对应的数据包内容
+     *
+     * @param packageIndex 当前需要第几包
+     * @param largeData    整个大型数据
+     * @param pageCount    总包数
+     * @return byte数组
+     */
+    private byte[] getBigPackageData(int packageIndex, byte[] largeData, int pageCount) {
+
+        if (packageIndex >= pageCount) {
+            return null;
+        }
+
+        if (packageIndex == pageCount - 1) {
+            int remainder = largeData.length % LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH;
+            if (remainder == 0) {
+                byte[] data = new byte[20];
+                data[0] = (byte) pageCount;
+                data[1] = (byte) (packageIndex + 1);
+                System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, 2, data.length - 2);
+                return data;
+            } else {
+                byte[] data = new byte[remainder + 2];
+                data[0] = (byte) pageCount;
+                data[1] = (byte) (packageIndex + 1);
+                System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, 2, data.length - 2);
+                return data;
+            }
+        } else {
+            byte[] data = new byte[20];
+            data[0] = (byte) pageCount;
+            data[1] = (byte) (packageIndex + 1);
+            System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, 2, data.length - 2);
+            return data;
+        }
+    }
+
+    /**
+     * 发起一个线程开始进行数据传输
+     *
+     * @param serviceUuid                       服务UUID
+     * @param characteristicUuid                特征UUID
+     * @param packageDelayTime                  每一包数据之间的间隔时间
+     * @param bigData                           大数据内容
+     * @param dataLength                        数据长度
+     * @param onBigDataSendStateChangedListener 大数据传输时的相关回调
+     */
+    private void startThreadToStartWriteBigData(final String serviceUuid, final String characteristicUuid, final byte[] bigData, final int dataLength, final int packageDelayTime, final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                final int pageCount = getPageCount(dataLength);
+                int currentPackageCount = 0;
+                //记录数据重发的次数
+                int tryCount = 0;
+                BleManager.getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (onBigDataSendStateChangedListener != null) {
+                            onBigDataSendStateChangedListener.sendStarted();
+                        }
+                    }
+                });
+                while (true) {
+                    final byte[] data = getBigPackageData(currentPackageCount, bigData, pageCount);
+                    if (data == null) {
+                        BleManager.getHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (onBigDataSendStateChangedListener != null) {
+                                    onBigDataSendStateChangedListener.sendFinished();
+                                }
+                            }
+                        });
+                        break;
+                    }
+                    if (tryCount >= 3) {
+                        final int finalCurrentPackageCount1 = currentPackageCount;
+                        final int finalTryCount1 = tryCount;
+                        BleManager.getHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (onBigDataSendStateChangedListener != null) {
+                                    onBigDataSendStateChangedListener.packageSendFailed(finalCurrentPackageCount1 + 1, pageCount, finalTryCount1, data);
+                                }
+                            }
+                        });
+                        break;
+                    }
+                    if (writeData(serviceUuid, characteristicUuid, data)) {
+                        final int finalTryCount = tryCount;
+                        final int finalCurrentPackageCount = currentPackageCount;
+                        BleManager.getHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (onBigDataSendStateChangedListener != null) {
+                                    onBigDataSendStateChangedListener.packageSendSuccess(finalCurrentPackageCount + 1, pageCount, finalTryCount, data);
+                                }
+                            }
+                        });
+                        tryCount = 0;
+                        currentPackageCount++;
+                    } else {
+                        final int finalCurrentPackageCount2 = currentPackageCount;
+                        final int finalTryCount2 = tryCount;
+                        BleManager.getHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (onBigDataSendStateChangedListener != null) {
+                                    onBigDataSendStateChangedListener.packageSendFailedAndRetry(finalCurrentPackageCount2 + 1, pageCount, finalTryCount2, data);
+                                }
+                            }
+                        });
+                        tryCount++;
+                    }
+                    if (packageDelayTime >= 20 && packageDelayTime <= 2000) {
+                        Tool.sleep(packageDelayTime);
+                    } else {
+                        if (packageDelayTime >= 20) {
+                            Tool.sleep(20);
+                        } else {
+                            Tool.sleep(2000);
+                        }
+                    }
+                }
+
+            }
+        };
+        BleManager.getThreadFactory().newThread(runnable).start();
     }
 }

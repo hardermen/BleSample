@@ -169,4 +169,18 @@ class Tool {
         }
         return new String(bytes);
     }
+
+    /**
+     * 使用死循环使当前线程延迟一段时间执行下一个指令
+     *
+     * @param sleepTime 延迟时间
+     */
+    public static void sleep(int sleepTime) {
+        long currentTimeMillis = System.currentTimeMillis();
+        while (true) {
+            if (System.currentTimeMillis() - currentTimeMillis >= sleepTime) {
+                break;
+            }
+        }
+    }
 }

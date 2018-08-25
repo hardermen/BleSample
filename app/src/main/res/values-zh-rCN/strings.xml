@@ -67,4 +67,5 @@
     <string name="no_response_record">没有响应包</string>
     <string name="filter_name">过滤设备名</string>
     <string name="filter_address">过滤设备地址</string>
+    <string name="write_big_data">写入大量数据</string>
 </resources>

@@ -476,9 +476,18 @@ public class BleScanner {
                         .build();
             }
             bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
-            bluetoothLeScanner.startScan(scanFilters, scanSettings, mScanCallback);
+            try {
+                bluetoothLeScanner.startScan(scanFilters, scanSettings, mScanCallback);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else {
-            mBluetoothAdapter.startLeScan(this.mLeScanCallback);
+            try {
+                //noinspection AliDeprecation
+                mBluetoothAdapter.startLeScan(this.mLeScanCallback);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         scanning = true;
         return true;
@@ -521,6 +530,7 @@ public class BleScanner {
             }
         } else {
             try {
+                //noinspection AliDeprecation
                 this.mBluetoothAdapter.stopLeScan(this.mLeScanCallback);
             } catch (Exception e) {
                 e.printStackTrace();

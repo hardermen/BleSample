@@ -11,6 +11,8 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 
+import java.util.concurrent.ThreadFactory;
+
 /**
  * BlE管理类
  *
@@ -27,6 +29,15 @@ public class BleManager {
      */
     private static final Handler HANDLER = new Handler();
 
+    /**
+     * 线程工厂
+     */
+    private static final ThreadFactory THREAD_FACTORY = new ThreadFactory() {
+        @Override
+        public Thread newThread(@NonNull Runnable r) {
+            return new Thread(r);
+        }
+    };
     /*------------------------静态变量----------------------------*/
 
     /**
@@ -88,12 +99,22 @@ public class BleManager {
     }
 
     /**
+     * 获取Handler
+     *
      * @return Handler
      */
     static Handler getHandler() {
         return HANDLER;
     }
 
+    /**
+     * 获取线程工厂
+     *
+     * @return 线程工厂
+     */
+    static ThreadFactory getThreadFactory() {
+        return THREAD_FACTORY;
+    }
     /*------------------------公开静态函数----------------------------*/
 
     /**

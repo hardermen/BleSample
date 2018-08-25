@@ -67,4 +67,5 @@
     <string name="no_response_record">No response packet</string>
     <string name="filter_name">Filter device name</string>
     <string name="filter_address">Filter device address</string>
+    <string name="write_big_data">Write large amounts of data</string>
 </resources>

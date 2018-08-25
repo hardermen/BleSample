@@ -12,15 +12,17 @@ import com.jackiepenghe.baselibrary.Tool;
  * @date 2018/1/22 0022
  */
 
-public class EditTextWatcherForHexData implements TextWatcher {
+public class EditTextWatcherForHexDataWithin20 implements TextWatcher {
 
-    private static final String TAG = EditTextWatcherForHexData.class.getSimpleName();
+    private static final String TAG = EditTextWatcherForHexDataWithin20.class.getSimpleName();
     private static final char CHAR_0 = '0';
     private static final char CHAR_9 = '9';
     private static final char CHAR_A = 'A';
     private static final char CHAR_F = 'F';
     private static final char CHAR_LOW_A = 'a';
     private static final char CHAR_LOW_F = 'f';
+
+    private static final int MAX_NUM = 20;
 
     private boolean mFormat;
 
@@ -33,7 +35,7 @@ public class EditTextWatcherForHexData implements TextWatcher {
     private EditText editText;
 
 
-    public EditTextWatcherForHexData(EditText editText) {
+    public EditTextWatcherForHexDataWithin20(EditText editText) {
         this.editText = editText;
     }
 
@@ -44,7 +46,7 @@ public class EditTextWatcherForHexData implements TextWatcher {
      * It is an error to attempt to make changes to <code>s</code> from
      * this callback.
      *
-     * @param s CharSequence
+     * @param s     CharSequence
      * @param start int
      * @param count int
      * @param after after
@@ -62,15 +64,20 @@ public class EditTextWatcherForHexData implements TextWatcher {
      * this callback.
      *
      * @param charSequence CharSequence
-     * @param start int
-     * @param before int
-     * @param count int
+     * @param start        int
+     * @param before       int
+     * @param count        int
      */
     @Override
     public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
         try {
 
             String temp = charSequence.toString();
+            //蓝牙发送一包最多20个字节
+            if (temp.length() > (MAX_NUM * 3 - 1)) {
+                editText.setText(mLastText);
+                return;
+            }
 
             // Set selection.
             if (mLastText.equals(temp)) {
@@ -119,24 +126,24 @@ public class EditTextWatcherForHexData implements TextWatcher {
             //                 A-F.
             else //noinspection StatementWithEmptyBody
                 if (CHAR_A <= mid && mid <= CHAR_F) {
-            }
-            //                 把 a-f转为A-F.
-            else if (CHAR_LOW_A <= mid && mid <= CHAR_LOW_F) {
-
-                for (int i = 0; i < lastChar.length; i++) {
-                    lastChar[i] = (char) (lastChar[i] - 32);
                 }
+                //                 把 a-f转为A-F.
+                else if (CHAR_LOW_A <= mid && mid <= CHAR_LOW_F) {
+
+                    for (int i = 0; i < lastChar.length; i++) {
+                        lastChar[i] = (char) (lastChar[i] - 32);
+                    }
 
 
-                temp = temp.substring(0, start) + new String(lastChar);
-                editText.setText(temp);
-            }
-            /* Invalid input. */
-            else {
-                mInvalid = true;
-                temp = temp.substring(0, start) + temp.substring(start + count, temp.length());
-                editText.setText(temp);
-            }
+                    temp = temp.substring(0, start) + new String(lastChar);
+                    editText.setText(temp);
+                }
+                /* Invalid input. */
+                else {
+                    mInvalid = true;
+                    temp = temp.substring(0, start) + temp.substring(start + count, temp.length());
+                    editText.setText(temp);
+                }
 
         } catch (Exception e) {
             Tool.warnOut(TAG, e.getMessage());

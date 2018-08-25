@@ -4,5 +4,6 @@
         <item>@string/read</item>
         <item>@string/write</item>
         <item>@string/open_notification</item>
+        <item>@string/write_big_data</item>
     </string-array>
 </resources>
