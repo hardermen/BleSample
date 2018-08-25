@@ -40,11 +40,11 @@ public class BleConnector {
     /**
      * 分包传输时，每一包传输的有效数据的最大长度
      */
-    private static final int LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH = 18;
+    private static final int LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH = 16;
     /**
      * 大数据的最大字节长度
      */
-    private static final int LARGE_DATA_MAX_LENGTH = 255 * 18;
+    private static final int LARGE_DATA_MAX_LENGTH = 0xFFFF;
 
     /**
      * 上下文弱引用
@@ -833,27 +833,36 @@ public class BleConnector {
         if (packageIndex >= pageCount) {
             return null;
         }
-
+        int largeDataLength = largeData.length;
         if (packageIndex == pageCount - 1) {
-            int remainder = largeData.length % LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH;
+            int remainder = largeDataLength % LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH;
             if (remainder == 0) {
                 byte[] data = new byte[20];
-                data[0] = (byte) pageCount;
-                data[1] = (byte) (packageIndex + 1);
-                System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, 2, data.length - 2);
+                byte[] bytes = Tool.intToBytes2(largeDataLength);
+                data[0] = bytes[0];
+                data[1] = bytes[1];
+                data[2] = (byte) pageCount;
+                data[3] = (byte) (packageIndex + 1);
+                System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH));
                 return data;
             } else {
-                byte[] data = new byte[remainder + 2];
-                data[0] = (byte) pageCount;
-                data[1] = (byte) (packageIndex + 1);
-                System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, 2, data.length - 2);
+                byte[] data = new byte[remainder + 4];
+                byte[] bytes = Tool.intToBytes2(largeDataLength);
+                data[0] = bytes[0];
+                data[1] = bytes[1];
+                data[2] = (byte) pageCount;
+                data[3] = (byte) (packageIndex + 1);
+                System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH));
                 return data;
             }
         } else {
             byte[] data = new byte[20];
-            data[0] = (byte) pageCount;
-            data[1] = (byte) (packageIndex + 1);
-            System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, 2, data.length - 2);
+            byte[] bytes = Tool.intToBytes2(largeDataLength);
+            data[0] = bytes[0];
+            data[1] = bytes[1];
+            data[2] = (byte) pageCount;
+            data[3] = (byte) (packageIndex + 1);
+            System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH));
             return data;
         }
     }

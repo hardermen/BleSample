@@ -183,4 +183,26 @@ class Tool {
             }
         }
     }
+
+    /**
+     * 将一个int型转为2字节的byte数组
+     *
+     * @param i int型数据
+     */
+    public static byte[] intToBytes2(int i) {
+        String hexString = Integer.toHexString(i);
+        byte highByte;
+        byte lowByte;
+        int hexStringMinLength = 2;
+        if (hexString.length() > hexStringMinLength) {
+            String substring = hexString.substring(0, hexString.length() - 2);
+            highByte = (byte) Integer.parseInt(substring, 16);
+            substring = hexString.substring(hexString.length() - 2, hexString.length());
+            lowByte = (byte) Integer.parseInt(substring, 16);
+        } else {
+            highByte = 0;
+            lowByte = (byte) Integer.parseInt(hexString, 16);
+        }
+        return new byte[]{highByte, lowByte};
+    }
 }

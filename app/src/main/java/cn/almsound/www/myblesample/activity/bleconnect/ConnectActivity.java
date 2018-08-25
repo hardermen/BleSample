@@ -27,7 +27,6 @@ import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleUtils;
-import com.jackiepenghe.blelibrary.DefaultBigDataSendStateChangedListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -317,13 +316,12 @@ public class ConnectActivity extends BaseAppCompatActivity {
             onBackPressed();
         }
     };
-    private DefaultBigDataSendStateChangedListener onBigDataSendStateChangedListener = new DefaultBigDataSendStateChangedListener() {
+    private BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener = new BleInterface.OnBigDataSendStateChangedListener() {
         /**
          * 传输开始
          */
         @Override
         public void sendStarted() {
-            super.sendStarted();
             Tool.toast(ConnectActivity.this, "sendStarted", 200);
         }
 
@@ -332,7 +330,6 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void sendFinished() {
-            super.sendFinished();
             Tool.toast(ConnectActivity.this, "sendFinished", 200);
         }
 
@@ -346,8 +343,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void packageSendSuccess(int currentPackageCount, int pageCount, int tryCount, byte[] data) {
-            super.packageSendSuccess(currentPackageCount, pageCount, tryCount, data);
             Tool.toast(ConnectActivity.this, "packageSendSuccess " + currentPackageCount + " / " + pageCount, 200);
+            Tool.warnOut(TAG, "data = " + Tool.bytesToHexStr(data));
         }
 
         /**
@@ -360,7 +357,6 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void packageSendFailed(int currentPackageCount, int pageCount, int tryCount, byte[] data) {
-            super.packageSendFailed(currentPackageCount, pageCount, tryCount, data);
             Tool.toast(ConnectActivity.this, "packageSendFailed " + currentPackageCount + " / " + pageCount, 200);
         }
 
@@ -374,7 +370,6 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void packageSendFailedAndRetry(int currentPackageCount, int pageCount, int tryCount, byte[] data) {
-            super.packageSendFailedAndRetry(currentPackageCount, pageCount, tryCount, data);
             Tool.toast(ConnectActivity.this, "packageSendFailedAndRetry: tryCount = " + tryCount + " " + currentPackageCount + " / " + pageCount, 200);
         }
 
@@ -724,7 +719,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         final EditText editText = (EditText) View.inflate(this, R.layout.dialog_show_write_big_data, null);
         EditTextWatcherForHexData editTextWatcherForHexData = new EditTextWatcherForHexData(editText);
         editText.addTextChangedListener(editTextWatcherForHexData);
-        byte[] bytes = new byte[255];
+        byte[] bytes = new byte[256];
         for (int i = 0; i < bytes.length; i++) {
             bytes[i] = (byte) i;
         }
@@ -743,7 +738,6 @@ public class ConnectActivity extends BaseAppCompatActivity {
                         }
                         text = text.replace(" ", "");
                         byte[] bytes = Tool.hexStrToBytes(text);
-//                        bleConnector.writeBigData(serviceUUID, characteristicUUID, bytes);
                         bleConnector.writeBigData(serviceUUID, characteristicUUID, bytes, 200, onBigDataSendStateChangedListener);
 
                     }

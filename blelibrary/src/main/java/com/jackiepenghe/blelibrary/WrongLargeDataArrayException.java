@@ -12,6 +12,6 @@ class WrongLargeDataArrayException extends RuntimeException {
      * initialized by a call to {@link #initCause}.
      */
     WrongLargeDataArrayException() {
-        super("large data array length must be Greater than 20");
+        super("large data array length must be Greater than 20 and lower than 65536");
     }
 }
