@@ -487,12 +487,31 @@ public class BleConnector {
         connectBleBroadcastReceiver.setOnMtuChangedListener(onMtuChangedListener);
     }
 
+    /**
+     * 发送大量数据到远端设备（超过20字节的数据）
+     *
+     * @param serviceUuid        服务UUID
+     * @param characteristicUuid 特征UUID
+     * @param bigData            数据
+     */
     public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData) {
         writeBigData(serviceUuid, characteristicUuid, bigData, 100, new DefaultBigDataSendStateChangedListener());
     }
 
     /**
      * 发送大量数据到远端设备（超过20字节的数据）
+     *
+     * @param serviceUuid                       服务UUID
+     * @param characteristicUuid                特征UUID
+     * @param bigData                           数据
+     * @param onBigDataSendStateChangedListener 数据发送的相关回调
+     */
+    public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+        writeBigData(serviceUuid, characteristicUuid, bigData, 100, onBigDataSendStateChangedListener);
+    }
+
+    /**
+     * 发送大量数据到远端设备（超过 20 字节并且小于 18 * 255 字节的数据）
      *
      * @param serviceUuid                       服务UUID
      * @param characteristicUuid                特征UUID
@@ -857,64 +876,23 @@ public class BleConnector {
                 int currentPackageCount = 0;
                 //记录数据重发的次数
                 int tryCount = 0;
-                BleManager.getHandler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (onBigDataSendStateChangedListener != null) {
-                            onBigDataSendStateChangedListener.sendStarted();
-                        }
-                    }
-                });
+                performBigDataSendStartedListener(onBigDataSendStateChangedListener);
                 while (true) {
                     final byte[] data = getBigPackageData(currentPackageCount, bigData, pageCount);
                     if (data == null) {
-                        BleManager.getHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (onBigDataSendStateChangedListener != null) {
-                                    onBigDataSendStateChangedListener.sendFinished();
-                                }
-                            }
-                        });
+                        performBigDataSendFinishedListener(onBigDataSendStateChangedListener);
                         break;
                     }
                     if (tryCount >= 3) {
-                        final int finalCurrentPackageCount1 = currentPackageCount;
-                        final int finalTryCount1 = tryCount;
-                        BleManager.getHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (onBigDataSendStateChangedListener != null) {
-                                    onBigDataSendStateChangedListener.packageSendFailed(finalCurrentPackageCount1 + 1, pageCount, finalTryCount1, data);
-                                }
-                            }
-                        });
+                        performBigDataSendFailedListener(pageCount, data, currentPackageCount, tryCount, onBigDataSendStateChangedListener);
                         break;
                     }
                     if (writeData(serviceUuid, characteristicUuid, data)) {
-                        final int finalTryCount = tryCount;
-                        final int finalCurrentPackageCount = currentPackageCount;
-                        BleManager.getHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (onBigDataSendStateChangedListener != null) {
-                                    onBigDataSendStateChangedListener.packageSendSuccess(finalCurrentPackageCount + 1, pageCount, finalTryCount, data);
-                                }
-                            }
-                        });
+                        performBigDataSendFailedAndRetryListener(pageCount, data, tryCount, currentPackageCount, onBigDataSendStateChangedListener);
                         tryCount = 0;
                         currentPackageCount++;
                     } else {
-                        final int finalCurrentPackageCount2 = currentPackageCount;
-                        final int finalTryCount2 = tryCount;
-                        BleManager.getHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (onBigDataSendStateChangedListener != null) {
-                                    onBigDataSendStateChangedListener.packageSendFailedAndRetry(finalCurrentPackageCount2 + 1, pageCount, finalTryCount2, data);
-                                }
-                            }
-                        });
+                        performBigDataSendProgressChangedListener(pageCount, data, currentPackageCount, tryCount, onBigDataSendStateChangedListener);
                         tryCount++;
                     }
                     if (packageDelayTime >= 20 && packageDelayTime <= 2000) {
@@ -931,5 +909,97 @@ public class BleConnector {
             }
         };
         BleManager.getThreadFactory().newThread(runnable).start();
+    }
+
+    /**
+     * 触发大量数据传输进度更新时进行的回调
+     *
+     * @param pageCount                         总包数
+     * @param data                              当前包数据
+     * @param currentPackageCount               当前包数
+     * @param tryCount                          尝试次数
+     * @param onBigDataSendStateChangedListener 相关的回调
+     */
+    private void performBigDataSendProgressChangedListener(final int pageCount, final byte[] data, final int currentPackageCount, final int tryCount, final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataSendStateChangedListener != null) {
+                    onBigDataSendStateChangedListener.packageSendFailedAndRetry(currentPackageCount + 1, pageCount, tryCount, data);
+                }
+            }
+        });
+    }
+
+    /**
+     * 触发大量数据传输时失败，尝试重传时的回调
+     *
+     * @param pageCount                         总包数
+     * @param data                              当前包数据
+     * @param tryCount                          尝试次数
+     * @param currentPackageCount               当前包数
+     * @param onBigDataSendStateChangedListener 相关的回调
+     */
+    private void performBigDataSendFailedAndRetryListener(final int pageCount, final byte[] data, final int tryCount, final int currentPackageCount, final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataSendStateChangedListener != null) {
+                    onBigDataSendStateChangedListener.packageSendSuccess(currentPackageCount + 1, pageCount, tryCount, data);
+                }
+            }
+        });
+    }
+
+    /**
+     * 触发大量数据传输时失败时的回调
+     *
+     * @param pageCount                         总包数
+     * @param data                              当前包数据
+     * @param currentPackageCount               当前包数
+     * @param tryCount                          尝试次数
+     * @param onBigDataSendStateChangedListener 相关的回调
+     */
+    private void performBigDataSendFailedListener(final int pageCount, final byte[] data, final int currentPackageCount, final int tryCount, final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataSendStateChangedListener != null) {
+                    onBigDataSendStateChangedListener.packageSendFailed(currentPackageCount + 1, pageCount, tryCount, data);
+                }
+            }
+        });
+    }
+
+    /**
+     * 触发大量数据传输时完成时的回调
+     *
+     * @param onBigDataSendStateChangedListener 相关的回调
+     */
+    private void performBigDataSendFinishedListener(final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataSendStateChangedListener != null) {
+                    onBigDataSendStateChangedListener.sendFinished();
+                }
+            }
+        });
+    }
+
+    /**
+     * 触发大量数据开始传输时进行的回调
+     *
+     * @param onBigDataSendStateChangedListener 相关的回调
+     */
+    private void performBigDataSendStartedListener(final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataSendStateChangedListener != null) {
+                    onBigDataSendStateChangedListener.sendStarted();
+                }
+            }
+        });
     }
 }
