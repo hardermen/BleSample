@@ -259,7 +259,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
     BleInterface.OnCloseCompleteListener onCloseCompleteListener = new BleInterface.OnCloseCompleteListener() {
         @Override
         public void onCloseComplete() {
-            ConnectActivity.super.onBackPressed();
+            BleManager.releaseBleConnector();
+            finish();
         }
     };
     /**
@@ -448,6 +449,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
             Tool.toastL(ConnectActivity.this, "onSendFailedWithWrongNotifyData");
         }
     };
+    private DefaultItemDecoration defaultItemDecoration;
 
     /**
      * 标题栏的返回按钮被按下的时候回调此函数
@@ -616,7 +618,42 @@ public class ConnectActivity extends BaseAppCompatActivity {
         //关闭连接工具,如果返回false,直接调用super.onBackPressed()，否则在close的回调中调用返回
         if (!bleConnector.close()) {
             super.onBackPressed();
+            BleManager.releaseBleConnector();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        customTextCircleView = null;
+        bleConnector = null;
+        isLinked = false;
+        serviceDiscovered = false;
+        nameTv = null;
+        addressTv = null;
+        bluetoothDevice = null;
+        recyclerView.setAdapter(null);
+        recyclerView.setLayoutManager(null);
+        recyclerView.removeItemDecoration(defaultItemDecoration);
+        defaultItemDecoration = null;
+        recyclerView = null;
+        adapterData = null;
+        servicesCharacteristicsListAdapter = null;
+        onCharacteristicClickListener = null;
+        onConnectedListener = null;
+        onServicesDiscoveredListener = null;
+        onDisconnectedListener = null;
+        onCharacteristicReadListener = null;
+        onConnectingListener = null;
+        onReceiveNotificationListener = null;
+        onReadRemoteRssiListener = null;
+        onCloseCompleteListener = null;
+        onBondStateChangedListener = null;
+        onMtuChangedListener = null;
+        onDisconnectingListener = null;
+        onStatusErrorListener = null;
+        onBigDataSendStateChangedListener = null;
+        onBigDataWriteWithNotificationSendStateChangedListener = null;
     }
 
     /**
@@ -719,7 +756,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * 初始化RecyclerView的数据
      */
     private void initRecyclerView() {
-        DefaultItemDecoration defaultItemDecoration = new DefaultItemDecoration(Color.GRAY, ViewGroup.LayoutParams.MATCH_PARENT, 2, -1);
+        defaultItemDecoration = new DefaultItemDecoration(Color.GRAY, ViewGroup.LayoutParams.MATCH_PARENT, 2, -1);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.addItemDecoration(defaultItemDecoration);

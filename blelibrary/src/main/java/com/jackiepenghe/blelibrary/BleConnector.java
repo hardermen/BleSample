@@ -378,6 +378,14 @@ public class BleConnector {
         if (withGattRefresh) {
             refreshGattCache();
         }
+        disconnect();
+        bleServiceConnection.closeGatt();
+        bleServiceConnection.stopService();
+        try {
+            context.unbindService(bleServiceConnection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         setOnReceiveNotificationListener(null);
         setOnServicesDiscoveredListener(null);
         setOnStatusErrorListener(null);
@@ -396,14 +404,6 @@ public class BleConnector {
         setOnMtuChangedListener(null);
         setOnReadRemoteRssiListener(null);
         setOnReliableWriteCompletedListener(null);
-        disconnect();
-        bleServiceConnection.closeGatt();
-        bleServiceConnection.stopService();
-        try {
-            context.unbindService(bleServiceConnection);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         checkCloseStatus();
         boundBleBroadcastReceiver = null;
         connectBleBroadcastReceiver = null;
