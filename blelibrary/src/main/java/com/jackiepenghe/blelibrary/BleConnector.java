@@ -386,24 +386,24 @@ public class BleConnector {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        setOnReceiveNotificationListener(null);
-        setOnServicesDiscoveredListener(null);
-        setOnStatusErrorListener(null);
-        setOnCharacteristicReadListener(null);
-        setOnConnectedListener(null);
-        setOnDisconnectedListener(null);
-        setOnDisconnectingListener(null);
+        connectBleBroadcastReceiver.setOnReceiveNotificationListener(null);
+        connectBleBroadcastReceiver.setOnServicesDiscoveredListener(null);
+        connectBleBroadcastReceiver.setOnStatusErrorListener(null);
+        connectBleBroadcastReceiver.setOnCharacteristicReadListener(null);
+        connectBleBroadcastReceiver.setOnConnectedListener(null);
+        connectBleBroadcastReceiver.setOnDisconnectedListener(null);
+        connectBleBroadcastReceiver.setOnDisconnectingListener(null);
         setAddress(null);
         setDevice(null);
-        setOnBluetoothGattOptionsNotSuccessListener(null);
-        setOnBluetoothSwitchChangedListener(null);
-        setOnBondStateChangedListener(null);
-        setOnConnectingListener(null);
-        setOnDescriptorReadListener(null);
-        setOnDescriptorWriteListener(null);
-        setOnMtuChangedListener(null);
-        setOnReadRemoteRssiListener(null);
-        setOnReliableWriteCompletedListener(null);
+        connectBleBroadcastReceiver.setOnBluetoothGattOptionsNotSuccessListener(null);
+        connectBleBroadcastReceiver.setOnBluetoothSwitchChangedListener(null);
+        boundBleBroadcastReceiver.setOnDeviceBondStateChangedListener(null);
+        connectBleBroadcastReceiver.setOnConnectingListener(null);
+        connectBleBroadcastReceiver.setOnDescriptorReadListener(null);
+        connectBleBroadcastReceiver.setOnDescriptorWriteListener(null);
+        connectBleBroadcastReceiver.setOnMtuChangedListener(null);
+        connectBleBroadcastReceiver.setOnReadRemoteRssiListener(null);
+        connectBleBroadcastReceiver.setOnReliableWriteCompletedListener(null);
         checkCloseStatus();
         boundBleBroadcastReceiver = null;
         connectBleBroadcastReceiver = null;
@@ -425,6 +425,9 @@ public class BleConnector {
      * @param onConnectedListener 连接成功的监听事件
      */
     public void setOnConnectedListener(BleInterface.OnConnectedListener onConnectedListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnConnectedListener(onConnectedListener);
     }
 
@@ -434,10 +437,16 @@ public class BleConnector {
      * @param onDisconnectedListener 连接断开的监听事件
      */
     public void setOnDisconnectedListener(BleInterface.OnDisconnectedListener onDisconnectedListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnDisconnectedListener(onDisconnectedListener);
     }
 
     public void setOnStatusErrorListener(BleInterface.OnStatusErrorListener onStatusErrorListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnStatusErrorListener(onStatusErrorListener);
     }
 
@@ -447,6 +456,9 @@ public class BleConnector {
      * @param onServicesDiscoveredListener 服务发现完成的监听事件
      */
     public void setOnServicesDiscoveredListener(BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
     }
 
@@ -456,6 +468,9 @@ public class BleConnector {
      * @param onConnectingListener 正在连接的监听事件
      */
     public void setOnConnectingListener(BleInterface.OnConnectingListener onConnectingListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnConnectingListener(onConnectingListener);
     }
 
@@ -465,6 +480,9 @@ public class BleConnector {
      * @param onDisconnectingListener 正在断开连接的监听事件
      */
     public void setOnDisconnectingListener(BleInterface.OnDisconnectingListener onDisconnectingListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnDisconnectingListener(onDisconnectingListener);
     }
 
@@ -474,6 +492,9 @@ public class BleConnector {
      * @param onCharacteristicReadListener 读到特征数据的回调
      */
     public void setOnCharacteristicReadListener(BleInterface.OnCharacteristicReadListener onCharacteristicReadListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnCharacteristicReadListener(onCharacteristicReadListener);
     }
 
@@ -483,6 +504,9 @@ public class BleConnector {
      * @param onReceiveNotificationListener 收到远端设备通知数据的回调
      */
     public void setOnReceiveNotificationListener(BleInterface.OnReceiveNotificationListener onReceiveNotificationListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnReceiveNotificationListener(onReceiveNotificationListener);
     }
 
@@ -492,6 +516,9 @@ public class BleConnector {
      * @param onCharacteristicWriteListener 写入特征数据的回调
      */
     public void setOnCharacteristicWriteListener(BleInterface.OnCharacteristicWriteListener onCharacteristicWriteListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnCharacteristicWriteListener(onCharacteristicWriteListener);
     }
 
@@ -501,6 +528,9 @@ public class BleConnector {
      * @param onDescriptorReadListener 读取描述符数据的回调
      */
     public void setOnDescriptorReadListener(BleInterface.OnDescriptorReadListener onDescriptorReadListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnDescriptorReadListener(onDescriptorReadListener);
     }
 
@@ -510,6 +540,9 @@ public class BleConnector {
      * @param onDescriptorWriteListener 写入描述符数据的
      */
     public void setOnDescriptorWriteListener(BleInterface.OnDescriptorWriteListener onDescriptorWriteListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnDescriptorWriteListener(onDescriptorWriteListener);
     }
 
@@ -518,7 +551,10 @@ public class BleConnector {
      *
      * @param onDeviceBondStateChangedListener 绑定状态改变时的回调
      */
-    public void setOnBondStateChangedListener(BleInterface.OnDeviceBondStateChangedListener onDeviceBondStateChangedListener) {
+    public void setOnDeviceBondStateChangedListener(BleInterface.OnDeviceBondStateChangedListener onDeviceBondStateChangedListener) {
+        if (boundBleBroadcastReceiver == null) {
+            return;
+        }
         boundBleBroadcastReceiver.setOnDeviceBondStateChangedListener(onDeviceBondStateChangedListener);
     }
 
@@ -528,6 +564,9 @@ public class BleConnector {
      * @param onReliableWriteCompletedListener 可靠数据写入完成的回调z
      */
     public void setOnReliableWriteCompletedListener(BleInterface.OnReliableWriteCompletedListener onReliableWriteCompletedListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnReliableWriteCompletedListener(onReliableWriteCompletedListener);
     }
 
@@ -537,6 +576,9 @@ public class BleConnector {
      * @param onReadRemoteRssiListener 读到远端设备rssi的回调
      */
     public void setOnReadRemoteRssiListener(BleInterface.OnReadRemoteRssiListener onReadRemoteRssiListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnReadRemoteRssiListener(onReadRemoteRssiListener);
     }
 
@@ -546,6 +588,9 @@ public class BleConnector {
      * @param onMtuChangedListener 最大传输单位被改变的回调
      */
     public void setOnMtuChangedListener(BleInterface.OnMtuChangedListener onMtuChangedListener) {
+        if (connectBleBroadcastReceiver == null) {
+            return;
+        }
         connectBleBroadcastReceiver.setOnMtuChangedListener(onMtuChangedListener);
     }
 

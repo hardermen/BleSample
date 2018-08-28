@@ -692,7 +692,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         //设置 连接器关闭时的回调
         bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
         //设置 绑定状态被更改时的回调
-        bleConnector.setOnBondStateChangedListener(onBondStateChangedListener);
+        bleConnector.setOnDeviceBondStateChangedListener(onBondStateChangedListener);
         //设置 Mtu参数被更改时的回调
         bleConnector.setOnMtuChangedListener(onMtuChangedListener);
         //设置 连接时，错误状态码接收的处理
