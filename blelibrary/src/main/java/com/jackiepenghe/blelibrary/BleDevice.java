@@ -56,6 +56,7 @@ public class BleDevice implements Serializable, Parcelable {
      *
      * @param bluetoothDevice 蓝牙设备
      * @param rssi            rssi值
+     * @param deviceName      设备名
      */
     public BleDevice(BluetoothDevice bluetoothDevice, int rssi, String deviceName) {
         this(bluetoothDevice, rssi, null, deviceName);

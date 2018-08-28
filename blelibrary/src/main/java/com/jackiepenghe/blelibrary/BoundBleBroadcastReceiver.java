@@ -14,7 +14,6 @@ import android.os.Handler;
  * BLE绑定设备时，监听绑定状态的广播接收者
  *
  * @author alm
- * @date 17-6-5
  */
 
 public class BoundBleBroadcastReceiver extends BroadcastReceiver {

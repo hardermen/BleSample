@@ -588,6 +588,7 @@ public class BleConnector {
      * @param characteristicUuid                特征UUID
      * @param bigData                           大量数据
      * @param packageDelayTime                  每一包数据之间的时间间隔
+     * @param maxTryCount                       每一包数据最大重发次数
      * @param onBigDataSendStateChangedListener 数据发送的相关回调
      */
     public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, int packageDelayTime, int maxTryCount, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {

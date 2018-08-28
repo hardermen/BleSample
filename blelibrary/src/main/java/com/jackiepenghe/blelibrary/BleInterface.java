@@ -319,7 +319,7 @@ public class BleInterface {
 
         /**
          * A remote client has requested to read a local characteristic.
-         * <p>
+         *
          * <p>An application must call {@link BluetoothGattServer#sendResponse}
          * to complete the request.
          *
@@ -332,7 +332,7 @@ public class BleInterface {
 
         /**
          * A remote client has requested to write to a local characteristic.
-         * <p>
+         *
          * <p>An application must call {@link BluetoothGattServer#sendResponse}
          * to complete the request.
          *
@@ -349,7 +349,7 @@ public class BleInterface {
 
         /**
          * A remote client has requested to read a local descriptor.
-         * <p>
+         *
          * <p>An application must call {@link BluetoothGattServer#sendResponse}
          * to complete the request.
          *

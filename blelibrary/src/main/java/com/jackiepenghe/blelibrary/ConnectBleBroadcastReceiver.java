@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Handler;
 
 
 /**
@@ -92,7 +93,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * BroadcastReceiver to view/modify the current result values.  This method
      * is always called within the main thread of its process, unless you
      * explicitly asked for it to be scheduled on a different thread using
-     * {@link Context#registerReceiver(BroadcastReceiver, * IntentFilter , String, BleManager.getHandler())}. When it runs on the main
+     * {@link Context#registerReceiver(BroadcastReceiver, * IntentFilter , String, Handler)}. When it runs on the main
      * thread you should
      * never perform long-running operations in it (there is a timeout of
      * 10 seconds that the system allows before considering the receiver to

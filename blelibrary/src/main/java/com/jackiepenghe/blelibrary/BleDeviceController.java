@@ -82,6 +82,7 @@ public class BleDeviceController {
      *
      * @param serviceUUID        服务UUID
      * @param characteristicUUID 特征UUID
+     * @param enable             true表示打开通知，false表示关闭通知
      * @return true表示成功
      */
     public boolean enableNotification(String serviceUUID, String characteristicUUID, boolean enable) {
