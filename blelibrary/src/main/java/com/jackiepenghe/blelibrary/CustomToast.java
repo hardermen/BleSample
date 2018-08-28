@@ -2,6 +2,8 @@ package com.jackiepenghe.blelibrary;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Build;
+import android.os.IBinder;
 import android.support.annotation.StringRes;
 import android.widget.Toast;
 
@@ -70,6 +72,7 @@ class CustomToast {
 
     /**
      * 构造函数
+     *
      * @param toast 系统吐司
      */
     private CustomToast(Toast toast) {
@@ -81,8 +84,9 @@ class CustomToast {
 
     /**
      * 生成一个自定义吐司本类
-     * @param context 上下文
-     * @param message 吐司信息文本
+     *
+     * @param context  上下文
+     * @param message  吐司信息文本
      * @param duration 吐司持续时间
      * @return 自定义吐司本类
      */
@@ -94,9 +98,10 @@ class CustomToast {
 
     /**
      * 生成一个自定义吐司本类
-     * @param context 上下文
+     *
+     * @param context    上下文
      * @param messageRes 吐司信息资源id
-     * @param duration 吐司持续时间
+     * @param duration   吐司持续时间
      * @return 自定义吐司本类
      */
     static CustomToast makeText(Context context, @StringRes int messageRes, int duration) {
@@ -109,16 +114,19 @@ class CustomToast {
 
     private void initTN() {
         try {
-            Field tnField= mToast.getClass().getDeclaredField("mTN");
+            Field tnField = mToast.getClass().getDeclaredField("mTN");
             tnField.setAccessible(true);
             mTN = tnField.get(mToast);
-
-            showMethod = mTN.getClass().getDeclaredMethod("show");
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                showMethod = mTN.getClass().getDeclaredMethod("show");
+            } else {
+                showMethod = mTN.getClass().getDeclaredMethod("show", IBinder.class);
+            }
             hideMethod = mTN.getClass().getDeclaredMethod("hide");
 
             Field tnTextViewField = mTN.getClass().getDeclaredField("mNextView");
             tnTextViewField.setAccessible(true);
-            tnTextViewField.set(mTN,mToast.getView());
+            tnTextViewField.set(mTN, mToast.getView());
 
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
@@ -145,20 +153,24 @@ class CustomToast {
     /**
      * 显示吐司
      */
-    void show(){
+    void show() {
         initTN();
         try {
-            showMethod.invoke(mTN);
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                showMethod.invoke(mTN);
+            } else {
+                showMethod.invoke(mTN, (IBinder) null);
+            }
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
 
-        if (mDuration > 0){
-            BleManager.getHandler().postDelayed(mHide,mDuration);
-        }else if(mDuration < 0){
-            BleManager.getHandler().postDelayed(mHide,LENGTH_LONG);
+        if (mDuration > 0) {
+            BleManager.getHandler().postDelayed(mHide, mDuration);
+        } else if (mDuration < 0) {
+            BleManager.getHandler().postDelayed(mHide, LENGTH_LONG);
         }
     }
 }

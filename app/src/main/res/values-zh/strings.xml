@@ -45,7 +45,7 @@
     <string name="notification_data">收到的通知</string>
     <string name="read_not_support">该UUID不支持读取</string>
     <string name="write_not_support">该UUID不支持写入</string>
-    <string name="write_not_notify">该UUID不支持通知</string>
+    <string name="notify_not_support">该UUID不支持通知</string>
     <string name="can_read">R</string>
     <string name="can_write">W</string>
     <string name="can_notify">N</string>
@@ -68,4 +68,9 @@
     <string name="filter_name">过滤设备名</string>
     <string name="filter_address">过滤设备地址</string>
     <string name="write_big_data">写入大量数据</string>
+    <string name="write_big_data_with_notification">写入大量数据(需要通知)</string>
+    <string name="no_notification_permission">没有通知权限，无法显示弹出式提示（Toast）信息</string>
+    <string name="no_notification_permission_title">没有通知权限</string>
+    <string name="no_notification_permission_message">是否允许我们使用通知权限？进入设置后，请手动打开通知权限</string>
+    <string name="allow">允许</string>
 </resources>

@@ -45,7 +45,7 @@
     <string name="notification_data">Received notification</string>
     <string name="read_not_support">Does not support reading</string>
     <string name="write_not_support">Does not support writing</string>
-    <string name="write_not_notify">Not supported notifications</string>
+    <string name="notify_not_support">Not supported notifications</string>
     <string name="can_read">R</string>
     <string name="can_write">W</string>
     <string name="can_notify">N</string>
@@ -68,4 +68,9 @@
     <string name="filter_name">Filter device name</string>
     <string name="filter_address">Filter device address</string>
     <string name="write_big_data">Write large amounts of data</string>
+    <string name="write_big_data_with_notification">Write large amounts of data with Notify</string>
+    <string name="no_notification_permission">Unable to display critical information! Please allow programs to use notification permissions</string>
+    <string name="no_notification_permission_title">Unable to display critical information!</string>
+    <string name="no_notification_permission_message">Would you like to allow us use notification permission?After entering the settings, please manually open the notification permission</string>
+    <string name="allow">Allow</string>
 </resources>

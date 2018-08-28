@@ -1,10 +1,14 @@
 package com.jackiepenghe.blelibrary;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.StringRes;
 import android.util.Log;
 import android.widget.Toast;
+
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 工具类
@@ -19,6 +23,19 @@ class Tool {
      * 是否打印日志信息的标志
      */
     private static boolean mDebug = false;
+    /**
+     * Toast
+     */
+    private static Toast toast;
+
+    /**
+     * showToastKeep
+     */
+    private static ScheduledExecutorService SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE;
+    /**
+     * hideToastKeep
+     */
+    private static ScheduledExecutorService HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE;
 
     /**
      * 获取当前日志打印标志
@@ -81,17 +98,7 @@ class Tool {
             CustomToast.makeText(context, messageRes, duration).show();
             return;
         }
-        switch (duration) {
-            case CustomToast.LENGTH_LONG:
-                Toast.makeText(context, messageRes, Toast.LENGTH_LONG).show();
-                break;
-            case CustomToast.LENGTH_SHORT:
-                Toast.makeText(context, messageRes, Toast.LENGTH_SHORT).show();
-                break;
-            default:
-                Toast.makeText(context, messageRes, Toast.LENGTH_LONG).show();
-                break;
-        }
+        showMyToast(context, messageRes, duration);
     }
 
     /**
@@ -154,7 +161,6 @@ class Tool {
      * 十六进制转换字符串
      *
      * @param hexStr 字符串
-     *
      * @return String 对应的字符串
      */
     public static String hexStrToStr(String hexStr) {
@@ -204,5 +210,77 @@ class Tool {
             lowByte = (byte) Integer.parseInt(hexString, 16);
         }
         return new byte[]{highByte, lowByte};
+    }
+
+    private static void showMyToast(Context context, @StringRes int messageRes, final int duration) {
+        String message = context.getString(messageRes);
+        showMyToast(context, message, duration);
+    }
+
+    @SuppressLint("ShowToast")
+    private static void showMyToast(Context context, final String message, final int duration) {
+
+        if (toast != null) {
+            try {
+                toast.cancel();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            toast = null;
+        }
+
+        toast = Toast.makeText(context, message, Toast.LENGTH_LONG);
+
+        if (SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE != null && !SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.isShutdown()) {
+            try {
+                SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.shutdownNow();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = null;
+        }
+        if (HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE != null && !HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.isShutdown()) {
+            try {
+                HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.shutdownNow();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = null;
+        }
+        if (SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE == null) {
+            synchronized (Tool.class) {
+                if (SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE == null) {
+                    SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = BleManager.newScheduledExecutorService();
+                }
+            }
+        }
+
+        if (HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE == null) {
+            synchronized (Tool.class) {
+                if (HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE == null) {
+                    HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = BleManager.newScheduledExecutorService();
+                }
+            }
+        }
+        SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                toast.setText(message);
+                toast.show();
+            }
+        }, 0, 3000, TimeUnit.MILLISECONDS);
+        HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.schedule(new Runnable() {
+            @Override
+            public void run() {
+                toast.cancel();
+                try {
+                    SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.shutdownNow();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = null;
+                HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = null;
+            }
+        }, duration, TimeUnit.MILLISECONDS);
     }
 }

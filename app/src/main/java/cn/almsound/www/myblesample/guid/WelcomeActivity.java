@@ -1,10 +1,17 @@
 package cn.almsound.www.myblesample.guid;
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v7.app.AlertDialog;
 
 import com.jackiepenghe.baselibrary.BaseWelcomeActivity;
 import com.jackiepenghe.baselibrary.CrashHandler;
+import com.jackiepenghe.baselibrary.Tool;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.Permission;
 import com.yanzhenjie.permission.PermissionListener;
@@ -13,6 +20,7 @@ import com.yanzhenjie.permission.RationaleListener;
 
 import java.util.List;
 
+import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.main.MainActivity;
 
 /**
@@ -62,6 +70,16 @@ public class WelcomeActivity extends BaseWelcomeActivity {
 
     @Override
     protected void doAfterAnimation() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            NotificationManagerCompat manager = NotificationManagerCompat.from(WelcomeActivity.this.getApplicationContext());
+            boolean isOpened = manager.areNotificationsEnabled();
+            if (!isOpened) {
+                Tool.toastL(WelcomeActivity.this, R.string.no_notification_permission);
+                //去打开通知权限
+                showOpenNotificationPermissionDialog();
+                return;
+            }
+        }
         requestPermission();
     }
 
@@ -104,7 +122,7 @@ public class WelcomeActivity extends BaseWelcomeActivity {
     private void requestPermission() {
         AndPermission.with(this)
                 .requestCode(REQUEST_CODE)
-                .permission(Permission.LOCATION,Permission.STORAGE)
+                .permission(Permission.LOCATION, Permission.STORAGE)
                 .callback(permissionListener)
                 .rationale(rationaleListener)
                 .start();
@@ -120,5 +138,33 @@ public class WelcomeActivity extends BaseWelcomeActivity {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    /**
+     * 跳转到设置中，让用户打开通知权限
+     */
+    private void showOpenNotificationPermissionDialog() {
+        new AlertDialog.Builder(WelcomeActivity.this)
+                .setTitle(R.string.no_notification_permission_title)
+                .setMessage(R.string.no_notification_permission_message)
+                .setPositiveButton(R.string.allow, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Intent intent = new Intent();
+                        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        Uri uri = Uri.fromParts("package", getApplication().getPackageName(), null);
+                        intent.setData(uri);
+                        startActivity(intent);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        requestPermission();
+                    }
+                })
+                .setCancelable(false)
+                .show();
+
     }
 }

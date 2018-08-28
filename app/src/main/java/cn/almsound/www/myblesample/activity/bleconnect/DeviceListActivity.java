@@ -56,6 +56,10 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      */
     private static final int REQUEST_CODE_ASK_ACCESS_COARSE_LOCATION = 1;
     /**
+     * 广播包数据的固定长度
+     */
+    private static final int BROADCAST_PACKAGE_LENGTH = 31;
+    /**
      * 要过滤的设备名
      */
     private String filterName;
@@ -454,7 +458,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
             return;
         }
         View view = View.inflate(DeviceListActivity.this, R.layout.dialog_scan_record, null);
-        if (scanRecordBytes.length > 31) {
+        if (scanRecordBytes.length > BROADCAST_PACKAGE_LENGTH) {
             EditText scanRecordEditText = view.findViewById(R.id.scan_record);
             byte[] scanRecord = new byte[31];
             System.arraycopy(scanRecordBytes, 0, scanRecord, 0, scanRecord.length);

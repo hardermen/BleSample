@@ -27,6 +27,7 @@ import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleUtils;
+import com.jackiepenghe.blelibrary.DefaultBigDataWriteWithNotificationSendStateChangedListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -334,16 +335,15 @@ public class ConnectActivity extends BaseAppCompatActivity {
         }
 
         /**
-         * 数据发送成功
+         * 数据发送进度更改
          *
          * @param currentPackageCount 当前发送成功的包数
          * @param pageCount           总包数
-         * @param tryCount            尝试次数
          * @param data                本包发送的数据
          */
         @Override
-        public void packageSendSuccess(int currentPackageCount, int pageCount, int tryCount, byte[] data) {
-            Tool.toast(ConnectActivity.this, "packageSendSuccess " + currentPackageCount + " / " + pageCount, 200);
+        public void packageSendProgressChanged(int currentPackageCount, int pageCount, byte[] data) {
+            Tool.toast(ConnectActivity.this, "packageSendProgressChanged " + currentPackageCount + " / " + pageCount, 200);
             Tool.warnOut(TAG, "data = " + Tool.bytesToHexStr(data));
         }
 
@@ -352,11 +352,10 @@ public class ConnectActivity extends BaseAppCompatActivity {
          *
          * @param currentPackageCount 当前发送失败的包数
          * @param pageCount           总包数
-         * @param tryCount            尝试次数
          * @param data                本包发送的数据
          */
         @Override
-        public void packageSendFailed(int currentPackageCount, int pageCount, int tryCount, byte[] data) {
+        public void packageSendFailed(int currentPackageCount, int pageCount, byte[] data) {
             Tool.toast(ConnectActivity.this, "packageSendFailed " + currentPackageCount + " / " + pageCount, 200);
         }
 
@@ -374,6 +373,80 @@ public class ConnectActivity extends BaseAppCompatActivity {
         }
 
 
+    };
+    private DefaultBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener = new DefaultBigDataWriteWithNotificationSendStateChangedListener() {
+        /**
+         * 收到远端设备的通知时进行的回调
+         *
+         *
+         * @param currentPackageData 当前包数据
+         * @param currentPackageCount 当前包数
+         * @param packageCount 总包数
+         * @param values 远端设备的通知内容
+         * @return true表示可以继续下一包发送，false表示传输出错
+         */
+        @Override
+        public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageCount, int packageCount, byte[] values) {
+            return super.onReceiveNotification(currentPackageData, currentPackageCount, packageCount, values);
+        }
+
+        /**
+         * 数据发送完成
+         */
+        @Override
+        public void onDataSendFinished() {
+            super.onDataSendFinished();
+            Tool.toastL(ConnectActivity.this, "onDataSendFinished");
+        }
+
+        /**
+         * 数据发送失败
+         *
+         * @param currentPackageCount 当前发送失败的包数
+         * @param pageCount           总包数
+         * @param data                当前发送失败的数据内容
+         */
+        @Override
+        public void onDataSendFailed(int currentPackageCount, int pageCount, byte[] data) {
+            super.onDataSendFailed(currentPackageCount, pageCount, data);
+            Tool.toastL(ConnectActivity.this, "onDataSendFailed");
+        }
+
+        /**
+         * 数据发送失败并尝试重发
+         *
+         * @param currentPackageCount 当前包数
+         * @param pageCount           总包数
+         * @param data                当前包数据内容
+         * @param tryCount            重试次数
+         */
+        @Override
+        public void onDataSendFailedAndRetry(int currentPackageCount, int pageCount, byte[] data, int tryCount) {
+            super.onDataSendFailedAndRetry(currentPackageCount, pageCount, data, tryCount);
+            Tool.toast(ConnectActivity.this, "onDataSendFailedAndRetry " + currentPackageCount + " / " + pageCount, 200);
+        }
+
+        /**
+         * 数据发送进度有更改
+         *
+         * @param currentPackageCount 当前包数
+         * @param pageCount           总包数
+         * @param data                当前包数据内容
+         */
+        @Override
+        public void onDataSendProgressChanged(int currentPackageCount, int pageCount, byte[] data) {
+            super.onDataSendProgressChanged(currentPackageCount, pageCount, data);
+            Tool.toast(ConnectActivity.this, currentPackageCount + " / " + pageCount, 200);
+        }
+
+        /**
+         * 因为通知返回的数据出错而导致的传输失败
+         */
+        @Override
+        public void onSendFailedWithWrongNotifyData() {
+            super.onSendFailedWithWrongNotifyData();
+            Tool.toastL(ConnectActivity.this, "onSendFailedWithWrongNotifyData");
+        }
     };
 
     /**
@@ -688,7 +761,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                             //打开通知
                             case 2:
                                 if (!bleConnector.canNotify(serviceUUID, characteristicUUID)) {
-                                    Tool.toastL(ConnectActivity.this, R.string.write_not_notify);
+                                    Tool.toastL(ConnectActivity.this, R.string.notify_not_support);
                                     return;
                                 }
                                 boolean openNotification = bleConnector.enableNotification(serviceUUID, characteristicUUID, true);
@@ -705,6 +778,17 @@ public class ConnectActivity extends BaseAppCompatActivity {
                                 }
                                 showWriteBigDataDialog(serviceUUID, characteristicUUID);
                                 break;
+                            case 4:
+                                if (!bleConnector.canWrite(serviceUUID, characteristicUUID)) {
+                                    Tool.toastL(ConnectActivity.this, R.string.write_not_support);
+                                    return;
+                                }
+                                if (!bleConnector.canNotify(serviceUUID, characteristicUUID)) {
+                                    Tool.toastL(ConnectActivity.this, R.string.notify_not_support);
+                                    return;
+                                }
+                                showWriteBigDataWithNotifyDialog(serviceUUID, characteristicUUID);
+                                break;
                             default:
                                 break;
                         }
@@ -712,6 +796,38 @@ public class ConnectActivity extends BaseAppCompatActivity {
                 })
                 .setCancelable(false)
                 .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void showWriteBigDataWithNotifyDialog(final String serviceUUID, final String characteristicUUID) {
+        final EditText editText = (EditText) View.inflate(this, R.layout.dialog_show_write_big_data_with_notify, null);
+        EditTextWatcherForHexData editTextWatcherForHexData = new EditTextWatcherForHexData(editText);
+        editText.addTextChangedListener(editTextWatcherForHexData);
+        byte[] bytes = new byte[256];
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte) i;
+        }
+        editText.setText(Tool.bytesToHexStr(bytes));
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.input_data)
+                .setView(editText)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String text = editText.getText().toString();
+                        if ("".equals(text)) {
+                            Tool.toastL(ConnectActivity.this, R.string.set_nothing);
+                            showWriteDataDialog(serviceUUID, characteristicUUID);
+                            return;
+                        }
+                        text = text.replace(" ", "");
+                        byte[] bytes = Tool.hexStrToBytes(text);
+                        bleConnector.writeBigDataWithNotification(serviceUUID, characteristicUUID, bytes, 200, onBigDataWriteWithNotificationSendStateChangedListener);
+
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .setCancelable(false)
                 .show();
     }
 

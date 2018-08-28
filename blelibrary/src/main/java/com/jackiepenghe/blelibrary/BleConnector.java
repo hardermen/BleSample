@@ -24,7 +24,7 @@ import java.util.UUID;
  * @author alm
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class BleConnector {
 
     /*-------------------------静态常量-------------------------*/
@@ -40,7 +40,7 @@ public class BleConnector {
     /**
      * 分包传输时，每一包传输的有效数据的最大长度
      */
-    private static final int LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH = 16;
+    private static final int LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH = 17;
     /**
      * 大数据的最大字节长度
      */
@@ -79,6 +79,34 @@ public class BleConnector {
      * 如果发起绑定，会记录下绑定设备的地址
      */
     private String bondAddress;
+    /**
+     * 写入大量数据（需要收到通知）的总包数
+     */
+    private int writeBigDataWithNotificationPackageCount;
+    /**
+     * 写入大量数据（需要收到通知）的当前包数
+     */
+    private int writeBigDataWithNotificationCurrentPackageCount;
+    /**
+     * 写入大量数据（需要收到通知）的同一包数据的当前重发次数
+     */
+    private int writeBigDataWithNotificationTryCount;
+    /**
+     * 是否继续写入大量数据（需要收到通知）的标志
+     */
+    private boolean writeBigDataWithNotificationContinueFlag;
+    /**
+     * 写入大量数据（需要收到通知）时，是否收到通知消息的标志
+     */
+    private boolean receivedNotification;
+    /**
+     * 接收到错误的通知数据的次数
+     */
+    private int wrongNotificationResultCount;
+    /**
+     * 是否继续写入大量数据的标志
+     */
+    private boolean writeBigDataContinueFlag;
 
     /*-------------------------构造函数-------------------------*/
 
@@ -348,12 +376,41 @@ public class BleConnector {
         if (withGattRefresh) {
             refreshGattCache();
         }
+        setOnReceiveNotificationListener(null);
+        setOnServicesDiscoveredListener(null);
+        setOnStatusErrorListener(null);
+        setOnCharacteristicReadListener(null);
+        setOnConnectedListener(null);
+        setOnDisconnectedListener(null);
+        setOnDisconnectingListener(null);
+        setAddress(null);
+        setDevice(null);
+        setOnBluetoothGattOptionsNotSuccessListener(null);
+        setOnBluetoothSwitchChangedListener(null);
+        setOnBondStateChangedListener(null);
+        setOnConnectingListener(null);
+        setOnDescriptorReadListener(null);
+        setOnDescriptorWriteListener(null);
+        setOnMtuChangedListener(null);
+        setOnReadRemoteRssiListener(null);
+        setOnReliableWriteCompletedListener(null);
         disconnect();
         bleServiceConnection.closeGatt();
         bleServiceConnection.stopService();
-        context.unbindService(bleServiceConnection);
+        try {
+            context.unbindService(bleServiceConnection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         checkCloseStatus();
         context = null;
+        writeBigDataWithNotificationContinueFlag = false;
+        writeBigDataContinueFlag = false;
+        receivedNotification = false;
+        wrongNotificationResultCount = 0;
+        writeBigDataWithNotificationPackageCount = 0;
+        writeBigDataWithNotificationCurrentPackageCount = 0;
+        writeBigDataWithNotificationTryCount = 0;
         return true;
     }
 
@@ -495,7 +552,7 @@ public class BleConnector {
      * @param bigData            数据
      */
     public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData) {
-        writeBigData(serviceUuid, characteristicUuid, bigData, 100, new DefaultBigDataSendStateChangedListener());
+        writeBigData(serviceUuid, characteristicUuid, bigData, new DefaultBigDataSendStateChangedListener());
     }
 
     /**
@@ -510,6 +567,7 @@ public class BleConnector {
         writeBigData(serviceUuid, characteristicUuid, bigData, 100, onBigDataSendStateChangedListener);
     }
 
+
     /**
      * 发送大量数据到远端设备（超过 20 字节并且小于 18 * 255 字节的数据）
      *
@@ -520,13 +578,26 @@ public class BleConnector {
      * @param onBigDataSendStateChangedListener 数据发送的相关回调
      */
     public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, int packageDelayTime, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+        writeBigData(serviceUuid, characteristicUuid, bigData, packageDelayTime, 5, onBigDataSendStateChangedListener);
+    }
+
+    /**
+     * 发送大量数据到远端设备（超过 20 字节并且小于 18 * 255 字节的数据）
+     *
+     * @param serviceUuid                       服务UUID
+     * @param characteristicUuid                特征UUID
+     * @param bigData                           大量数据
+     * @param packageDelayTime                  每一包数据之间的时间间隔
+     * @param onBigDataSendStateChangedListener 数据发送的相关回调
+     */
+    public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, int packageDelayTime, int maxTryCount, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
         int dataLength = bigData.length;
 
         if (dataLength <= PACKAGE_MAX_LENGTH || dataLength > LARGE_DATA_MAX_LENGTH) {
-            throw new WrongLargeDataArrayException();
+            throw new WrongBigDataArrayException();
         }
 
-        startThreadToStartWriteBigData(serviceUuid, characteristicUuid, bigData, dataLength, packageDelayTime, onBigDataSendStateChangedListener);
+        startThreadToWriteBigData(serviceUuid, characteristicUuid, bigData, dataLength, packageDelayTime, maxTryCount, onBigDataSendStateChangedListener);
     }
 
     /**
@@ -619,6 +690,186 @@ public class BleConnector {
     @SuppressWarnings("WeakerAccess")
     public BluetoothGattService getService(UUID uuid) {
         return bleServiceConnection.getService(uuid);
+    }
+
+    /**
+     * 传输大量数据并需要通知回调以继续发送
+     *
+     * @param serviceUUID        写入数据的服务UUID，通知的服务UUID
+     * @param characteristicUUID 写入数据的特征UUID，通知的特征UUID
+     * @param bigData            大数据内容
+     */
+    public void writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData) {
+        writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, new DefaultBigDataWriteWithNotificationSendStateChangedListener());
+    }
+
+    /**
+     * 传输大量数据并需要通知回调以继续发送
+     *
+     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
+     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
+     * @param bigData                                                大数据内容
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     */
+    public void writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData, BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, 200, onBigDataWriteWithNotificationSendStateChangedListener);
+    }
+
+    /**
+     * 传输大量数据并需要通知回调以继续发送
+     *
+     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
+     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
+     * @param bigData                                                大数据内容
+     * @param packageDelayTime                                       每一包之间的发送间隔
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     */
+    public void writeBigDataWithNotification(String serviceUUID, String characteristicUUID,
+                                             byte[] bigData, int packageDelayTime, BleInterface.
+                                                     OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, packageDelayTime, 3, onBigDataWriteWithNotificationSendStateChangedListener);
+    }
+
+    /**
+     * 传输大量数据并需要通知回调以继续发送
+     *
+     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
+     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
+     * @param bigData                                                大数据内容
+     * @param packageDelayTime                                       每一包之间的发送间隔
+     * @param maxTryCount                                            最大重试次数
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     */
+    public void writeBigDataWithNotification(String serviceUUID, String characteristicUUID,
+                                             byte[] bigData, int packageDelayTime, int maxTryCount, BleInterface.
+                                                     OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        writeBigDataWithNotification(serviceUUID, characteristicUUID, serviceUUID, characteristicUUID, bigData, packageDelayTime, maxTryCount, onBigDataWriteWithNotificationSendStateChangedListener);
+    }
+
+    /**
+     * 传输大量数据并需要通知回调以继续发送
+     *
+     * @param writeDataServiceUUID                                   写入数据的服务UUID
+     * @param writeDataCharacteristicUUID                            写入数据的特征UUID
+     * @param notificationServiceUUID                                通知的服务UUID
+     * @param notificationCharacteristicUUID                         通知的特征UUID
+     * @param bigData                                                大数据内容
+     * @param packageDelayTime                                       每一包之间的发送间隔
+     * @param maxTryCount                                            最大重试次数
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     */
+    public void writeBigDataWithNotification(String writeDataServiceUUID, String
+            writeDataCharacteristicUUID, String notificationServiceUUID, String
+                                                     notificationCharacteristicUUID, byte[] bigData, int packageDelayTime,
+                                             int maxTryCount, BleInterface.
+                                                     OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        int length = bigData.length;
+        if (length <= PACKAGE_MAX_LENGTH) {
+            throw new WrongBigDataArrayException();
+        }
+        if (!canWrite(writeDataServiceUUID, writeDataCharacteristicUUID)) {
+            return;
+        }
+        if (!canNotify(notificationServiceUUID, notificationCharacteristicUUID)) {
+            return;
+        }
+        if (!enableNotification(notificationServiceUUID, notificationCharacteristicUUID, true)) {
+            return;
+        }
+        startThreadToWriteBigDataWithNotification(bigData, length, maxTryCount, writeDataServiceUUID, writeDataCharacteristicUUID, notificationServiceUUID, notificationCharacteristicUUID, packageDelayTime, onBigDataWriteWithNotificationSendStateChangedListener);
+    }
+
+    /**
+     * 开启一个线程发送大数据
+     *
+     * @param bigData                                                大数据内容
+     * @param dataLength                                             数据大小
+     * @param maxTryCount                                            最大重试次数
+     * @param writeDataServiceUUID                                   写入数据的服务UUID
+     * @param writeDataCharacteristicUUID                            写入数据的特征UUID
+     * @param notificationServiceUUID                                通知的服务UUID
+     * @param notificationCharacteristicUUID                         通知的特征UUID
+     * @param packageDelayTime                                       每一包之间的发送间隔
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     */
+    private void startThreadToWriteBigDataWithNotification(final byte[] bigData,
+                                                           final int dataLength, final int maxTryCount, final String writeDataServiceUUID,
+                                                           final String writeDataCharacteristicUUID, String notificationServiceUUID,
+                                                           final String notificationCharacteristicUUID, final int packageDelayTime,
+                                                           final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                writeBigDataWithNotificationPackageCount = getPageCount(dataLength);
+                writeBigDataWithNotificationCurrentPackageCount = 0;
+                //记录数据重发的次数
+                writeBigDataWithNotificationTryCount = 0;
+                writeBigDataWithNotificationContinueFlag = true;
+                BleInterface.OnReceiveNotificationListener writeBigDataWithNotificationOnReceiveNotificationListener = new BleInterface.OnReceiveNotificationListener() {
+                    @Override
+                    public void onReceiveNotification(String uuid, final byte[] values) {
+                        if (uuid.equalsIgnoreCase(notificationCharacteristicUUID)) {
+                            BleManager.getHandler().post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
+                                        boolean success = onBigDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeBigDataWithNotificationCurrentPackageCount, writeBigDataWithNotificationPackageCount, getBigPackageData(writeBigDataWithNotificationCurrentPackageCount, bigData, writeBigDataWithNotificationPackageCount));
+                                        if (!success) {
+                                            if (wrongNotificationResultCount >= maxTryCount) {
+                                                performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataListener(onBigDataWriteWithNotificationSendStateChangedListener);
+                                                writeBigDataWithNotificationContinueFlag = false;
+                                            } else {
+                                                writeBigDataWithNotificationCurrentPackageCount--;
+                                                wrongNotificationResultCount++;
+                                                performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onBigDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount, writeBigDataWithNotificationCurrentPackageCount, writeBigDataWithNotificationPackageCount, getBigPackageData(writeBigDataWithNotificationCurrentPackageCount, bigData, writeBigDataWithNotificationPackageCount));
+                                            }
+                                        } else {
+                                            wrongNotificationResultCount = 0;
+                                        }
+                                    }
+                                    receivedNotification = true;
+                                }
+                            });
+                        }
+                    }
+                };
+                setOnReceiveNotificationListener(writeBigDataWithNotificationOnReceiveNotificationListener);
+                receivedNotification = true;
+                while (writeBigDataWithNotificationContinueFlag) {
+                    if (!receivedNotification) {
+                        continue;
+                    }
+                    final byte[] data = getBigPackageData(writeBigDataWithNotificationCurrentPackageCount, bigData, writeBigDataWithNotificationPackageCount);
+                    if (data == null) {
+                        performBigDataWriteWithNotificationSendFinishedListener(onBigDataWriteWithNotificationSendStateChangedListener);
+                        break;
+                    }
+                    if (writeBigDataWithNotificationTryCount >= maxTryCount) {
+                        performBigDataWriteWithNotificationSendFailedListener(writeBigDataWithNotificationPackageCount, data, writeBigDataWithNotificationCurrentPackageCount, onBigDataWriteWithNotificationSendStateChangedListener);
+                        break;
+                    }
+                    if (writeData(writeDataServiceUUID, writeDataCharacteristicUUID, data)) {
+                        performBigDataWriteWithNotificationSendProgressChangedListener(writeBigDataWithNotificationPackageCount, data, writeBigDataWithNotificationCurrentPackageCount, onBigDataWriteWithNotificationSendStateChangedListener);
+                        writeBigDataWithNotificationTryCount = 0;
+                        writeBigDataWithNotificationCurrentPackageCount++;
+                        receivedNotification = false;
+                    } else {
+                        performBigDataWriteWithNotificationSendFailedAndRetryListener(writeBigDataWithNotificationPackageCount, data, writeBigDataWithNotificationTryCount, writeBigDataWithNotificationCurrentPackageCount, onBigDataWriteWithNotificationSendStateChangedListener);
+                        writeBigDataWithNotificationTryCount++;
+                    }
+                    if (packageDelayTime >= 20 && packageDelayTime <= 2000) {
+                        Tool.sleep(packageDelayTime);
+                    } else {
+                        if (packageDelayTime < 20) {
+                            Tool.sleep(20);
+                        } else {
+                            Tool.sleep(2000);
+                        }
+                    }
+                }
+            }
+        };
+        BleManager.getThreadFactory().newThread(runnable).start();
     }
 
     /**
@@ -756,14 +1007,15 @@ public class BleConnector {
      */
     private void checkCloseStatus() {
         mClosed = true;
-        if (onCloseCompleteListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onCloseCompleteListener != null) {
                     onCloseCompleteListener.onCloseComplete();
+                    onCloseCompleteListener = null;
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
@@ -824,45 +1076,41 @@ public class BleConnector {
      * 根据当前需要第几包，获取对应的数据包内容
      *
      * @param packageIndex 当前需要第几包
-     * @param largeData    整个大型数据
+     * @param bigData      整个大型数据
      * @param pageCount    总包数
      * @return byte数组
      */
-    private byte[] getBigPackageData(int packageIndex, byte[] largeData, int pageCount) {
+    private byte[] getBigPackageData(int packageIndex, byte[] bigData, int pageCount) {
 
         if (packageIndex >= pageCount) {
             return null;
         }
-        int largeDataLength = largeData.length;
+        int largeDataLength = bigData.length;
         if (packageIndex == pageCount - 1) {
             int remainder = largeDataLength % LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH;
             if (remainder == 0) {
                 byte[] data = new byte[20];
-                byte[] bytes = Tool.intToBytes2(largeDataLength);
-                data[0] = bytes[0];
-                data[1] = bytes[1];
-                data[2] = (byte) pageCount;
-                data[3] = (byte) (packageIndex + 1);
-                System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH));
+                data[0] = (byte) pageCount;
+                data[1] = (byte) (packageIndex + 1);
+                data[2] = LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH;
+                System.arraycopy(bigData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH));
                 return data;
             } else {
-                byte[] data = new byte[remainder + 4];
+                byte[] data = new byte[remainder + PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH];
                 byte[] bytes = Tool.intToBytes2(largeDataLength);
-                data[0] = bytes[0];
-                data[1] = bytes[1];
-                data[2] = (byte) pageCount;
-                data[3] = (byte) (packageIndex + 1);
-                System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH));
+                data[0] = (byte) pageCount;
+                data[1] = (byte) (packageIndex + 1);
+                data[2] = (byte) remainder;
+                System.arraycopy(bigData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH));
                 return data;
             }
         } else {
             byte[] data = new byte[20];
             byte[] bytes = Tool.intToBytes2(largeDataLength);
-            data[0] = bytes[0];
-            data[1] = bytes[1];
-            data[2] = (byte) pageCount;
-            data[3] = (byte) (packageIndex + 1);
-            System.arraycopy(largeData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH));
+            data[0] = (byte) pageCount;
+            data[1] = (byte) (packageIndex + 1);
+            data[2] = (byte) LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH;
+            System.arraycopy(bigData, packageIndex * LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_TRANSFORM_PACKAGE_MAX_LENGTH));
             return data;
         }
     }
@@ -872,12 +1120,16 @@ public class BleConnector {
      *
      * @param serviceUuid                       服务UUID
      * @param characteristicUuid                特征UUID
-     * @param packageDelayTime                  每一包数据之间的间隔时间
      * @param bigData                           大数据内容
      * @param dataLength                        数据长度
+     * @param packageDelayTime                  每一包数据之间的间隔时间
+     * @param maxTryCount                       最大的重发次数
      * @param onBigDataSendStateChangedListener 大数据传输时的相关回调
      */
-    private void startThreadToStartWriteBigData(final String serviceUuid, final String characteristicUuid, final byte[] bigData, final int dataLength, final int packageDelayTime, final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+    private void startThreadToWriteBigData(final String serviceUuid,
+                                           final String characteristicUuid, final byte[] bigData, final int dataLength,
+                                           final int packageDelayTime, final int maxTryCount,
+                                           final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -886,22 +1138,23 @@ public class BleConnector {
                 //记录数据重发的次数
                 int tryCount = 0;
                 performBigDataSendStartedListener(onBigDataSendStateChangedListener);
-                while (true) {
+                writeBigDataContinueFlag = true;
+                while (writeBigDataContinueFlag) {
                     final byte[] data = getBigPackageData(currentPackageCount, bigData, pageCount);
                     if (data == null) {
                         performBigDataSendFinishedListener(onBigDataSendStateChangedListener);
                         break;
                     }
-                    if (tryCount >= 3) {
-                        performBigDataSendFailedListener(pageCount, data, currentPackageCount, tryCount, onBigDataSendStateChangedListener);
+                    if (tryCount >= maxTryCount) {
+                        performBigDataSendFailedListener(pageCount, data, currentPackageCount, onBigDataSendStateChangedListener);
                         break;
                     }
                     if (writeData(serviceUuid, characteristicUuid, data)) {
-                        performBigDataSendFailedAndRetryListener(pageCount, data, tryCount, currentPackageCount, onBigDataSendStateChangedListener);
+                        performBigDataSendProgressChangedListener(pageCount, data, currentPackageCount, onBigDataSendStateChangedListener);
                         tryCount = 0;
                         currentPackageCount++;
                     } else {
-                        performBigDataSendProgressChangedListener(pageCount, data, currentPackageCount, tryCount, onBigDataSendStateChangedListener);
+                        performBigDataSendFailedAndRetryListener(pageCount, data, tryCount, currentPackageCount, onBigDataSendStateChangedListener);
                         tryCount++;
                     }
                     if (packageDelayTime >= 20 && packageDelayTime <= 2000) {
@@ -926,15 +1179,15 @@ public class BleConnector {
      * @param pageCount                         总包数
      * @param data                              当前包数据
      * @param currentPackageCount               当前包数
-     * @param tryCount                          尝试次数
      * @param onBigDataSendStateChangedListener 相关的回调
      */
-    private void performBigDataSendProgressChangedListener(final int pageCount, final byte[] data, final int currentPackageCount, final int tryCount, final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+    private void performBigDataSendProgressChangedListener(final int pageCount, final byte[] data, final int currentPackageCount,
+                                                           final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 if (onBigDataSendStateChangedListener != null) {
-                    onBigDataSendStateChangedListener.packageSendFailedAndRetry(currentPackageCount + 1, pageCount, tryCount, data);
+                    onBigDataSendStateChangedListener.packageSendProgressChanged(currentPackageCount + 1, pageCount, data);
                 }
             }
         });
@@ -949,12 +1202,14 @@ public class BleConnector {
      * @param currentPackageCount               当前包数
      * @param onBigDataSendStateChangedListener 相关的回调
      */
-    private void performBigDataSendFailedAndRetryListener(final int pageCount, final byte[] data, final int tryCount, final int currentPackageCount, final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+    private void performBigDataSendFailedAndRetryListener(final int pageCount, final byte[] data,
+                                                          final int tryCount, final int currentPackageCount,
+                                                          final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 if (onBigDataSendStateChangedListener != null) {
-                    onBigDataSendStateChangedListener.packageSendSuccess(currentPackageCount + 1, pageCount, tryCount, data);
+                    onBigDataSendStateChangedListener.packageSendFailedAndRetry(currentPackageCount + 1, pageCount, tryCount, data);
                 }
             }
         });
@@ -966,15 +1221,15 @@ public class BleConnector {
      * @param pageCount                         总包数
      * @param data                              当前包数据
      * @param currentPackageCount               当前包数
-     * @param tryCount                          尝试次数
      * @param onBigDataSendStateChangedListener 相关的回调
      */
-    private void performBigDataSendFailedListener(final int pageCount, final byte[] data, final int currentPackageCount, final int tryCount, final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
+    private void performBigDataSendFailedListener(final int pageCount, final byte[] data, final int currentPackageCount,
+                                                  final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 if (onBigDataSendStateChangedListener != null) {
-                    onBigDataSendStateChangedListener.packageSendFailed(currentPackageCount + 1, pageCount, tryCount, data);
+                    onBigDataSendStateChangedListener.packageSendFailed(currentPackageCount + 1, pageCount, data);
                 }
             }
         });
@@ -1007,6 +1262,114 @@ public class BleConnector {
             public void run() {
                 if (onBigDataSendStateChangedListener != null) {
                     onBigDataSendStateChangedListener.sendStarted();
+                }
+            }
+        });
+    }
+
+    /**
+     * 触发写入大量数据并包含通知时，数据发送完成的回调
+     *
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 写入大数据并包含通知 到远端设备时相关的回调
+     */
+    private void performBigDataWriteWithNotificationSendFinishedListener(
+            final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
+                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendFinished();
+                }
+            }
+        });
+    }
+
+    /**
+     * 触发写入大量数据并包含通知时，数据传输失败的回调
+     *
+     * @param pageCount                                              数据总包数
+     * @param data                                                   传输失败的当前包内容
+     * @param currentPackageCount                                    当前传输的包数
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关的回调
+     */
+    private void performBigDataWriteWithNotificationSendFailedListener(final int pageCount,
+                                                                       final byte[] data, final int currentPackageCount,
+                                                                       final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
+                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendFailed(currentPackageCount, pageCount, data);
+                }
+            }
+        });
+    }
+
+    /**
+     * 触发写入大量数据并包含通知时，数据传输失败并尝试重发的回调
+     *
+     * @param pageCount                                              数据总包数
+     * @param data                                                   传输失败的当前包内容
+     * @param tryCount                                               本包重试次数
+     * @param currentPackageCount                                    当前传输的包数
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关的回调
+     */
+    private void performBigDataWriteWithNotificationSendFailedAndRetryListener(
+            final int pageCount, final byte[] data, final int tryCount, final int currentPackageCount,
+            final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
+                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendFailedAndRetry(currentPackageCount, pageCount, data, tryCount);
+                }
+            }
+        });
+    }
+
+    /**
+     * 触发写入大量数据并包含通知时，数据传输进度更改时进行的回调的回调
+     *
+     * @param pageCount                                              数据总包数
+     * @param data                                                   传输失败的当前包内容
+     * @param currentPackageCount                                    当前传输的包数
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关的回调
+     */
+    private void performBigDataWriteWithNotificationSendProgressChangedListener(
+            final int pageCount, final byte[] data, final int currentPackageCount,
+            final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
+                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendProgressChanged(currentPackageCount, pageCount, data);
+                }
+            }
+        });
+    }
+
+    /**
+     * 触发写入大量数据并包含通知时,通知数据异常导致传输结束的回调
+     *
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关的回调
+     */
+    private void performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataListener(final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
+                    onBigDataWriteWithNotificationSendStateChangedListener.onSendFailedWithWrongNotifyData();
+                }
+            }
+        });
+    }
+
+    private void performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, final int tryCount, final int currentPackageIndex, final int packageCount, final byte[] data) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
+                    onBigDataWriteWithNotificationSendStateChangedListener.onSendFailedWithWrongNotifyDataAndRetry(tryCount, currentPackageIndex, packageCount, data);
                 }
             }
         });

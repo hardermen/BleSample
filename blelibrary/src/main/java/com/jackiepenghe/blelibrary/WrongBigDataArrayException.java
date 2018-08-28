@@ -5,13 +5,13 @@ package com.jackiepenghe.blelibrary;
  *
  * @author jackie
  */
-class WrongLargeDataArrayException extends RuntimeException {
+class WrongBigDataArrayException extends RuntimeException {
     /**
      * Constructs a new runtime exception with {@code null} as its
      * detail message.  The cause is not initialized, and may subsequently be
      * initialized by a call to {@link #initCause}.
      */
-    WrongLargeDataArrayException() {
-        super("large data array length must be Greater than 20 and lower than 65536");
+    WrongBigDataArrayException() {
+        super("big data array length must be Greater than 20 and lower than 65536");
     }
 }
