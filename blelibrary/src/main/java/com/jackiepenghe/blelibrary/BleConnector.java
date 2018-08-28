@@ -107,6 +107,10 @@ public class BleConnector {
      * 是否继续写入大量数据的标志
      */
     private boolean writeBigDataContinueFlag;
+    /**
+     * 是否执行过绑定指令
+     */
+    private boolean doBonded;
 
     /*-------------------------构造函数-------------------------*/
 
@@ -310,7 +314,7 @@ public class BleConnector {
 
         //注册绑定BLE的广播接收者
         context.registerReceiver(boundBleBroadcastReceiver, makeBoundBLEIntentFilter());
-
+        doBonded = true;
         //发起绑定
         if (remoteDevice.createBond()) {
             return BleConstants.DEVICE_BOND_START_SUCCESS;
@@ -365,11 +369,9 @@ public class BleConnector {
             return false;
         }
 
-        try {
+        if (doBonded) {
             bondAddress = null;
             context.unregisterReceiver(boundBleBroadcastReceiver);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         context.unregisterReceiver(connectBleBroadcastReceiver);
@@ -403,6 +405,9 @@ public class BleConnector {
             e.printStackTrace();
         }
         checkCloseStatus();
+        boundBleBroadcastReceiver = null;
+        connectBleBroadcastReceiver = null;
+        bleServiceConnection = null;
         context = null;
         writeBigDataWithNotificationContinueFlag = false;
         writeBigDataContinueFlag = false;
@@ -814,7 +819,7 @@ public class BleConnector {
                                 @Override
                                 public void run() {
                                     if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                                        boolean success = onBigDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeBigDataWithNotificationCurrentPackageCount, writeBigDataWithNotificationPackageCount, getBigPackageData(writeBigDataWithNotificationCurrentPackageCount, bigData, writeBigDataWithNotificationPackageCount));
+                                        boolean success = onBigDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeBigDataWithNotificationCurrentPackageCount + 1, writeBigDataWithNotificationPackageCount, getBigPackageData(writeBigDataWithNotificationCurrentPackageCount, bigData, writeBigDataWithNotificationPackageCount));
                                         if (!success) {
                                             if (wrongNotificationResultCount >= maxTryCount) {
                                                 performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataListener(onBigDataWriteWithNotificationSendStateChangedListener);
@@ -822,7 +827,7 @@ public class BleConnector {
                                             } else {
                                                 writeBigDataWithNotificationCurrentPackageCount--;
                                                 wrongNotificationResultCount++;
-                                                performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onBigDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount, writeBigDataWithNotificationCurrentPackageCount, writeBigDataWithNotificationPackageCount, getBigPackageData(writeBigDataWithNotificationCurrentPackageCount, bigData, writeBigDataWithNotificationPackageCount));
+                                                performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onBigDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount, writeBigDataWithNotificationCurrentPackageCount + 1, writeBigDataWithNotificationPackageCount, getBigPackageData(writeBigDataWithNotificationCurrentPackageCount, bigData, writeBigDataWithNotificationPackageCount));
                                             }
                                         } else {
                                             wrongNotificationResultCount = 0;
@@ -846,16 +851,16 @@ public class BleConnector {
                         break;
                     }
                     if (writeBigDataWithNotificationTryCount >= maxTryCount) {
-                        performBigDataWriteWithNotificationSendFailedListener(writeBigDataWithNotificationPackageCount, data, writeBigDataWithNotificationCurrentPackageCount, onBigDataWriteWithNotificationSendStateChangedListener);
+                        performBigDataWriteWithNotificationSendFailedListener(writeBigDataWithNotificationPackageCount, data, writeBigDataWithNotificationCurrentPackageCount + 1, onBigDataWriteWithNotificationSendStateChangedListener);
                         break;
                     }
                     if (writeData(writeDataServiceUUID, writeDataCharacteristicUUID, data)) {
-                        performBigDataWriteWithNotificationSendProgressChangedListener(writeBigDataWithNotificationPackageCount, data, writeBigDataWithNotificationCurrentPackageCount, onBigDataWriteWithNotificationSendStateChangedListener);
+                        performBigDataWriteWithNotificationSendProgressChangedListener(writeBigDataWithNotificationPackageCount, data, writeBigDataWithNotificationCurrentPackageCount + 1, onBigDataWriteWithNotificationSendStateChangedListener);
                         writeBigDataWithNotificationTryCount = 0;
                         writeBigDataWithNotificationCurrentPackageCount++;
                         receivedNotification = false;
                     } else {
-                        performBigDataWriteWithNotificationSendFailedAndRetryListener(writeBigDataWithNotificationPackageCount, data, writeBigDataWithNotificationTryCount, writeBigDataWithNotificationCurrentPackageCount, onBigDataWriteWithNotificationSendStateChangedListener);
+                        performBigDataWriteWithNotificationSendFailedAndRetryListener(writeBigDataWithNotificationPackageCount, data, writeBigDataWithNotificationTryCount, writeBigDataWithNotificationCurrentPackageCount + 1, onBigDataWriteWithNotificationSendStateChangedListener);
                         writeBigDataWithNotificationTryCount++;
                     }
                     if (packageDelayTime >= 20 && packageDelayTime <= 2000) {

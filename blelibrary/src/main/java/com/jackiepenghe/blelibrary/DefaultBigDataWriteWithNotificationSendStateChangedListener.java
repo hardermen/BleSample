@@ -25,7 +25,7 @@ public class DefaultBigDataWriteWithNotificationSendStateChangedListener impleme
     @Override
     public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageCount, int packageCount, byte[] values) {
         Tool.warnOut(TAG, "onReceiveNotification values = " + Tool.bytesToHexStr(values));
-        return false;
+        return true;
     }
 
     /**
