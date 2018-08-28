@@ -217,6 +217,7 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * 设置状态码错误的回调
+     *
      * @param onStatusErrorListener 状态码错误的回调
      */
     void setOnStatusErrorListener(BleInterface.OnStatusErrorListener onStatusErrorListener) {
@@ -338,35 +339,36 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
     /*------------------------库内函数----------------------------*/
 
     /**
-     *蓝牙状态更改时的处理
+     * 蓝牙状态更改时的处理
+     *
      * @param context 上下文
-     * @param intent intent对象
+     * @param intent  intent对象
      */
     private void processBluetoothStateChanged(Context context, Intent intent) {
         int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -2147483648);
         //如果蓝牙被关闭
         if (state == BluetoothAdapter.STATE_OFF) {
             Tool.toastL(context, R.string.bluetooth_off);
-            if (onBluetoothSwitchChangedListener != null) {
-                BleManager.getHandler().post(new Runnable() {
-                    @Override
-                    public void run() {
+            BleManager.getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    if (onBluetoothSwitchChangedListener != null) {
                         onBluetoothSwitchChangedListener.onBluetoothSwitchChanged(false);
                     }
-                });
-            }
+                }
+            });
         }
         //如果蓝牙被打开
         else if (state == BluetoothAdapter.STATE_ON) {
             Tool.toastL(context, R.string.bluetooth_on);
-            if (onBluetoothSwitchChangedListener != null) {
-                BleManager.getHandler().post(new Runnable() {
-                    @Override
-                    public void run() {
+            BleManager.getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    if (onBluetoothSwitchChangedListener != null) {
                         onBluetoothSwitchChangedListener.onBluetoothSwitchChanged(true);
                     }
-                });
-            }
+                }
+            });
         }
     }
 
@@ -375,14 +377,14 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     private void processGattConnect() {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTED");
-        if (onConnectedListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedListener != null) {
                     onConnectedListener.onConnected();
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
@@ -390,14 +392,14 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     private void processGattDisconnect() {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
-        if (onDisconnectedListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onDisconnectedListener != null) {
                     onDisconnectedListener.onDisconnected();
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
@@ -417,19 +419,20 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * GATT处理数据失败时进行的处理
+     *
      * @param intent intent
      */
     private void processGattNotSuccess(Intent intent) {
         final String methodName = intent.getStringExtra(LibraryConstants.METHOD);
         final int errorStatus = intent.getIntExtra(LibraryConstants.STATUS, LibraryConstants.DEFAULT_STATUS);
-        if (onBluetoothGattOptionsNotSuccessListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBluetoothGattOptionsNotSuccessListener != null) {
                     onBluetoothGattOptionsNotSuccessListener.onBluetoothGattOptionsNotSuccess(methodName, errorStatus);
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
@@ -437,14 +440,14 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     private void processGattConnecting() {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTING");
-        if (onConnectingListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectingListener != null) {
                     onConnectingListener.onConnecting();
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
@@ -452,164 +455,188 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      */
     private void processGattDisconnecting() {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_DISCONNECTING");
-        if (onDisconnectingListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onDisconnectingListener != null) {
                     onDisconnectingListener.onDisconnecting();
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
      * GATT读取到远端设备数据时进行的处理
+     *
      * @param values 数据内容
-     * @param uuid 数据来源uuid
+     * @param uuid   数据来源uuid
      */
     private void processCharacteristicRead(final byte[] values, final String uuid) {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_READ,value = " + Tool.bytesToHexStr(values));
-        if (onCharacteristicReadListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onCharacteristicReadListener != null) {
                     onCharacteristicReadListener.onCharacteristicRead(uuid, values);
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
      * GATT发现远端设备特征数据发生改变时(接收到通知时)进行的处理
+     *
      * @param values 数据内容
-     * @param uuid 数据来源uuid
+     * @param uuid   数据来源uuid
      */
     private void processCharacteristicChanged(final byte[] values, final String uuid) {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_CHANGED,value = " + Tool.bytesToHexStr(values));
-        if (onReceiveNotificationListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onReceiveNotificationListener != null) {
                     onReceiveNotificationListener.onReceiveNotification(uuid, values);
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
      * GATT向远端设备特征写入数据时的处理
+     *
      * @param values 数据内容
-     * @param uuid 数据目标uuid
+     * @param uuid   数据目标uuid
      */
     private void processCharacteristicWrite(final byte[] values, final String uuid) {
         Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_WRITE,value = " + Tool.bytesToHexStr(values));
-        if (onCharacteristicWriteListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onCharacteristicWriteListener != null) {
                     onCharacteristicWriteListener.onCharacteristicWrite(uuid, values);
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
      * GATT读取到远端设备描述数据时的处理
+     *
      * @param values 数据内容
-     * @param uuid 数据来源uuid
+     * @param uuid   数据来源uuid
      */
     private void processGattDescriptorRead(final byte[] values, final String uuid) {
-        if (onDescriptorReadListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onDescriptorReadListener != null) {
                     onDescriptorReadListener.onDescriptorRead(uuid, values);
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
      * GATT向远端设备描述写入数据时的处理
+     *
      * @param values 数据内容
-     * @param uuid 数据目标uuid
+     * @param uuid   数据目标uuid
      */
     private void processDescriptorWrite(final byte[] values, final String uuid) {
-        if (onDescriptorWriteListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onDescriptorWriteListener != null) {
                     onDescriptorWriteListener.onDescriptorWrite(uuid, values);
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
      * GATT向远端设备写入可靠数据完成时的处理
      */
     private void processReliableWriteCompleted() {
-        if (onReliableWriteCompletedListener != null) {
-            onReliableWriteCompletedListener.onReliableWriteCompleted();
-        }
+        BleManager.getHandler().post(new Runnable() {
+            /**
+             * When an object implementing interface <code>Runnable</code> is used
+             * to create a thread, starting the thread causes the object's
+             * <code>run</code> method to be called in that separately executing
+             * thread.
+             * <p>
+             * The general contract of the method <code>run</code> is that it may
+             * take any action whatsoever.
+             *
+             * @see Thread#run()
+             */
+            @Override
+            public void run() {
+                if (onReliableWriteCompletedListener != null) {
+                    onReliableWriteCompletedListener.onReliableWriteCompleted();
+                }
+            }
+        });
     }
 
     /**
      * GATT读取到远端设备RSSI时的处理
+     *
      * @param values 数据内容
      */
     private void processReadRemoteRssi(final byte[] values) {
-        if (onReadRemoteRssiListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onReadRemoteRssiListener != null) {
                     onReadRemoteRssiListener.onReadRemoteRssi(values[0]);
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
      * 与远端设备的MTU(单包最大读写数据长度)改变时的处理
+     *
      * @param values 数据内容
      */
     private void processMtuChanged(final byte[] values) {
-        if (onMtuChangedListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onMtuChangedListener != null) {
                     onMtuChangedListener.onMtuChanged(values[0]);
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
      * 发现远端设备的服务失败时的处理
      */
     private void processDiscoverServiceFailed() {
-        if (onServicesDiscoveedListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onServicesDiscoveedListener != null) {
                     onServicesDiscoveedListener.onDiscoverServiceFailed();
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
      * 状态码错误的处理
+     *
      * @param status 状态码
      */
     private void processGattStatusError(final int status) {
-        if (onStatusErrorListener != null) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onStatusErrorListener != null) {
                     onStatusErrorListener.onStatusError(status);
                 }
-            });
-        }
+            }
+        });
     }
 }
