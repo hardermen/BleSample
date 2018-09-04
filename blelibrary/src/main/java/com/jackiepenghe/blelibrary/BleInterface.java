@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanResult;
 import android.os.Build;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
 import java.util.List;
@@ -51,9 +52,10 @@ public class BleInterface {
         /**
          * 发现一个新的蓝牙设备时回调此函数
          *
-         * @param bleDevice 自定义Ble设备Been类
+         * @param index     当前的设备在设备列表中的位置
+         * @param bleDevice 自定义Ble设备Been类,如果数据内容为空，则说明扫描结果设备列表有数据更新
          */
-        void onScanFindOneNewDevice(BleDevice bleDevice);
+        void onScanFindOneNewDevice(int index, @Nullable BleDevice bleDevice);
     }
 
     /**
@@ -319,7 +321,7 @@ public class BleInterface {
 
         /**
          * A remote client has requested to read a local characteristic.
-         *
+         * <p>
          * <p>An application must call {@link BluetoothGattServer#sendResponse}
          * to complete the request.
          *
@@ -332,7 +334,7 @@ public class BleInterface {
 
         /**
          * A remote client has requested to write to a local characteristic.
-         *
+         * <p>
          * <p>An application must call {@link BluetoothGattServer#sendResponse}
          * to complete the request.
          *
@@ -349,7 +351,7 @@ public class BleInterface {
 
         /**
          * A remote client has requested to read a local descriptor.
-         *
+         * <p>
          * <p>An application must call {@link BluetoothGattServer#sendResponse}
          * to complete the request.
          *

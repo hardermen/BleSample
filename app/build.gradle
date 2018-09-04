@@ -8,8 +8,8 @@ android {
         applicationId "cn.almsound.www.myblesample"
         minSdkVersion 18
         targetSdkVersion 28
-        versionCode 17
-        versionName "0.1.7"
+        versionCode 18
+        versionName "0.1.8"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
@@ -33,8 +33,8 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.android.support:appcompat-v7:28.0.0-rc01'
-    implementation 'com.android.support:design:28.0.0-rc01'
+    implementation 'com.android.support:appcompat-v7:28.0.0-rc02'
+    implementation 'com.android.support:design:28.0.0-rc02'
     implementation 'com.jackiepenghe:baselibrary:0.8.9'
     implementation 'com.yanzhenjie:permission:1.1.2'
     implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.30'

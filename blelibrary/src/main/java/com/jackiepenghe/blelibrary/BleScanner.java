@@ -229,7 +229,7 @@ public class BleScanner {
                 }
                 if (!mScanResults.contains(bleDevice)) {
                     mScanResults.add(bleDevice);
-                    callOnScanFindOneNewDeviceListener(bleDevice);
+                    callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice);
                 }
             }
         };
@@ -331,7 +331,14 @@ public class BleScanner {
         }
         if (!mScanResults.contains(bleDevice)) {
             mScanResults.add(bleDevice);
-            callOnScanFindOneNewDeviceListener(bleDevice);
+            callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice);
+        } else {
+            int index = mScanResults.indexOf(bleDevice);
+            BleDevice bleDevice1 = mScanResults.get(index);
+            if (bleDevice1.getDeviceName() == null && bleDevice.getDeviceName() != null) {
+                mScanResults.set(index, bleDevice);
+                callOnScanFindOneNewDeviceListener(index, null);
+            }
         }
     }
 
@@ -729,12 +736,12 @@ public class BleScanner {
      *
      * @param bleDevice BleDevice
      */
-    private void callOnScanFindOneNewDeviceListener(final BleDevice bleDevice) {
+    private void callOnScanFindOneNewDeviceListener(final int inedx, final BleDevice bleDevice) {
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 if (onScanFindOneNewDeviceListener != null) {
-                    onScanFindOneNewDeviceListener.onScanFindOneNewDevice(bleDevice);
+                    onScanFindOneNewDeviceListener.onScanFindOneNewDevice(inedx, bleDevice);
                 }
             }
         });

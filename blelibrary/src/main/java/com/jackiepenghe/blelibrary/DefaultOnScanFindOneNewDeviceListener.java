@@ -10,7 +10,7 @@ class DefaultOnScanFindOneNewDeviceListener implements BleInterface.OnScanFindOn
      * @param bleDevice 自定义Ble设备Been类
      */
     @Override
-    public void onScanFindOneNewDevice(BleDevice bleDevice) {
+    public void onScanFindOneNewDevice(int index, BleDevice bleDevice) {
         Tool.warnOut(TAG, "bleDevice name = " + bleDevice.getDeviceName() + ", address = " + bleDevice.getDeviceAddress());
     }
 }

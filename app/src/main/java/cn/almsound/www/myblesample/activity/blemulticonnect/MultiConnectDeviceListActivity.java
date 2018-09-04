@@ -102,10 +102,16 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
      */
     private BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
         @Override
-        public void onScanFindOneNewDevice(BleDevice bleDevice) {
-            BleDeviceWithBoolean bleDeviceWithBoolean = new BleDeviceWithBoolean(bleDevice, false);
-            adapterList.add(bleDeviceWithBoolean);
-            adapter.notifyItemChanged(adapterList.size());
+        public void onScanFindOneNewDevice(int index, BleDevice bleDevice) {
+            if (bleDevice != null) {
+                BleDeviceWithBoolean bleDeviceWithBoolean = new BleDeviceWithBoolean(bleDevice, false);
+                adapterList.add(bleDeviceWithBoolean);
+                adapter.notifyItemInserted(adapterList.size());
+            } else {
+                BleDeviceWithBoolean bleDeviceWithBoolean = adapterList.get(index);
+                bleDeviceWithBoolean.setBleDevice(scanResults.get(index));
+                adapter.notifyItemChanged(index);
+            }
         }
     };
 
