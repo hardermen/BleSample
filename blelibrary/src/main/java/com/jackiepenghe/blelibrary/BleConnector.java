@@ -34,6 +34,10 @@ public class BleConnector {
      */
     private static final String TAG = BleConnector.class.getSimpleName();
     /**
+     * 默认的连接超时
+     */
+    private static final long DEFAULT_TIME_OUT = 10000;
+    /**
      * 数据连接传输时，每一包数据的最大长度
      */
     private static final int PACKAGE_MAX_LENGTH = 20;
@@ -111,6 +115,14 @@ public class BleConnector {
      * 是否执行过绑定指令
      */
     private boolean doBonded;
+    /**
+     * 连接超时的时间
+     */
+    private long timeOut = DEFAULT_TIME_OUT;
+    /**
+     * 连接超时的回调
+     */
+    private BleInterface.OnConnectTimeOutListener onConnectTimeOutListener;
 
     /*-------------------------构造函数-------------------------*/
 
@@ -265,7 +277,11 @@ public class BleConnector {
         context.registerReceiver(connectBleBroadcastReceiver, makeConnectBLEIntentFilter());
         //绑定BLE连接服务
         Intent intent = new Intent(context, BluetoothLeService.class);
-        return context.bindService(intent, bleServiceConnection, Context.BIND_AUTO_CREATE);
+        boolean bindService = context.bindService(intent, bleServiceConnection, Context.BIND_AUTO_CREATE);
+        if (bindService) {
+            startThreadToCheckTimeOut();
+        }
+        return bindService;
     }
 
     /**
@@ -355,6 +371,33 @@ public class BleConnector {
     }
 
     /**
+     * 是否已经成功连接到了远端设备
+     *
+     * @return true表示已连接
+     */
+    public boolean isConnected() {
+        return bleServiceConnection.isConnected();
+    }
+
+    /**
+     * 是否已经成功发现了远端设备的服务
+     *
+     * @return true表示已经成功发现了远端设备的服务
+     */
+    public boolean isServiceDiscovered() {
+        return bleServiceConnection.isServiceDiscovered();
+    }
+
+    /**
+     * 设置连接超时的时间
+     *
+     * @param timeOut 连接超时的时间
+     */
+    public void setTimeOut(long timeOut) {
+        this.timeOut = timeOut;
+    }
+
+    /**
      * 关闭BLE连接工具
      *
      * @param withGattRefresh 是否要在关闭连接之前 刷新GATT缓存
@@ -368,9 +411,10 @@ public class BleConnector {
         if (mClosed) {
             return false;
         }
-
+        mClosed = true;
         if (doBonded) {
             bondAddress = null;
+            boundBleBroadcastReceiver.setOnDeviceBondStateChangedListener(null);
             context.unregisterReceiver(boundBleBroadcastReceiver);
         }
 
@@ -520,6 +564,15 @@ public class BleConnector {
             return;
         }
         connectBleBroadcastReceiver.setOnCharacteristicWriteListener(onCharacteristicWriteListener);
+    }
+
+    /**
+     * 设置连接超时的回调
+     *
+     * @param onConnectTimeOutListener 连接超时的回调
+     */
+    public void setOnConnectTimeOutListener(BleInterface.OnConnectTimeOutListener onConnectTimeOutListener) {
+        this.onConnectTimeOutListener = onConnectTimeOutListener;
     }
 
     /**
@@ -1057,7 +1110,6 @@ public class BleConnector {
      * 检查关闭状况（用于调用回调）
      */
     private void checkCloseStatus() {
-        mClosed = true;
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
@@ -1424,5 +1476,40 @@ public class BleConnector {
                 }
             }
         });
+    }
+
+    private void startThreadToCheckTimeOut() {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                long currentTimeMillis = System.currentTimeMillis();
+                while (!mClosed) {
+                    if (System.currentTimeMillis() - currentTimeMillis > timeOut) {
+                        break;
+                    }
+                }
+                checkTimeOut();
+            }
+        };
+        BleManager.getThreadFactory().newThread(runnable).start();
+    }
+
+    /**
+     * 检查超时的回调
+     */
+    private void checkTimeOut() {
+        if (mClosed) {
+            return;
+        }
+        if (!bleServiceConnection.isConnected() || !bleServiceConnection.isServiceDiscovered()) {
+            BleManager.getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    if (onConnectTimeOutListener != null) {
+                        onConnectTimeOutListener.onConnectTimeOut();
+                    }
+                }
+            });
+        }
     }
 }

@@ -251,4 +251,22 @@ class BleServiceConnection implements ServiceConnection {
         }
         return bluetoothLeService.getBluetoothGatt();
     }
+
+    /**
+     * 设备是否已经连接
+     *
+     * @return 设备是否已经连接
+     */
+    boolean isConnected() {
+        return bluetoothLeService != null && bluetoothLeService.isConnected();
+    }
+
+    /**
+     * 设备是否已经完成发现服务
+     *
+     * @return 设备是否已经完成发现服务
+     */
+    boolean isServiceDiscovered() {
+        return bluetoothLeService != null && bluetoothLeService.isServiceDiscovered();
+    }
 }

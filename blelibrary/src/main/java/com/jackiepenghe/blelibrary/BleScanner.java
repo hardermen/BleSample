@@ -229,7 +229,7 @@ public class BleScanner {
                 }
                 if (!mScanResults.contains(bleDevice)) {
                     mScanResults.add(bleDevice);
-                    callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice);
+                    callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice, mScanResults);
                 }
             }
         };
@@ -331,13 +331,13 @@ public class BleScanner {
         }
         if (!mScanResults.contains(bleDevice)) {
             mScanResults.add(bleDevice);
-            callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice);
+            callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice, mScanResults);
         } else {
             int index = mScanResults.indexOf(bleDevice);
             BleDevice bleDevice1 = mScanResults.get(index);
             if (bleDevice1.getDeviceName() == null && bleDevice.getDeviceName() != null) {
                 mScanResults.set(index, bleDevice);
-                callOnScanFindOneNewDeviceListener(index, null);
+                callOnScanFindOneNewDeviceListener(index, null, mScanResults);
             }
         }
     }
@@ -735,13 +735,14 @@ public class BleScanner {
      * 调用相关回调
      *
      * @param bleDevice BleDevice
+     * @param mScanResults
      */
-    private void callOnScanFindOneNewDeviceListener(final int inedx, final BleDevice bleDevice) {
+    private void callOnScanFindOneNewDeviceListener(final int inedx, final BleDevice bleDevice, final ArrayList<BleDevice> mScanResults) {
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 if (onScanFindOneNewDeviceListener != null) {
-                    onScanFindOneNewDeviceListener.onScanFindOneNewDevice(inedx, bleDevice);
+                    onScanFindOneNewDeviceListener.onScanFindOneNewDevice(inedx, bleDevice, mScanResults);
                 }
             }
         });

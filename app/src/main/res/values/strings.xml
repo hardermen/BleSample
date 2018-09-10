@@ -73,4 +73,5 @@
     <string name="no_notification_permission_title">Unable to display critical information!</string>
     <string name="no_notification_permission_message">Would you like to allow us use notification permission?After entering the settings, please manually open the notification permission</string>
     <string name="allow">Allow</string>
+    <string name="connect_time_out">Connect timeout</string>
 </resources>

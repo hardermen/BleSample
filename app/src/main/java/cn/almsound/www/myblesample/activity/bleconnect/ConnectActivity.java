@@ -58,22 +58,27 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * 绿色：连接上并且将远端设备服务扫描完毕
      */
     private CustomTextCircleView customTextCircleView;
+
     /**
      * BLE连接器
      */
     private BleConnector bleConnector;
+
     /**
      * 用于记录连接状态
      */
     private boolean isLinked;
+
     /**
      * 用于记录服务是否已经扫描完毕，避免某些手机重复回调
      */
     private boolean serviceDiscovered;
+
     /**
      * 设备名，设备地址
      */
     private TextView nameTv, addressTv;
+
     /**
      * 蓝牙设备对象
      */
@@ -83,6 +88,11 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * 显示设备的服务与特征的列表
      */
     private RecyclerView recyclerView;
+
+    /**
+     * RecyclerView默认的装饰
+     */
+    private DefaultItemDecoration defaultItemDecoration = new DefaultItemDecoration(Color.GRAY, ViewGroup.LayoutParams.MATCH_PARENT, 2, -1);
 
     /**
      * adapter的数据
@@ -294,7 +304,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         public void onDeviceBindNone() {
             Tool.warnOut(TAG, "绑定失败");
             Tool.toastL(ConnectActivity.this, "绑定失败");
-            startConnect();
+            onBackPressed();
         }
     };
     BleInterface.OnMtuChangedListener onMtuChangedListener = new BleInterface.OnMtuChangedListener() {
@@ -449,7 +459,13 @@ public class ConnectActivity extends BaseAppCompatActivity {
             Tool.toastL(ConnectActivity.this, "onSendFailedWithWrongNotifyData");
         }
     };
-    private DefaultItemDecoration defaultItemDecoration;
+    private BleInterface.OnConnectTimeOutListener onConnectTimeOutListener = new BleInterface.OnConnectTimeOutListener() {
+        @Override
+        public void onConnectTimeOut() {
+            Tool.toastL(ConnectActivity.this, R.string.connect_time_out);
+            onBackPressed();
+        }
+    };
 
     /**
      * 标题栏的返回按钮被按下的时候回调此函数
@@ -547,7 +563,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
 //         * 注意：如果该设备不支持绑定，会直接回调绑定成功的回调，在绑定成功的回调中发起连接即可
 //         * 第一次绑定某一个设备会触发回调，之后再次绑定，可根据绑定时的函数的返回值来判断绑定状态，以进行下一步操作
 //         */
-//        switch (bleConnector.startBound(address)) {
+//        switch (bleConnector.startBound(bluetoothDevice.getAddress())) {
 //            case BleConstants.DEVICE_BOND_START_SUCCESS:
 //                Tool.warnOut(TAG, "开始绑定");
 //                Tool.toastL(this, "开始绑定");
@@ -615,10 +631,13 @@ public class ConnectActivity extends BaseAppCompatActivity {
 
         //屏蔽返回键
         /*super.onBackPressed();*/
+        if (bleConnector == null) {
+            super.onBackPressed();
+            return;
+        }
         //关闭连接工具,如果返回false,直接调用super.onBackPressed()，否则在close的回调中调用返回
         if (!bleConnector.close()) {
             super.onBackPressed();
-            BleManager.releaseBleConnector();
         }
     }
 
@@ -654,6 +673,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         onStatusErrorListener = null;
         onBigDataSendStateChangedListener = null;
         onBigDataWriteWithNotificationSendStateChangedListener = null;
+        BleManager.releaseBleConnector();
     }
 
     /**
@@ -697,6 +717,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         bleConnector.setOnMtuChangedListener(onMtuChangedListener);
         //设置 连接时，错误状态码接收的处理
         bleConnector.setOnStatusErrorListener(onStatusErrorListener);
+        bleConnector.setOnConnectTimeOutListener(onConnectTimeOutListener);
     }
 
     /**
@@ -756,7 +777,6 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * 初始化RecyclerView的数据
      */
     private void initRecyclerView() {
-        defaultItemDecoration = new DefaultItemDecoration(Color.GRAY, ViewGroup.LayoutParams.MATCH_PARENT, 2, -1);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.addItemDecoration(defaultItemDecoration);

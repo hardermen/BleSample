@@ -10,9 +10,11 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanResult;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -52,10 +54,11 @@ public class BleInterface {
         /**
          * 发现一个新的蓝牙设备时回调此函数
          *
-         * @param index     当前的设备在设备列表中的位置
-         * @param bleDevice 自定义Ble设备Been类,如果数据内容为空，则说明扫描结果设备列表有数据更新
+         * @param index      当前的设备在设备列表中的位置
+         * @param bleDevice  自定义Ble设备Been类,如果数据内容为空，则说明扫描结果设备列表有数据更新
+         * @param bleDevices 当前扫描到的所有设备列表
          */
-        void onScanFindOneNewDevice(int index, @Nullable BleDevice bleDevice);
+        void onScanFindOneNewDevice(int index, @Nullable BleDevice bleDevice, @NonNull ArrayList<BleDevice> bleDevices);
     }
 
     /**
@@ -161,6 +164,16 @@ public class BleInterface {
          * 远端设备服务列表扫描失败
          */
         void onDiscoverServiceFailed();
+    }
+
+    /**
+     * 连接超时的回调接口
+     */
+    public interface OnConnectTimeOutListener {
+        /**
+         * 连接超时
+         */
+        void onConnectTimeOut();
     }
 
     /**

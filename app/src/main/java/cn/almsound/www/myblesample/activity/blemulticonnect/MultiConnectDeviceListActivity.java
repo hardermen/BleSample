@@ -3,6 +3,8 @@ package cn.almsound.www.myblesample.activity.blemulticonnect;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -43,11 +45,6 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
      * 最大可选设备数量
      */
     private static final int MAX_DEVICE_SELECT_COUNT = 5;
-
-    /**
-     * TAG 用于打印调试信息
-     */
-    private static final String TAG = MultiConnectDeviceListActivity.class.getSimpleName();
 
     /**
      * 显示设备列表的控件
@@ -101,15 +98,22 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
      * 扫描到一个新的设备的监听
      */
     private BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
+        /**
+         * 发现一个新的蓝牙设备时回调此函数
+         *
+         * @param index      当前的设备在设备列表中的位置
+         * @param bleDevice  自定义Ble设备Been类,如果数据内容为空，则说明扫描结果设备列表有数据更新
+         * @param bleDevices 当前扫描到的所有设备列表
+         */
         @Override
-        public void onScanFindOneNewDevice(int index, BleDevice bleDevice) {
+        public void onScanFindOneNewDevice(int index, @Nullable BleDevice bleDevice, @NonNull ArrayList<BleDevice> bleDevices) {
             if (bleDevice != null) {
                 BleDeviceWithBoolean bleDeviceWithBoolean = new BleDeviceWithBoolean(bleDevice, false);
                 adapterList.add(bleDeviceWithBoolean);
                 adapter.notifyItemInserted(adapterList.size());
             } else {
                 BleDeviceWithBoolean bleDeviceWithBoolean = adapterList.get(index);
-                bleDeviceWithBoolean.setBleDevice(scanResults.get(index));
+                bleDeviceWithBoolean.setBleDevice(bleDevices.get(index));
                 adapter.notifyItemChanged(index);
             }
         }

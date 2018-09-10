@@ -71,6 +71,7 @@
     <string name="write_big_data_with_notification">写入大量数据(需要通知)</string>
     <string name="no_notification_permission">没有通知权限，无法显示弹出式提示（Toast）信息</string>
     <string name="no_notification_permission_title">没有通知权限</string>
-    <string name="no_notification_permission_message">Would you like to allow us use notification permission?After entering the settings, please manually open the notification permission</string>
+    <string name="no_notification_permission_message">是否允许我们使用通知权限？进入设置后，请手动打开通知权限</string>
     <string name="allow">允许</string>
+    <string name="connect_time_out">连接超时</string>
 </resources>

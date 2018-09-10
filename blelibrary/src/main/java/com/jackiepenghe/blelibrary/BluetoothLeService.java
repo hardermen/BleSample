@@ -379,4 +379,22 @@ public class BluetoothLeService extends Service {
     BluetoothGatt getBluetoothGatt() {
         return bluetoothGatt;
     }
+
+    /**
+     * 当前设备的连接状态
+     *
+     * @return 是否已经连接
+     */
+    boolean isConnected() {
+        return bluetoothGatt != null && bleBluetoothGattCallback.isConnected();
+    }
+
+    /**
+     * 设备是否已经完成发现服务
+     *
+     * @return 设备是否已经完成发现服务
+     */
+    boolean isServiceDiscovered() {
+        return bluetoothGatt != null && bleBluetoothGattCallback.isServiceDiscovered();
+    }
 }

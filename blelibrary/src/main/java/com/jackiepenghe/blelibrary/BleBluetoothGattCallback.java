@@ -1,6 +1,5 @@
 package com.jackiepenghe.blelibrary;
 
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -36,6 +35,14 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      * BluetoothGatt客户端
      */
     private BluetoothGatt gatt;
+    /**
+     * BLE设备的连接状态
+     */
+    private boolean connected;
+    /**
+     * BLE设备的服务被发现的状态
+     */
+    private boolean serviceDiscovered;
 
     /*-------------------------构造函数-------------------------*/
 
@@ -70,6 +77,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
                 if (status == BluetoothGatt.STATE_CONNECTED || status == BluetoothGatt.STATE_CONNECTING || status == BluetoothGatt.STATE_DISCONNECTED || status == BluetoothGatt.STATE_DISCONNECTING) {
                     Tool.warnOut(TAG, "STATE_DISCONNECTED");
                     intent.setAction(BleConstants.ACTION_GATT_DISCONNECTED);
+                    connected = false;
                 } else {
                     intent.putExtra(LibraryConstants.STATUS_ERROR, status);
                     intent.setAction(BleConstants.ACTION_GATT_STATUS_ERROR);
@@ -82,6 +90,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
                 break;
             //已连接
             case BluetoothGatt.STATE_CONNECTED:
+                connected = true;
                 Tool.warnOut(TAG, "STATE_CONNECTED");
                 intent.setAction(BleConstants.ACTION_GATT_CONNECTED);
                 if (!gatt.discoverServices()) {
@@ -116,6 +125,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      */
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+
         Tool.warnOut(TAG, "onServicesDiscovered");
         //BluetoothGatt客户端配置失败了
         if (BluetoothGatt.GATT_SUCCESS != status) {
@@ -123,6 +133,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
         }
         //BluetoothGatt客户端配置成功
         else {
+            serviceDiscovered = true;
             broadcastUpdate(BleConstants.ACTION_GATT_SERVICES_DISCOVERED);
             this.gatt = gatt;
         }
@@ -391,5 +402,23 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
             return null;
         }
         return gatt.getService(uuid);
+    }
+
+    /**
+     * 当前设备的连接状态
+     *
+     * @return 当前设备的连接状态
+     */
+    boolean isConnected() {
+        return connected;
+    }
+
+    /**
+     * 设备是否已经完成发现服务
+     *
+     * @return 设备是否已经完成发现服务
+     */
+    boolean isServiceDiscovered() {
+        return serviceDiscovered;
     }
 }
