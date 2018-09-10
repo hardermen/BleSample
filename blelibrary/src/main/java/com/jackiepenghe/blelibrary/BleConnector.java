@@ -430,6 +430,7 @@ public class BleConnector {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        onConnectTimeOutListener = null;
         connectBleBroadcastReceiver.setOnReceiveNotificationListener(null);
         connectBleBroadcastReceiver.setOnServicesDiscoveredListener(null);
         connectBleBroadcastReceiver.setOnStatusErrorListener(null);
