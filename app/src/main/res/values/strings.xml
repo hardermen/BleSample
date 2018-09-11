@@ -74,4 +74,6 @@
     <string name="no_notification_permission_message">Would you like to allow us use notification permission?After entering the settings, please manually open the notification permission</string>
     <string name="allow">Allow</string>
     <string name="connect_time_out">Connect timeout</string>
+    <string name="write_big_data_without_format">Write large amounts of data without format</string>
+    <string name="write_big_data_with_notification_without_format">Write large amounts of data with Notify without format</string>
 </resources>

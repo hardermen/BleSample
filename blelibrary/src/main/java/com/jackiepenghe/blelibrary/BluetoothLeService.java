@@ -228,25 +228,28 @@ public class BluetoothLeService extends Service {
      * @return true表示成功
      */
     boolean writeData(String serviceUUID, String characteristicUUID, byte[] values) {
+        Tool.warnOut(TAG, "bluetoothGatt == " + bluetoothGatt);
         if (serviceUUID == null || characteristicUUID == null || values == null || bluetoothGatt == null) {
             return false;
         }
         BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(serviceUUID));
+        Tool.warnOut(TAG, "service from uuid = " + service);
         if (service == null) {
             return false;
         }
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+        Tool.warnOut(TAG, "characteristic from uuid = " + characteristic);
         if (characteristic == null) {
             return false;
         }
 
-
         if (!characteristic.setValue(values)) {
+            Tool.warnOut(TAG, "characteristic setValue failed");
             return false;
         }
+        Tool.warnOut(TAG, "characteristic setValue success");
 
         Tool.warnOut(TAG, "values = " + Tool.bytesToHexStr(values));
-
         return bluetoothGatt.writeCharacteristic(characteristic);
     }
 

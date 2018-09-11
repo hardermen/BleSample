@@ -334,7 +334,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void sendStarted() {
-            Tool.toast(ConnectActivity.this, "sendStarted", 200);
+            Tool.toast(ConnectActivity.this, "sendStarted", packageDelayTime);
         }
 
         /**
@@ -342,7 +342,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void sendFinished() {
-            Tool.toast(ConnectActivity.this, "sendFinished", 200);
+            Tool.toast(ConnectActivity.this, "sendFinished", packageDelayTime);
         }
 
         /**
@@ -354,7 +354,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void packageSendProgressChanged(int currentPackageCount, int pageCount, byte[] data) {
-            Tool.toast(ConnectActivity.this, "packageSendProgressChanged " + currentPackageCount + " / " + pageCount, 200);
+            Tool.toast(ConnectActivity.this, "packageSendProgressChanged " + currentPackageCount + " / " + pageCount, packageDelayTime);
             Tool.warnOut(TAG, "data = " + Tool.bytesToHexStr(data));
         }
 
@@ -367,7 +367,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void packageSendFailed(int currentPackageCount, int pageCount, byte[] data) {
-            Tool.toast(ConnectActivity.this, "packageSendFailed " + currentPackageCount + " / " + pageCount, 200);
+            Tool.toast(ConnectActivity.this, "packageSendFailed " + currentPackageCount + " / " + pageCount, packageDelayTime);
         }
 
         /**
@@ -380,7 +380,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void packageSendFailedAndRetry(int currentPackageCount, int pageCount, int tryCount, byte[] data) {
-            Tool.toast(ConnectActivity.this, "packageSendFailedAndRetry: tryCount = " + tryCount + " " + currentPackageCount + " / " + pageCount, 200);
+            Tool.toast(ConnectActivity.this, "packageSendFailedAndRetry: tryCount = " + tryCount + " " + currentPackageCount + " / " + pageCount, packageDelayTime);
         }
 
 
@@ -398,7 +398,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageCount, int packageCount, byte[] values) {
-            return super.onReceiveNotification(currentPackageData, currentPackageCount, packageCount, values);
+            super.onReceiveNotification(currentPackageData, currentPackageCount, packageCount, values);
+            return true;
         }
 
         /**
@@ -434,7 +435,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onDataSendFailedAndRetry(int currentPackageCount, int pageCount, byte[] data, int tryCount) {
             super.onDataSendFailedAndRetry(currentPackageCount, pageCount, data, tryCount);
-            Tool.toast(ConnectActivity.this, "onDataSendFailedAndRetry " + currentPackageCount + " / " + pageCount, 200);
+            Tool.toast(ConnectActivity.this, "onDataSendFailedAndRetry " + currentPackageCount + " / " + pageCount, packageDelayTime);
         }
 
         /**
@@ -447,7 +448,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onDataSendProgressChanged(int currentPackageCount, int pageCount, byte[] data) {
             super.onDataSendProgressChanged(currentPackageCount, pageCount, data);
-            Tool.toast(ConnectActivity.this, currentPackageCount + " / " + pageCount, 200);
+            Tool.toast(ConnectActivity.this, currentPackageCount + " / " + pageCount, packageDelayTime);
         }
 
         /**
@@ -466,6 +467,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
             onBackPressed();
         }
     };
+    private int packageDelayTime = 20;
 
     /**
      * 标题栏的返回按钮被按下的时候回调此函数
@@ -705,8 +707,6 @@ public class ConnectActivity extends BaseAppCompatActivity {
         bleConnector.setOnDisconnectedListener(onDisconnectedListener);
         //设置 读取到设备的数据时的回调
         bleConnector.setOnCharacteristicReadListener(onCharacteristicReadListener);
-        //设置 收到设备发来的通知时的回调
-        bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
         //设置 获取设备的RSSI的回调
         bleConnector.setOnReadRemoteRssiListener(onReadRemoteRssiListener);
         //设置 连接器关闭时的回调
@@ -717,6 +717,9 @@ public class ConnectActivity extends BaseAppCompatActivity {
         bleConnector.setOnMtuChangedListener(onMtuChangedListener);
         //设置 连接时，错误状态码接收的处理
         bleConnector.setOnStatusErrorListener(onStatusErrorListener);
+        //设置 收到设备发来的通知时的回调
+        bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
+        //设置 连接超时的回调
         bleConnector.setOnConnectTimeOutListener(onConnectTimeOutListener);
     }
 
@@ -826,15 +829,19 @@ public class ConnectActivity extends BaseAppCompatActivity {
                                     Tool.toastL(ConnectActivity.this, R.string.open_notification_failed);
                                 } else {
                                     Tool.toastL(ConnectActivity.this, R.string.open_notification_success);
+                                    //设置 收到设备发来的通知时的回调
+                                    bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
                                 }
                                 break;
+                            //写入超长数据,自动格式化（分包传输）
                             case 3:
                                 if (!bleConnector.canWrite(serviceUUID, characteristicUUID)) {
                                     Tool.toastL(ConnectActivity.this, R.string.write_not_support);
                                     return;
                                 }
-                                showWriteBigDataDialog(serviceUUID, characteristicUUID);
+                                showWriteBigDataDialog(serviceUUID, characteristicUUID, true);
                                 break;
+                            //写入超长数据，自动格式化（分包传输且需要通知处理）
                             case 4:
                                 if (!bleConnector.canWrite(serviceUUID, characteristicUUID)) {
                                     Tool.toastL(ConnectActivity.this, R.string.write_not_support);
@@ -844,7 +851,27 @@ public class ConnectActivity extends BaseAppCompatActivity {
                                     Tool.toastL(ConnectActivity.this, R.string.notify_not_support);
                                     return;
                                 }
-                                showWriteBigDataWithNotifyDialog(serviceUUID, characteristicUUID);
+                                showWriteBigDataWithNotifyDialog(serviceUUID, characteristicUUID, true);
+                                break;
+                            //写入超长数据,不自动格式化（分包传输）
+                            case 5:
+                                if (!bleConnector.canWrite(serviceUUID, characteristicUUID)) {
+                                    Tool.toastL(ConnectActivity.this, R.string.write_not_support);
+                                    return;
+                                }
+                                showWriteBigDataDialog(serviceUUID, characteristicUUID, false);
+                                break;
+                            //写入超长数据，不自动格式化（分包传输且需要通知处理）
+                            case 6:
+                                if (!bleConnector.canWrite(serviceUUID, characteristicUUID)) {
+                                    Tool.toastL(ConnectActivity.this, R.string.write_not_support);
+                                    return;
+                                }
+                                if (!bleConnector.canNotify(serviceUUID, characteristicUUID)) {
+                                    Tool.toastL(ConnectActivity.this, R.string.notify_not_support);
+                                    return;
+                                }
+                                showWriteBigDataWithNotifyDialog(serviceUUID, characteristicUUID, false);
                                 break;
                             default:
                                 break;
@@ -856,7 +883,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                 .show();
     }
 
-    private void showWriteBigDataWithNotifyDialog(final String serviceUUID, final String characteristicUUID) {
+    private void showWriteBigDataWithNotifyDialog(final String serviceUUID, final String characteristicUUID, final boolean autoFormat) {
         final EditText editText = (EditText) View.inflate(this, R.layout.dialog_show_write_big_data_with_notify, null);
         EditTextWatcherForHexData editTextWatcherForHexData = new EditTextWatcherForHexData(editText);
         editText.addTextChangedListener(editTextWatcherForHexData);
@@ -879,7 +906,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
                         }
                         text = text.replace(" ", "");
                         byte[] bytes = Tool.hexStrToBytes(text);
-                        bleConnector.writeBigDataWithNotification(serviceUUID, characteristicUUID, bytes, 200, onBigDataWriteWithNotificationSendStateChangedListener);
+                        bleConnector.writeBigDataWithNotification(serviceUUID, characteristicUUID, bytes, packageDelayTime, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
+//                        bleConnector.writeBigDataWithNotification(serviceUUID, characteristicUUID, bytes, 1000, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
 
                     }
                 })
@@ -888,7 +916,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                 .show();
     }
 
-    private void showWriteBigDataDialog(final String serviceUUID, final String characteristicUUID) {
+    private void showWriteBigDataDialog(final String serviceUUID, final String characteristicUUID, final boolean autoFormat) {
         final EditText editText = (EditText) View.inflate(this, R.layout.dialog_show_write_big_data, null);
         EditTextWatcherForHexData editTextWatcherForHexData = new EditTextWatcherForHexData(editText);
         editText.addTextChangedListener(editTextWatcherForHexData);
@@ -911,7 +939,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                         }
                         text = text.replace(" ", "");
                         byte[] bytes = Tool.hexStrToBytes(text);
-                        bleConnector.writeBigData(serviceUUID, characteristicUUID, bytes, 200, onBigDataSendStateChangedListener);
+                        bleConnector.writeBigData(serviceUUID, characteristicUUID, bytes, packageDelayTime, onBigDataSendStateChangedListener, autoFormat);
 
                     }
                 })

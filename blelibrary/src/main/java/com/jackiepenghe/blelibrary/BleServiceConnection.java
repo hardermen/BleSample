@@ -141,6 +141,7 @@ class BleServiceConnection implements ServiceConnection {
      * @return true表示成功
      */
     boolean writeData(String serviceUUID, String characteristicUUID, byte[] value) {
+        Tool.warnOut(TAG, "bluetoothLeService == " + bluetoothLeService);
         return bluetoothLeService != null && !(serviceUUID == null || characteristicUUID == null || value == null) && bluetoothLeService.writeData(serviceUUID, characteristicUUID, value);
     }
 

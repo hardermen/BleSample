@@ -229,7 +229,9 @@ class Tool {
             toast = null;
         }
 
-        toast = Toast.makeText(context, message, Toast.LENGTH_LONG);
+        if (toast == null) {
+            toast = Toast.makeText(context, message, Toast.LENGTH_LONG);
+        }
 
         if (SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE != null && !SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.isShutdown()) {
             try {
