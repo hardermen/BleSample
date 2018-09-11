@@ -53,6 +53,10 @@ public class BleConnector {
      * 默认的重试次数
      */
     private static final int DEFAULT_MAX_TRY_COUNT = Integer.MAX_VALUE;
+    /**
+     * 默认的延迟时间
+     */
+    private static final int DEFAULT_DELAY_TIME = 20;
 
     /**
      * 上下文弱引用
@@ -683,7 +687,7 @@ public class BleConnector {
      * @param onBigDataSendStateChangedListener 数据发送的相关回调
      */
     public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
-        writeBigData(serviceUuid, characteristicUuid, bigData, 100, onBigDataSendStateChangedListener);
+        writeBigData(serviceUuid, characteristicUuid, bigData, DEFAULT_DELAY_TIME, onBigDataSendStateChangedListener);
     }
 
     /**
@@ -870,7 +874,7 @@ public class BleConnector {
      * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
      */
     public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData, BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, boolean autoFormat) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, 200, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
+        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, DEFAULT_DELAY_TIME, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
     }
 
     /**
