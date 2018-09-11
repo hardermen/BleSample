@@ -851,7 +851,7 @@ public class BleConnector {
      * @param bigData            大数据内容
      */
     public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, true);
+        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, new DefaultBigDataWriteWithNotificationSendStateChangedListener());
     }
 
     /**
@@ -863,6 +863,18 @@ public class BleConnector {
      */
     public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData, boolean autoFormat) {
         return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, new DefaultBigDataWriteWithNotificationSendStateChangedListener(), autoFormat);
+    }
+
+    /**
+     * 传输大量数据并需要通知回调以继续发送
+     *
+     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
+     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
+     * @param bigData                                                大数据内容
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     */
+    public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData, BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, DEFAULT_DELAY_TIME, onBigDataWriteWithNotificationSendStateChangedListener);
     }
 
     /**
@@ -888,9 +900,41 @@ public class BleConnector {
      */
     public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID,
                                                 byte[] bigData, int packageDelayTime, BleInterface.
+                                                        OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, packageDelayTime, DEFAULT_MAX_TRY_COUNT, onBigDataWriteWithNotificationSendStateChangedListener);
+    }
+
+    /**
+     * 传输大量数据并需要通知回调以继续发送
+     *
+     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
+     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
+     * @param bigData                                                大数据内容
+     * @param packageDelayTime                                       每一包之间的发送间隔
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     */
+    public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID,
+                                                byte[] bigData, int packageDelayTime, BleInterface.
                                                         OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener,
                                                 boolean autoFormat) {
         return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, packageDelayTime, DEFAULT_MAX_TRY_COUNT, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
+    }
+
+    /**
+     * 传输大量数据并需要通知回调以继续发送
+     *
+     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
+     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
+     * @param bigData                                                大数据内容
+     * @param packageDelayTime                                       每一包之间的发送间隔
+     * @param maxTryCount                                            最大重试次数
+     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     */
+    public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID,
+                                                byte[] bigData, int packageDelayTime, int maxTryCount,
+                                                BleInterface.
+                                                        OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
+        return writeBigDataWithNotification(serviceUUID, characteristicUUID, serviceUUID, characteristicUUID, bigData, packageDelayTime, maxTryCount, onBigDataWriteWithNotificationSendStateChangedListener, true);
     }
 
     /**
