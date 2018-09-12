@@ -689,6 +689,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
             Tool.toastL(ConnectActivity.this, R.string.ble_not_supported);
             return;
         }
+        bleConnector.setTimeOut(60000);
         setConnectListener();
     }
 

@@ -1646,7 +1646,11 @@ public class BleConnector {
                     if (System.currentTimeMillis() - currentTimeMillis > timeOut) {
                         break;
                     }
+                    if (bleServiceConnection.isConnected() && bleServiceConnection.isServiceDiscovered()) {
+                        break;
+                    }
                 }
+
                 checkTimeOut();
             }
         };
