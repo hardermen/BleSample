@@ -486,30 +486,30 @@ public class BleInterface {
         /**
          * 数据发送成功
          *
-         * @param currentPackageCount 当前发送成功的包数
+         * @param currentPackageIndex 当前发送成功的包数
          * @param pageCount           总包数
          * @param data                本包发送的数据
          */
-        void packageSendProgressChanged(int currentPackageCount, int pageCount, byte[] data);
+        void packageSendProgressChanged(int currentPackageIndex, int pageCount, byte[] data);
 
         /**
          * 数据发送失败
          *
-         * @param currentPackageCount 当前发送失败的包数
+         * @param currentPackageIndex 当前发送失败的包数
          * @param pageCount           总包数
          * @param data                本包发送的数据
          */
-        void packageSendFailed(int currentPackageCount, int pageCount, byte[] data);
+        void packageSendFailed(int currentPackageIndex, int pageCount, byte[] data);
 
         /**
          * 本包数据发送失败，正在重新发送
          *
-         * @param currentPackageCount 当前发送失败的包数
+         * @param currentPackageIndex 当前发送失败的包数
          * @param pageCount           总包数
          * @param tryCount            尝试次数
          * @param data                本包发送的数据
          */
-        void packageSendFailedAndRetry(int currentPackageCount, int pageCount, int tryCount, byte[] data);
+        void packageSendFailedAndRetry(int currentPackageIndex, int pageCount, int tryCount, byte[] data);
     }
 
     /**
@@ -521,12 +521,12 @@ public class BleInterface {
          * 收到远端设备的通知时进行的回调
          *
          * @param currentPackageData  当前包的数据
-         * @param currentPackageCount 当前包数
+         * @param currentPackageIndex 当前包数
          * @param packageCount        总包数
          * @param values              远端设备的通知内容
          * @return true表示可以继续下一包发送，false表示传输出错并终止本次传输
          */
-        boolean onReceiveNotification(byte[] currentPackageData, int currentPackageCount, int packageCount, byte[] values);
+        boolean onReceiveNotification(byte[] currentPackageData, int currentPackageIndex, int packageCount, byte[] values);
 
         /**
          * 数据发送完成
@@ -536,30 +536,30 @@ public class BleInterface {
         /**
          * 数据发送失败
          *
-         * @param currentPackageCount 当前发送失败的包数
+         * @param currentPackageIndex 当前发送失败的包数
          * @param pageCount           总包数
          * @param data                当前发送失败的数据内容
          */
-        void onDataSendFailed(int currentPackageCount, int pageCount, byte[] data);
+        void onDataSendFailed(int currentPackageIndex, int pageCount, byte[] data);
 
         /**
          * 数据发送失败并尝试重发
          *
-         * @param currentPackageCount 当前包数
+         * @param currentPackageIndex 当前包数
          * @param pageCount           总包数
          * @param data                当前包数据内容
          * @param tryCount            重试次数
          */
-        void onDataSendFailedAndRetry(int currentPackageCount, int pageCount, byte[] data, int tryCount);
+        void onDataSendFailedAndRetry(int currentPackageIndex, int pageCount, byte[] data, int tryCount);
 
         /**
          * 数据发送进度有更改
          *
-         * @param currentPackageCount 当前包数
+         * @param currentPackageIndex 当前包数
          * @param pageCount           总包数
          * @param data                当前包数据内容
          */
-        void onDataSendProgressChanged(int currentPackageCount, int pageCount, byte[] data);
+        void onDataSendProgressChanged(int currentPackageIndex, int pageCount, byte[] data);
 
         /**
          * 因为通知返回的数据出错而导致的传输失败

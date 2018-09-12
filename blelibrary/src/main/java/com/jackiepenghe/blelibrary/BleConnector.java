@@ -1358,26 +1358,15 @@ public class BleConnector {
                 int remainder = largeDataLength % PACKAGE_MAX_LENGTH;
                 if (remainder == 0) {
                     byte[] data = new byte[20];
-                    data[0] = (byte) pageCount;
-                    data[1] = (byte) (packageIndex + 1);
-                    data[2] = PACKAGE_MAX_LENGTH;
                     System.arraycopy(bigData, packageIndex * PACKAGE_MAX_LENGTH, data, 0, data.length);
                     return data;
                 } else {
-                    byte[] data = new byte[remainder + PACKAGE_MAX_LENGTH - PACKAGE_MAX_LENGTH];
-                    byte[] bytes = Tool.intToBytes2(largeDataLength);
-                    data[0] = (byte) pageCount;
-                    data[1] = (byte) (packageIndex + 1);
-                    data[2] = (byte) remainder;
+                    byte[] data = new byte[remainder];
                     System.arraycopy(bigData, packageIndex * PACKAGE_MAX_LENGTH, data, 0, data.length);
                     return data;
                 }
             } else {
                 byte[] data = new byte[20];
-                byte[] bytes = Tool.intToBytes2(largeDataLength);
-                data[0] = (byte) pageCount;
-                data[1] = (byte) (packageIndex + 1);
-                data[2] = (byte) PACKAGE_MAX_LENGTH;
                 System.arraycopy(bigData, packageIndex * PACKAGE_MAX_LENGTH, data, 0, data.length);
                 return data;
             }

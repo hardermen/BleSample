@@ -32,37 +32,37 @@ public class DefaultBigDataSendStateChangedListener implements BleInterface.OnBi
     /**
      * 数据发送成功
      *
-     * @param currentPackageCount 当前发送成功的包数
+     * @param currentPackageIndex 当前发送成功的包数
      * @param pageCount           总包数
      * @param data                本包发送的数据
      */
     @Override
-    public void packageSendProgressChanged(int currentPackageCount, int pageCount, byte[] data) {
-        Tool.warnOut(TAG, "packageSendProgressChanged : currentPackageCount = " + currentPackageCount + ",pageCount = " + pageCount + ",data = " + Tool.bytesToHexStr(data));
+    public void packageSendProgressChanged(int currentPackageIndex, int pageCount, byte[] data) {
+        Tool.warnOut(TAG, "packageSendProgressChanged : currentPackageIndex = " + currentPackageIndex + ",pageCount = " + pageCount + ",data = " + Tool.bytesToHexStr(data));
     }
 
     /**
      * 数据发送失败
      *
-     * @param currentPackageCount 当前发送失败的包数
+     * @param currentPackageIndex 当前发送失败的包数
      * @param pageCount           总包数
      * @param data                本包发送的数据
      */
     @Override
-    public void packageSendFailed(int currentPackageCount, int pageCount, byte[] data) {
-        Tool.warnOut(TAG, "packageSendFailed : currentPackageCount = " + currentPackageCount + ",pageCount = " + pageCount + ",data = " + Tool.bytesToHexStr(data));
+    public void packageSendFailed(int currentPackageIndex, int pageCount, byte[] data) {
+        Tool.warnOut(TAG, "packageSendFailed : currentPackageIndex = " + currentPackageIndex + ",pageCount = " + pageCount + ",data = " + Tool.bytesToHexStr(data));
     }
 
     /**
      * 本包数据发送失败，正在重新发送
      *
-     * @param currentPackageCount 当前发送失败的包数
+     * @param currentPackageIndex 当前发送失败的包数
      * @param pageCount           总包数
      * @param tryCount            尝试次数
      * @param data                本包发送的数据
      */
     @Override
-    public void packageSendFailedAndRetry(int currentPackageCount, int pageCount, int tryCount, byte[] data) {
-        Tool.warnOut(TAG, "packageSendFailedAndRetry : currentPackageCount = " + currentPackageCount + ",pageCount = " + pageCount + ",tryCount = " + tryCount + ",data = " + Tool.bytesToHexStr(data));
+    public void packageSendFailedAndRetry(int currentPackageIndex, int pageCount, int tryCount, byte[] data) {
+        Tool.warnOut(TAG, "packageSendFailedAndRetry : currentPackageIndex = " + currentPackageIndex + ",pageCount = " + pageCount + ",tryCount = " + tryCount + ",data = " + Tool.bytesToHexStr(data));
     }
 }

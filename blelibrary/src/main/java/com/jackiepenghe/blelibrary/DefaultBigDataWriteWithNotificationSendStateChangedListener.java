@@ -17,13 +17,13 @@ public class DefaultBigDataWriteWithNotificationSendStateChangedListener impleme
      * 收到远端设备的通知时进行的回调
      *
      * @param currentPackageData  当前包数据
-     * @param currentPackageCount 当前包数
+     * @param currentPackageIndex 当前包数
      * @param packageCount        总包数
      * @param values              远端设备的通知内容
      * @return true表示可以继续下一包发送，false表示传输出错
      */
     @Override
-    public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageCount, int packageCount, byte[] values) {
+    public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageIndex, int packageCount, byte[] values) {
         Tool.warnOut(TAG, "onReceiveNotification values = " + Tool.bytesToHexStr(values));
         return true;
     }
@@ -39,38 +39,38 @@ public class DefaultBigDataWriteWithNotificationSendStateChangedListener impleme
     /**
      * 数据发送失败
      *
-     * @param currentPackageCount 当前发送失败的包数
+     * @param currentPackageIndex 当前发送失败的包数
      * @param pageCount           总包数
      * @param data                当前发送失败的数据内容
      */
     @Override
-    public void onDataSendFailed(int currentPackageCount, int pageCount, byte[] data) {
-        Tool.warnOut(TAG, "onDataSendFailed currentPackageCount = " + currentPackageCount + ",pageCount = " + pageCount + "\ndata = " + Tool.bytesToHexStr(data));
+    public void onDataSendFailed(int currentPackageIndex, int pageCount, byte[] data) {
+        Tool.warnOut(TAG, "onDataSendFailed currentPackageIndex = " + currentPackageIndex + ",pageCount = " + pageCount + "\ndata = " + Tool.bytesToHexStr(data));
     }
 
     /**
      * 数据发送失败并尝试重发
      *
-     * @param currentPackageCount 当前包数
+     * @param currentPackageIndex 当前包数
      * @param pageCount           总包数
      * @param data                当前包数据内容
      * @param tryCount            重试次数
      */
     @Override
-    public void onDataSendFailedAndRetry(int currentPackageCount, int pageCount, byte[] data, int tryCount) {
-        Tool.warnOut(TAG, "onDataSendFailedAndRetry currentPackageCount = " + currentPackageCount + ",pageCount = " + pageCount + ",tryCount = " + tryCount + "\ndata = " + Tool.bytesToHexStr(data));
+    public void onDataSendFailedAndRetry(int currentPackageIndex, int pageCount, byte[] data, int tryCount) {
+        Tool.warnOut(TAG, "onDataSendFailedAndRetry currentPackageIndex = " + currentPackageIndex + ",pageCount = " + pageCount + ",tryCount = " + tryCount + "\ndata = " + Tool.bytesToHexStr(data));
     }
 
     /**
      * 数据发送进度有更改
      *
-     * @param currentPackageCount 当前包数
+     * @param currentPackageIndex 当前包数
      * @param pageCount           总包数
      * @param data                当前包数据内容
      */
     @Override
-    public void onDataSendProgressChanged(int currentPackageCount, int pageCount, byte[] data) {
-        Tool.warnOut(TAG, "onDataSendProgressChanged currentPackageCount = " + currentPackageCount + ",pageCount = " + pageCount + "\ndata = " + Tool.bytesToHexStr(data));
+    public void onDataSendProgressChanged(int currentPackageIndex, int pageCount, byte[] data) {
+        Tool.warnOut(TAG, "onDataSendProgressChanged currentPackageIndex = " + currentPackageIndex + ",pageCount = " + pageCount + "\ndata = " + Tool.bytesToHexStr(data));
     }
 
     /**
