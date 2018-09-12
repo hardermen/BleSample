@@ -1650,7 +1650,9 @@ public class BleConnector {
                         break;
                     }
                 }
-
+                if (bleServiceConnection.isConnected() && bleServiceConnection.isServiceDiscovered()) {
+                    return;
+                }
                 checkTimeOut();
             }
         };
