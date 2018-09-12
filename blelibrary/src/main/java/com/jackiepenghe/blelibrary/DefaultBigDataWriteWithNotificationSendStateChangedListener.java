@@ -70,7 +70,7 @@ public class DefaultBigDataWriteWithNotificationSendStateChangedListener impleme
      */
     @Override
     public void onDataSendProgressChanged(int currentPackageCount, int pageCount, byte[] data) {
-        Tool.warnOut(TAG, "onDataSendFailedAndRetry currentPackageCount = " + currentPackageCount + ",pageCount = " + pageCount + "\ndata = " + Tool.bytesToHexStr(data));
+        Tool.warnOut(TAG, "onDataSendProgressChanged currentPackageCount = " + currentPackageCount + ",pageCount = " + pageCount + "\ndata = " + Tool.bytesToHexStr(data));
     }
 
     /**
