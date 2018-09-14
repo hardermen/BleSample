@@ -52,7 +52,7 @@ public class BleConnector {
     /**
      * 默认的重试次数
      */
-    private static final int DEFAULT_MAX_TRY_COUNT = Integer.MAX_VALUE;
+    private static final int DEFAULT_MAX_TRY_COUNT = Short.MAX_VALUE;
     /**
      * 默认的延迟时间
      */
@@ -420,6 +420,8 @@ public class BleConnector {
             return false;
         }
         mClosed = true;
+        writeBigDataWithNotificationContinueFlag = false;
+        writeBigDataContinueFlag = false;
         if (doBonded) {
             bondAddress = null;
             boundBleBroadcastReceiver.setOnDeviceBondStateChangedListener(null);
@@ -462,8 +464,6 @@ public class BleConnector {
         connectBleBroadcastReceiver = null;
         bleServiceConnection = null;
         context = null;
-        writeBigDataWithNotificationContinueFlag = false;
-        writeBigDataContinueFlag = false;
         receivedNotification = false;
         wrongNotificationResultCount = 0;
         writeBigDataWithNotificationPackageCount = 0;
@@ -699,7 +699,7 @@ public class BleConnector {
      * @param onBigDataSendStateChangedListener 数据发送的相关回调
      */
     public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener, boolean autoFormat) {
-        writeBigData(serviceUuid, characteristicUuid, bigData, 100, onBigDataSendStateChangedListener, autoFormat);
+        writeBigData(serviceUuid, characteristicUuid, bigData, DEFAULT_DELAY_TIME, onBigDataSendStateChangedListener, autoFormat);
     }
 
 

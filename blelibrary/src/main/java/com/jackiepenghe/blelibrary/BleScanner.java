@@ -17,6 +17,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
 import java.util.ArrayList;
@@ -708,7 +709,7 @@ public class BleScanner {
      * @param onScanCompleteListener 扫描完成的回调
      */
     @SuppressWarnings("unused")
-    public void setOnScanCompleteListener(@NonNull BleInterface.OnScanCompleteListener
+    public void setOnScanCompleteListener(@Nullable BleInterface.OnScanCompleteListener
                                                   onScanCompleteListener) {
         scanTimer.setOnScanCompleteListener(onScanCompleteListener);
     }

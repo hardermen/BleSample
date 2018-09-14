@@ -27,6 +27,7 @@ import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleUtils;
+import com.jackiepenghe.blelibrary.DefaultBigDataSendStateChangedListener;
 import com.jackiepenghe.blelibrary.DefaultBigDataWriteWithNotificationSendStateChangedListener;
 
 import java.util.ArrayList;
@@ -328,13 +329,16 @@ public class ConnectActivity extends BaseAppCompatActivity {
             onBackPressed();
         }
     };
-    private BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener = new BleInterface.OnBigDataSendStateChangedListener() {
+    private int toastKeepTime = 100;
+
+    private DefaultBigDataSendStateChangedListener onBigDataSendStateChangedListener = new DefaultBigDataSendStateChangedListener() {
         /**
          * 传输开始
          */
         @Override
         public void sendStarted() {
-            Tool.toast(ConnectActivity.this, "sendStarted", packageDelayTime);
+            super.sendStarted();
+            Tool.toast(ConnectActivity.this, "sendStarted", toastKeepTime);
         }
 
         /**
@@ -342,7 +346,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void sendFinished() {
-            Tool.toast(ConnectActivity.this, "sendFinished", packageDelayTime);
+            super.sendFinished();
+            Tool.toast(ConnectActivity.this, "sendFinished", toastKeepTime);
         }
 
         /**
@@ -354,7 +359,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void packageSendProgressChanged(int currentPackageCount, int pageCount, byte[] data) {
-            Tool.toast(ConnectActivity.this, "packageSendProgressChanged " + currentPackageCount + " / " + pageCount, packageDelayTime);
+            super.packageSendProgressChanged(currentPackageCount, pageCount, data);
+            Tool.toast(ConnectActivity.this, "packageSendProgressChanged " + currentPackageCount + " / " + pageCount, toastKeepTime);
             Tool.warnOut(TAG, "data = " + Tool.bytesToHexStr(data));
         }
 
@@ -367,7 +373,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void packageSendFailed(int currentPackageCount, int pageCount, byte[] data) {
-            Tool.toast(ConnectActivity.this, "packageSendFailed " + currentPackageCount + " / " + pageCount, packageDelayTime);
+            super.packageSendFailed(currentPackageCount, pageCount, data);
+            Tool.toast(ConnectActivity.this, "packageSendFailed " + currentPackageCount + " / " + pageCount, toastKeepTime);
         }
 
         /**
@@ -380,7 +387,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
          */
         @Override
         public void packageSendFailedAndRetry(int currentPackageCount, int pageCount, int tryCount, byte[] data) {
-            Tool.toast(ConnectActivity.this, "packageSendFailedAndRetry: tryCount = " + tryCount + " " + currentPackageCount + " / " + pageCount, packageDelayTime);
+            super.packageSendFailedAndRetry(currentPackageCount, pageCount, tryCount, data);
+            Tool.toast(ConnectActivity.this, "packageSendFailedAndRetry: tryCount = " + tryCount + " " + currentPackageCount + " / " + pageCount, toastKeepTime);
         }
 
 
@@ -435,7 +443,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onDataSendFailedAndRetry(int currentPackageCount, int pageCount, byte[] data, int tryCount) {
             super.onDataSendFailedAndRetry(currentPackageCount, pageCount, data, tryCount);
-            Tool.toast(ConnectActivity.this, "onDataSendFailedAndRetry " + currentPackageCount + " / " + pageCount, packageDelayTime);
+            Tool.toast(ConnectActivity.this, "onDataSendFailedAndRetry " + currentPackageCount + " / " + pageCount, toastKeepTime);
         }
 
         /**
@@ -448,7 +456,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onDataSendProgressChanged(int currentPackageCount, int pageCount, byte[] data) {
             super.onDataSendProgressChanged(currentPackageCount, pageCount, data);
-            Tool.toast(ConnectActivity.this, currentPackageCount + " / " + pageCount, packageDelayTime);
+            Tool.toast(ConnectActivity.this, currentPackageCount + " / " + pageCount, toastKeepTime);
         }
 
         /**
@@ -468,6 +476,13 @@ public class ConnectActivity extends BaseAppCompatActivity {
         }
     };
     private int packageDelayTime = 20;
+    private BleInterface.OnCharacteristicWriteListener onCharacteristicWriteListener = new BleInterface.OnCharacteristicWriteListener() {
+        @Override
+        public void onCharacteristicWrite(String uuid, byte[] values) {
+            String hexStr = Tool.bytesToHexStr(values);
+            Tool.warnOut(TAG, "onCharacteristicWrite hexStr = " + hexStr);
+        }
+    };
 
     /**
      * 标题栏的返回按钮被按下的时候回调此函数
@@ -708,6 +723,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
         bleConnector.setOnDisconnectedListener(onDisconnectedListener);
         //设置 读取到设备的数据时的回调
         bleConnector.setOnCharacteristicReadListener(onCharacteristicReadListener);
+        //设置 写入设备的数据执行的回调
+        bleConnector.setOnCharacteristicWriteListener(onCharacteristicWriteListener);
         //设置 获取设备的RSSI的回调
         bleConnector.setOnReadRemoteRssiListener(onReadRemoteRssiListener);
         //设置 连接器关闭时的回调
