@@ -105,7 +105,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
                 break;
             default:
                 //其他情况
-                Tool.warnOut(TAG, "other state");
+                Tool.warnOut(TAG, "other state:" + newState);
                 break;
         }
         BleManager.getHandler().post(new Runnable() {
@@ -303,7 +303,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      *
      * @param action 广播中需要包含的action
      */
-    private synchronized void broadcastUpdate(String action) {
+    private void broadcastUpdate(String action) {
         final Intent intent = new Intent();
         intent.setAction(action);
         BleManager.getHandler().post(new Runnable() {
@@ -321,7 +321,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      * @param action 广播中需要包含的action
      * @param value  广播中需要包含的数据
      */
-    private synchronized void broadcastUpdate(String uuid, String action, byte[] value) {
+    private void broadcastUpdate(String uuid, String action, byte[] value) {
         final Intent intent = new Intent();
         intent.putExtra(BleConstants.UUID, uuid);
         intent.setAction(action);
@@ -341,7 +341,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      * @param action 广播中需要包含的action
      * @param value  广播中需要包含的数据
      */
-    private synchronized void broadcastUpdate(String action, byte[] value) {
+    private void broadcastUpdate(String action, byte[] value) {
         final Intent intent = new Intent();
         intent.setAction(action);
         intent.putExtra(LibraryConstants.VALUE, value);
@@ -360,7 +360,7 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
      * @param action 广播中需要包含的action
      * @param method 广播中需要包含的数据
      */
-    private synchronized void broadcastUpdate(String action, String method, int status) {
+    private void broadcastUpdate(String action, String method, int status) {
         final Intent intent = new Intent();
         intent.setAction(action);
         intent.putExtra(LibraryConstants.METHOD, method);

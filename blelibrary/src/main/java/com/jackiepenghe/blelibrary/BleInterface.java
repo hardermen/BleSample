@@ -510,12 +510,36 @@ public class BleInterface {
          * @param data                本包发送的数据
          */
         void packageSendFailedAndRetry(int currentPackageIndex, int pageCount, int tryCount, byte[] data);
+
+        /**
+         * 数据发送超时进行的回调
+         *
+         * @param currentPackageIndex 当前发送超时的包数
+         * @param pageCount           总包数
+         * @param data                发送超时的数据
+         */
+        void onSendTimeOut(int currentPackageIndex, int pageCount, byte[] data);
+
+        /**
+         * 数据发送超时,尝试重发数据时进行的回调
+         *
+         * @param tryCount            重发次数
+         * @param currentPackageIndex 当前重发的包数
+         * @param pageCount           总包数
+         * @param data                重发的数据内容
+         */
+        void onSendTimeOutAndRetry(int tryCount, int currentPackageIndex, int pageCount, byte[] data);
     }
 
     /**
      * 写入大数据并包含通知 到远端设备时相关的回调
      */
     public interface OnBigDataWriteWithNotificationSendStateChangedListener {
+
+        /**
+         * 数据开始发送时执行的回调
+         */
+        void onDataSendStart();
 
         /**
          * 收到远端设备的通知时进行的回调
@@ -575,5 +599,20 @@ public class BleInterface {
          * @param data                当前包数据
          */
         void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, byte[] data);
+
+        /**
+         * 在一段时间内没有收到通知回复时，判定为超时
+         */
+        void onDataSendTimeOut(int currentPackageIndex, int packageCount, byte[] data);
+
+        /**
+         * 通知回复超时时，进行重发尝试时的回调
+         *
+         * @param data                重发的数据
+         * @param tryCount            重试次数
+         * @param currentPackageIndex 当前尝试重发的包数
+         * @param packageCount        总包数
+         */
+        void onDataSendTimeOutAndRetry(byte[] data, int tryCount, int currentPackageIndex, int packageCount);
     }
 }

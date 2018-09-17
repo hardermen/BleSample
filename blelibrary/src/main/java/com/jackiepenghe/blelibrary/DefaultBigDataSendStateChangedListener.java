@@ -65,4 +65,29 @@ public class DefaultBigDataSendStateChangedListener implements BleInterface.OnBi
     public void packageSendFailedAndRetry(int currentPackageIndex, int pageCount, int tryCount, byte[] data) {
         Tool.warnOut(TAG, "packageSendFailedAndRetry : currentPackageIndex = " + currentPackageIndex + ",pageCount = " + pageCount + ",tryCount = " + tryCount + ",data = " + Tool.bytesToHexStr(data));
     }
+
+    /**
+     * 数据发送超时进行的回调
+     *
+     * @param currentPackageIndex 当前发送超时的包数
+     * @param pageCount           总包数
+     * @param data                发送超时的数据
+     */
+    @Override
+    public void onSendTimeOut(int currentPackageIndex, int pageCount, byte[] data) {
+        Tool.warnOut(TAG, "onSendTimeOut");
+    }
+
+    /**
+     * 数据发送超时,尝试重发数据时进行的回调
+     *
+     * @param tryCount            重发次数
+     * @param currentPackageIndex 当前重发的包数
+     * @param pageCount           总包数
+     * @param data                重发的数据内容
+     */
+    @Override
+    public void onSendTimeOutAndRetry(int tryCount, int currentPackageIndex, int pageCount, byte[] data) {
+        Tool.warnOut(TAG, "onSendTimeOutAndRetry : currentPackageIndex = " + currentPackageIndex + ",pageCount = " + pageCount + ",tryCount = " + tryCount + ",data = " + Tool.bytesToHexStr(data));
+    }
 }

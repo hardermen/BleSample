@@ -14,6 +14,14 @@ public class DefaultBigDataWriteWithNotificationSendStateChangedListener impleme
     /*-------------------------实现父类方法-------------------------*/
 
     /**
+     * 数据开始发送时执行的回调
+     */
+    @Override
+    public void onDataSendStart() {
+        Tool.warnOut(TAG, "onDataSendStart");
+    }
+
+    /**
      * 收到远端设备的通知时进行的回调
      *
      * @param currentPackageData  当前包数据
@@ -92,5 +100,30 @@ public class DefaultBigDataWriteWithNotificationSendStateChangedListener impleme
     @Override
     public void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, byte[] data) {
         Tool.warnOut(TAG, "onSendFailedWithWrongNotifyDataAndRetry：tryCount = " + tryCount + ",currentPackageIndex = " + currentPackageIndex + ",packageCount = " + packageCount + "\ndata = " + Tool.bytesToHexStr(data));
+    }
+
+    /**
+     * 在一段时间内没有收到通知回复时，判定为超时
+     *
+     * @param currentPackageIndex 当前发送超时的包数
+     * @param packageCount        总包数
+     * @param data                发送超时的包数据
+     */
+    @Override
+    public void onDataSendTimeOut(int currentPackageIndex, int packageCount, byte[] data) {
+        Tool.warnOut(TAG, "onSendFailedWithWrongNotifyDataAndRetry：currentPackageIndex = " + currentPackageIndex + ",packageCount = " + packageCount + "\ndata = " + Tool.bytesToHexStr(data));
+    }
+
+    /**
+     * 通知回复超时时，进行重发尝试时的回调
+     *
+     * @param data                重发的数据
+     * @param tryCount            重试次数
+     * @param currentPackageIndex 当前尝试重发的包数
+     * @param packageCount        总包数
+     */
+    @Override
+    public void onDataSendTimeOutAndRetry(byte[] data, int tryCount, int currentPackageIndex, int packageCount) {
+        Tool.warnOut(TAG, "onDataSendTimeOutAndRetry：tryCount = " + tryCount + ",currentPackageIndex = " + currentPackageIndex + ",packageCount = " + packageCount + "\ndata = " + Tool.bytesToHexStr(data));
     }
 }

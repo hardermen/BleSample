@@ -17,6 +17,8 @@ import android.os.Handler;
 
 public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
 
+    private static final String TAG = ConnectBleBroadcastReceiver.class.getSimpleName();
+
     /*------------------------成员变量----------------------------*/
 
     /**
@@ -162,36 +164,29 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
                 processCharacteristicWrite(values, uuid);
                 break;
             case BleConstants.ACTION_DESCRIPTOR_READ:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_DESCRIPTOR_READ,value = " + Tool.bytesToHexStr(values));
                 processGattDescriptorRead(values, uuid);
                 break;
             case BleConstants.ACTION_DESCRIPTOR_WRITE:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_DESCRIPTOR_WRITE,value = " + Tool.bytesToHexStr(values));
                 processDescriptorWrite(values, uuid);
                 break;
             case BleConstants.ACTION_RELIABLE_WRITE_COMPLETED:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_RELIABLE_WRITE_COMPLETED");
                 processReliableWriteCompleted();
                 break;
             case BleConstants.ACTION_READ_REMOTE_RSSI:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_READ_REMOTE_RSSI,rssi = " + values[0]);
                 processReadRemoteRssi(values);
                 break;
             case BleConstants.ACTION_MTU_CHANGED:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_MTU_CHANGED,mtu = " + values[0]);
                 processMtuChanged(values);
                 break;
             case BleConstants.ACTION_GATT_DISCOVER_SERVICES_FAILED:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_DISCOVER_SERVICES_FAILED");
                 processDiscoverServiceFailed();
                 break;
             case BleConstants.ACTION_GATT_STATUS_ERROR:
                 int status = intent.getIntExtra(LibraryConstants.STATUS_ERROR, -1);
-                Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_STATUS_ERROR,status = " + status);
                 processGattStatusError(status);
                 break;
             default:
-                Tool.warnOut("ConnectBleBroadcastReceiver", "get other action" + action);
+                Tool.warnOut(TAG, "get other action" + action);
                 break;
         }
     }
@@ -377,7 +372,6 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * 与远程设备建立连接时进行的处理
      */
     private void processGattConnect() {
-        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTED");
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
@@ -392,7 +386,6 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * 与远程设备断开连接时进行的处理
      */
     private void processGattDisconnect() {
-        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
@@ -407,7 +400,6 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * 发现远程设备服务时进行的处理
      */
     private void processGattServiceDiscovered() {
-        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_SERVICES_DISCOVERED");
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
@@ -440,7 +432,6 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * GATT正在进行连接时进行的处理
      */
     private void processGattConnecting() {
-        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_CONNECTING");
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
@@ -455,7 +446,6 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * GATT正在断开连接时进行的处理
      */
     private void processGattDisconnecting() {
-        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_GATT_DISCONNECTING");
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
@@ -473,7 +463,6 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * @param uuid   数据来源uuid
      */
     private void processCharacteristicRead(final byte[] values, final String uuid) {
-        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_READ,value = " + Tool.bytesToHexStr(values));
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
@@ -491,7 +480,6 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * @param uuid   数据来源uuid
      */
     private void processCharacteristicChanged(final byte[] values, final String uuid) {
-        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_CHANGED,value = " + Tool.bytesToHexStr(values));
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {
@@ -509,7 +497,6 @@ public class ConnectBleBroadcastReceiver extends BroadcastReceiver {
      * @param uuid   数据目标uuid
      */
     private void processCharacteristicWrite(final byte[] values, final String uuid) {
-        Tool.warnOut("ConnectBleBroadcastReceiver", "ACTION_CHARACTERISTIC_WRITE,value = " + Tool.bytesToHexStr(values));
         BleManager.getHandler().post(new Runnable() {
             @Override
             public void run() {

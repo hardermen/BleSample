@@ -329,7 +329,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
             onBackPressed();
         }
     };
-    private int toastKeepTime = 100;
+    private int toastKeepTime = 500;
 
     private DefaultBigDataSendStateChangedListener onBigDataSendStateChangedListener = new DefaultBigDataSendStateChangedListener() {
         /**
@@ -388,15 +388,39 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void packageSendFailedAndRetry(int currentPackageCount, int pageCount, int tryCount, byte[] data) {
             super.packageSendFailedAndRetry(currentPackageCount, pageCount, tryCount, data);
-            Tool.toast(ConnectActivity.this, "packageSendFailedAndRetry: tryCount = " + tryCount + " " + currentPackageCount + " / " + pageCount, toastKeepTime);
+//            Tool.toast(ConnectActivity.this, "packageSendFailedAndRetry: tryCount = " + tryCount + " " + currentPackageCount + " / " + pageCount, toastKeepTime);
         }
 
+        /**
+         * 数据发送超时进行的回调
+         *
+         * @param currentPackageIndex 当前发送超时的包数
+         * @param pageCount           总包数
+         * @param data                发送超时的数据
+         */
+        @Override
+        public void onSendTimeOut(int currentPackageIndex, int pageCount, byte[] data) {
+            super.onSendTimeOut(currentPackageIndex, pageCount, data);
+            Tool.toast(ConnectActivity.this, "onSendTimeOut: " + currentPackageIndex + " / " + pageCount, toastKeepTime);
+        }
 
+        /**
+         * 数据发送超时,尝试重发数据时进行的回调
+         *
+         * @param tryCount            重发次数
+         * @param currentPackageIndex 当前重发的包数
+         * @param pageCount           总包数
+         * @param data                重发的数据内容
+         */
+        @Override
+        public void onSendTimeOutAndRetry(int tryCount, int currentPackageIndex, int pageCount, byte[] data) {
+            super.onSendTimeOutAndRetry(tryCount, currentPackageIndex, pageCount, data);
+            Tool.warnOut(TAG, "onSendTimeOut: tryCount = " + tryCount + " " + currentPackageIndex + " / " + pageCount);
+        }
     };
     private DefaultBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener = new DefaultBigDataWriteWithNotificationSendStateChangedListener() {
         /**
          * 收到远端设备的通知时进行的回调
-         *
          *
          * @param currentPackageData 当前包数据
          * @param currentPackageCount 当前包数
@@ -465,7 +489,48 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onSendFailedWithWrongNotifyData() {
             super.onSendFailedWithWrongNotifyData();
-            Tool.toastL(ConnectActivity.this, "onSendFailedWithWrongNotifyData");
+            Tool.toast(ConnectActivity.this, "onSendFailedWithWrongNotifyData", toastKeepTime);
+        }
+
+        /**
+         * 数据发送失败（通知返回数据有错误）
+         *
+         * @param tryCount            重试次数
+         * @param currentPackageIndex 当前发送的包数
+         * @param packageCount        总包数
+         * @param data                当前包数据
+         */
+        @Override
+        public void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, byte[] data) {
+            super.onSendFailedWithWrongNotifyDataAndRetry(tryCount, currentPackageIndex, packageCount, data);
+            Tool.toast(ConnectActivity.this, "onSendFailedWithWrongNotifyDataAndRetry:tryCount = " + tryCount, toastKeepTime);
+        }
+
+        /**
+         * 在一段时间内没有收到通知回复时，判定为超时
+         *
+         * @param currentPackageIndex 当前发送超时的包数
+         * @param packageCount        总包数
+         * @param data                发送超时的包数据
+         */
+        @Override
+        public void onDataSendTimeOut(int currentPackageIndex, int packageCount, byte[] data) {
+            super.onDataSendTimeOut(currentPackageIndex, packageCount, data);
+            Tool.toast(ConnectActivity.this, "onDataSendTimeOut", toastKeepTime);
+        }
+
+        /**
+         * 通知回复超时时，进行重发尝试时的回调
+         *
+         * @param data                重发的数据
+         * @param tryCount            重试次数
+         * @param currentPackageIndex 当前尝试重发的包数
+         * @param packageCount        总包数
+         */
+        @Override
+        public void onDataSendTimeOutAndRetry(byte[] data, int tryCount, int currentPackageIndex, int packageCount) {
+            super.onDataSendTimeOutAndRetry(data, tryCount, currentPackageIndex, packageCount);
+            Tool.toast(ConnectActivity.this, "onDataSendTimeOutAndRetry:tryCount = " + tryCount,toastKeepTime);
         }
     };
     private BleInterface.OnConnectTimeOutListener onConnectTimeOutListener = new BleInterface.OnConnectTimeOutListener() {
@@ -475,7 +540,6 @@ public class ConnectActivity extends BaseAppCompatActivity {
             onBackPressed();
         }
     };
-    private int packageDelayTime = 20;
     private BleInterface.OnCharacteristicWriteListener onCharacteristicWriteListener = new BleInterface.OnCharacteristicWriteListener() {
         @Override
         public void onCharacteristicWrite(String uuid, byte[] values) {
@@ -704,7 +768,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
             Tool.toastL(ConnectActivity.this, R.string.ble_not_supported);
             return;
         }
-        bleConnector.setTimeOut(60000);
+        bleConnector.setConnectTimeOut(60000);
         setConnectListener();
     }
 
@@ -924,8 +988,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                         }
                         text = text.replace(" ", "");
                         byte[] bytes = Tool.hexStrToBytes(text);
-                        bleConnector.writeBigDataWithNotification(serviceUUID, characteristicUUID, bytes, packageDelayTime, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
-//                        bleConnector.writeBigDataWithNotification(serviceUUID, characteristicUUID, bytes, 1000, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
+                        bleConnector.writeBigDataWithNotification(serviceUUID, characteristicUUID, bytes, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
 
                     }
                 })
@@ -957,8 +1020,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                         }
                         text = text.replace(" ", "");
                         byte[] bytes = Tool.hexStrToBytes(text);
-                        bleConnector.writeBigData(serviceUUID, characteristicUUID, bytes, packageDelayTime, onBigDataSendStateChangedListener, autoFormat);
-
+                        bleConnector.writeBigData(serviceUUID, characteristicUUID, bytes, onBigDataSendStateChangedListener, autoFormat);
                     }
                 })
                 .setNegativeButton(R.string.cancel, null)
