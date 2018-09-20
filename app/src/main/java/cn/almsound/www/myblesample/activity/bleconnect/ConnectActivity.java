@@ -467,7 +467,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onDataSendFailedAndRetry(int currentPackageCount, int pageCount, byte[] data, int tryCount) {
             super.onDataSendFailedAndRetry(currentPackageCount, pageCount, data, tryCount);
-            Tool.toast(ConnectActivity.this, "onDataSendFailedAndRetry " + currentPackageCount + " / " + pageCount, toastKeepTime);
+//            Tool.toast(ConnectActivity.this, "onDataSendFailedAndRetry " + currentPackageCount + " / " + pageCount, toastKeepTime);
         }
 
         /**
@@ -503,7 +503,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, byte[] data) {
             super.onSendFailedWithWrongNotifyDataAndRetry(tryCount, currentPackageIndex, packageCount, data);
-            Tool.toast(ConnectActivity.this, "onSendFailedWithWrongNotifyDataAndRetry:tryCount = " + tryCount, toastKeepTime);
+//            Tool.toast(ConnectActivity.this, "onSendFailedWithWrongNotifyDataAndRetry:tryCount = " + tryCount, toastKeepTime);
         }
 
         /**
@@ -530,7 +530,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onDataSendTimeOutAndRetry(byte[] data, int tryCount, int currentPackageIndex, int packageCount) {
             super.onDataSendTimeOutAndRetry(data, tryCount, currentPackageIndex, packageCount);
-            Tool.toast(ConnectActivity.this, "onDataSendTimeOutAndRetry:tryCount = " + tryCount,toastKeepTime);
+//            Tool.toast(ConnectActivity.this, "onDataSendTimeOutAndRetry:tryCount = " + tryCount,toastKeepTime);
         }
     };
     private BleInterface.OnConnectTimeOutListener onConnectTimeOutListener = new BleInterface.OnConnectTimeOutListener() {
@@ -803,6 +803,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
         bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
         //设置 连接超时的回调
         bleConnector.setOnConnectTimeOutListener(onConnectTimeOutListener);
+        //设置发送分包数据时，每一包数据之间的延时
+        bleConnector.setSendBigDataPackageDelayTime(500);
     }
 
     /**
@@ -890,7 +892,9 @@ public class ConnectActivity extends BaseAppCompatActivity {
                                 boolean readData = bleConnector.readData(serviceUUID, characteristicUUID);
                                 if (!readData) {
                                     Tool.toastL(ConnectActivity.this, R.string.read_failed);
+                                    return;
                                 }
+                                Tool.toastL(ConnectActivity.this, R.string.request_sent);
                                 break;
                             //写
                             case 1:
@@ -906,14 +910,21 @@ public class ConnectActivity extends BaseAppCompatActivity {
                                     Tool.toastL(ConnectActivity.this, R.string.notify_not_support);
                                     return;
                                 }
+                                bleConnector.setOnDescriptorWriteListener(new BleInterface.OnDescriptorWriteListener() {
+                                    @Override
+                                    public void onDescriptorWrite(String uuid, byte[] values) {
+                                        Tool.toastL(ConnectActivity.this, R.string.open_notification_success);
+                                        bleConnector.setOnDescriptorWriteListener(null);
+                                        //设置 收到设备发来的通知时的回调
+                                        bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
+                                    }
+                                });
                                 boolean openNotification = bleConnector.enableNotification(serviceUUID, characteristicUUID, true);
                                 if (!openNotification) {
                                     Tool.toastL(ConnectActivity.this, R.string.open_notification_failed);
-                                } else {
-                                    Tool.toastL(ConnectActivity.this, R.string.open_notification_success);
-                                    //设置 收到设备发来的通知时的回调
-                                    bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
+                                    return;
                                 }
+                                Tool.toastL(ConnectActivity.this, R.string.request_sent);
                                 break;
                             //写入超长数据,自动格式化（分包传输）
                             case 3:

@@ -30,6 +30,7 @@ public class MyApplication extends Application {
         super.onCreate();
         //打开debug信息开关
         Tool.setDebugFlag(true);
+        Tool.setToastReuse(true);
         //初始化文件工具类
         FileUtil.init(this.getApplicationContext());
         BleManager.init(MyApplication.this);

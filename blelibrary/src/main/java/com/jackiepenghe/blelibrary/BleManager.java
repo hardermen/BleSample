@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
@@ -40,7 +41,15 @@ public class BleManager {
             return new Thread(r);
         }
     };
+    /**
+     * 定时器
+     */
     private static final ScheduledExecutorService SCHEDULED_THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(20, THREAD_FACTORY);
+    /**
+     * 监听蓝牙状态的广播接收者
+     */
+    private static final BluetoothStateReceiver BLUETOOTH_STATE_RECEIVER = new BluetoothStateReceiver();
+
     /*------------------------静态变量----------------------------*/
 
     /**
@@ -72,6 +81,11 @@ public class BleManager {
      */
     @SuppressLint("StaticFieldLeak")
     private static Context context;
+    /**
+     * 记录蓝牙状态广播接收者是否已注册的标志
+     */
+    private static boolean bluetoothStateReceiverRegistered;
+
     /*------------------------库内静态函数----------------------------*/
 
     /**
@@ -118,7 +132,28 @@ public class BleManager {
     static ThreadFactory getThreadFactory() {
         return THREAD_FACTORY;
     }
+
     /*------------------------公开静态函数----------------------------*/
+
+    /**
+     * 设置是否重用未消失的Toast
+     *
+     * @param reuse true表示开启重用
+     */
+    @SuppressWarnings("unused")
+    public static void setToastReuse(boolean reuse) {
+        CustomToast.setReuse(reuse);
+    }
+
+    /**
+     * 获取当前Toast是否开启重用
+     *
+     * @return true表示开启重用
+     */
+    @SuppressWarnings("unused")
+    public static boolean isToastReuse() {
+        return ToastHandler.isReuse();
+    }
 
     /**
      * 判断手机是否支持BLE
@@ -138,6 +173,22 @@ public class BleManager {
      */
     public static void init(@NonNull Context context) {
         BleManager.context = context.getApplicationContext();
+    }
+
+    /**
+     * 注册蓝牙状态的广播监听
+     */
+    public static void registerBluetoothStateReceiver() {
+        BleManager.context.registerReceiver(BLUETOOTH_STATE_RECEIVER, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+        bluetoothStateReceiverRegistered = true;
+    }
+
+    /**
+     * 注册蓝牙状态的广播监听
+     */
+    public static void unregisterBluetoothStateReceiver() {
+        BleManager.context.unregisterReceiver(BLUETOOTH_STATE_RECEIVER);
+        bluetoothStateReceiverRegistered = false;
     }
 
     /**
@@ -328,6 +379,7 @@ public class BleManager {
      *
      * @return true表示请求发起成功（只是发起关闭蓝牙的请求成功，并不是关闭蓝牙成功）
      */
+    @SuppressWarnings("UnusedReturnValue")
     public static boolean enableBluetooth(boolean enable) {
         checkInitStatus();
         if (!isSupportBle()) {
@@ -374,6 +426,13 @@ public class BleManager {
         }
     }
 
+    public static void setOnBluetoothStateChangedListener(BluetoothStateReceiver.OnBluetoothStateChangedListener onBluetoothStateChangedListener) {
+        if (!bluetoothStateReceiverRegistered) {
+            throw new IllegalStateException("BluetoothStateChangedReceiver not Registered");
+        }
+        BLUETOOTH_STATE_RECEIVER.setOnBluetoothStateChangedListener(onBluetoothStateChangedListener);
+    }
+
     /**
      * 释放BLE多连接器的资源
      */
@@ -407,6 +466,7 @@ public class BleManager {
         releaseBleConnector();
         releaseBleScanner();
         releaseBleMultiConnector();
+        BLUETOOTH_STATE_RECEIVER.setOnBluetoothStateChangedListener(null);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             releaseBleAdvertiser();
         }

@@ -75,6 +75,10 @@ public class BleConnector {
      * 关闭完成时执行的回调
      */
     private BleInterface.OnCloseCompleteListener onCloseCompleteListener;
+    /**
+     * 默认的延迟时间
+     */
+    private int packageDelayTime = DEFAULT_PACKAGE_DELAY_TIME;
 
     /**
      * 服务连接工具
@@ -407,6 +411,15 @@ public class BleConnector {
     }
 
     /**
+     * 设置发送多包数据时，每一包数据的延时（单位：毫秒）
+     *
+     * @param packageDelayTime 每一包数据的延时
+     */
+    public void setSendBigDataPackageDelayTime(int packageDelayTime) {
+        this.packageDelayTime = packageDelayTime;
+    }
+
+    /**
      * 关闭BLE连接工具
      *
      * @param withGattRefresh 是否要在关闭连接之前 刷新GATT缓存
@@ -683,7 +696,7 @@ public class BleConnector {
      * @param onBigDataSendStateChangedListener 数据发送的相关回调
      */
     public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
-        writeBigData(serviceUuid, characteristicUuid, bigData, DEFAULT_PACKAGE_DELAY_TIME, onBigDataSendStateChangedListener);
+        writeBigData(serviceUuid, characteristicUuid, bigData, packageDelayTime, onBigDataSendStateChangedListener);
     }
 
     /**
@@ -695,7 +708,7 @@ public class BleConnector {
      * @param onBigDataSendStateChangedListener 数据发送的相关回调
      */
     public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener, boolean autoFormat) {
-        writeBigData(serviceUuid, characteristicUuid, bigData, DEFAULT_PACKAGE_DELAY_TIME, onBigDataSendStateChangedListener, autoFormat);
+        writeBigData(serviceUuid, characteristicUuid, bigData, packageDelayTime, onBigDataSendStateChangedListener, autoFormat);
     }
 
 
@@ -870,7 +883,7 @@ public class BleConnector {
      * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
      */
     public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData, BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, DEFAULT_PACKAGE_DELAY_TIME, onBigDataWriteWithNotificationSendStateChangedListener);
+        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, packageDelayTime, onBigDataWriteWithNotificationSendStateChangedListener);
     }
 
     /**
@@ -882,7 +895,7 @@ public class BleConnector {
      * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
      */
     public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData, BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, boolean autoFormat) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, DEFAULT_PACKAGE_DELAY_TIME, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
+        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, packageDelayTime, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
     }
 
     /**
@@ -984,6 +997,7 @@ public class BleConnector {
         BleInterface.OnDescriptorWriteListener onDescriptorWriteListener = new BleInterface.OnDescriptorWriteListener() {
             @Override
             public void onDescriptorWrite(String uuid, byte[] values) {
+                Tool.warnOut(TAG, "open notification success");
                 startThreadToWriteBigDataWithNotification(bigData, length, maxTryCount, writeDataServiceUUID, writeDataCharacteristicUUID, notificationServiceUUID, notificationCharacteristicUUID, packageDelayTime, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
                 setOnDescriptorWriteListener(null);
             }
@@ -1045,7 +1059,6 @@ public class BleConnector {
                                             wrongNotificationResultCount[0] = 0;
                                         }
                                     }
-                                    writeBigDataWithNotificationCurrentPackageCount[0]++;
                                     receivedNotification[0] = true;
                                 }
                             });
@@ -1057,7 +1070,8 @@ public class BleConnector {
                     public void onCharacteristicWrite(String uuid, byte[] values) {
                         writeBigDataWithNotificationTryCount[0] = 0;
                         characteristicWriteSuccess[0] = true;
-                        performBigDataWriteWithNotificationSendProgressChangedListener(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
+                        performBigDataWriteWithNotificationSendProgressChangedListener(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationCurrentPackageCount[0], onBigDataWriteWithNotificationSendStateChangedListener);
+                        writeBigDataWithNotificationCurrentPackageCount[0]++;
                     }
                 };
                 setOnReceiveNotificationListener(writeBigDataWithNotificationOnReceiveNotificationListener);
@@ -1160,27 +1174,6 @@ public class BleConnector {
                 }
             }
         });
-    }
-
-    /**
-     * 开启一个线程发送大数据
-     *
-     * @param bigData                                                大数据内容
-     * @param dataLength                                             数据大小
-     * @param maxTryCount                                            最大重试次数
-     * @param writeDataServiceUUID                                   写入数据的服务UUID
-     * @param writeDataCharacteristicUUID                            写入数据的特征UUID
-     * @param notificationServiceUUID                                通知的服务UUID
-     * @param notificationCharacteristicUUID                         通知的特征UUID
-     * @param packageDelayTime                                       每一包之间的发送间隔
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
-     */
-    private void startWriteBigDataWithNotification(final byte[] bigData,
-                                                   final int dataLength, final int maxTryCount, final String writeDataServiceUUID,
-                                                   final String writeDataCharacteristicUUID, String notificationServiceUUID,
-                                                   final String notificationCharacteristicUUID, final int packageDelayTime,
-                                                   final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, final boolean autoFormat) {
-
     }
 
     /**
@@ -1798,7 +1791,7 @@ public class BleConnector {
             @Override
             public void run() {
                 if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendProgressChanged(currentPackageCount, pageCount, data);
+                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendProgressChanged(currentPackageCount + 1, pageCount, data);
                 }
             }
         });

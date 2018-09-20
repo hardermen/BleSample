@@ -1,25 +1,43 @@
 package com.jackiepenghe.blelibrary;
 
-import android.app.job.JobScheduler;
-import android.app.job.JobService;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
+import android.content.IntentFilter;
 
 /**
- * 监听蓝牙开启状态的广播接收者
+ * 蓝牙扫描器监听蓝牙状态改变的广播接收者
  *
  * @author jackie
  */
-public class BluetoothStateReceiver extends BroadcastReceiver {
+class BleScannerBluetoothStateReceiver extends BroadcastReceiver {
 
-    /*--------------------------成员变量--------------------------*/
+    /*------------------------成员变量----------------------------*/
 
-    private OnBluetoothStateChangedListener onBluetoothStateChangedListener;
+    /**
+     * 蓝牙扫描器弱引用
+     */
+    private BleScanner bleScanner;
 
-    /*--------------------------实现父类方法--------------------------*/
+    /**
+     * 蓝牙状态更改时进行的回调
+     */
+    private BleInterface.OnBluetoothSwitchChangedListener onBluetoothStateChangedListener;
+
+    /*------------------------构造函数----------------------------*/
+
+    /**
+     * 构造函数
+     *
+     * @param bleScanner BLE扫描器
+     */
+    public BleScannerBluetoothStateReceiver(BleScanner bleScanner) {
+        this.bleScanner = bleScanner;
+    }
+
+    /*------------------------实现父类函数----------------------------*/
 
     /**
      * This method is called when the BroadcastReceiver is receiving an Intent
@@ -27,7 +45,7 @@ public class BluetoothStateReceiver extends BroadcastReceiver {
      * BroadcastReceiver to view/modify the current result values.  This method
      * is always called within the main thread of its process, unless you
      * explicitly asked for it to be scheduled on a different thread using
-     * {@link Context#registerReceiver(BroadcastReceiver, * IntentFilter, String, Handler)}. When it runs on the main
+     * {@link Context#registerReceiver(BroadcastReceiver, * IntentFilter , String, Handler)}. When it runs on the main
      * thread you should
      * never perform long-running operations in it (there is a timeout of
      * 10 seconds that the system allows before considering the receiver to
@@ -36,14 +54,13 @@ public class BluetoothStateReceiver extends BroadcastReceiver {
      * <p>
      * <p><b>If this BroadcastReceiver was launched through a &lt;receiver&gt; tag,
      * then the object is no longer alive after returning from this
-     * function.</b> This means you should not perform any operations that
-     * return a result to you asynchronously. If you need to perform any follow up
-     * background work, schedule a {@link JobService} with
-     * {@link JobScheduler}.
-     * <p>
-     * If you wish to interact with a service that is already running and previously
-     * bound using {@link Context#bindService(Intent, ServiceConnection, int) bindService()},
-     * you can use {@link #peekService}.
+     * function.</b>  This means you should not perform any operations that
+     * return a result to you asynchronously -- in particular, for interacting
+     * with services, you should use
+     * {@link Context#startService(Intent)} instead of
+     * {@link Context#bindService(Intent, ServiceConnection, int)}.  If you wish
+     * to interact with a service that is already running, you can use
+     * {@link #peekService}.
      * <p>
      * <p>The Intent filters used in {@link Context#registerReceiver}
      * and in application manifests are <em>not</em> guaranteed to be exclusive. They
@@ -68,23 +85,25 @@ public class BluetoothStateReceiver extends BroadcastReceiver {
                 int bluetoothState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
                 switch (bluetoothState) {
                     case BluetoothAdapter.STATE_OFF:
+                        Tool.toastL(context, R.string.bluetooth_off);
+                        if (bleScanner != null) {
+                            bleScanner.stopScan();
+                        }
                         if (onBluetoothStateChangedListener != null) {
-                            onBluetoothStateChangedListener.onBluetoothClosed();
+                            onBluetoothStateChangedListener.onBluetoothSwitchChanged(false);
                         }
                         break;
                     case BluetoothAdapter.STATE_ON:
-                        if (onBluetoothStateChangedListener != null) {
-                            onBluetoothStateChangedListener.onBluetoothOpened();
+                        Tool.toastL(context, R.string.bluetooth_on);
+                        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+                        if (bluetoothManager == null) {
+                            return;
                         }
-                        break;
-                    case BluetoothAdapter.STATE_TURNING_OFF:
-                        if (onBluetoothStateChangedListener != null) {
-                            onBluetoothStateChangedListener.onBluetoothClosing();
+                        if (bleScanner != null) {
+                            bleScanner.setBluetoothAdapter(bluetoothManager.getAdapter());
                         }
-                        break;
-                    case BluetoothAdapter.STATE_TURNING_ON:
                         if (onBluetoothStateChangedListener != null) {
-                            onBluetoothStateChangedListener.onBluetoothOpening();
+                            onBluetoothStateChangedListener.onBluetoothSwitchChanged(true);
                         }
                         break;
                     default:
@@ -96,41 +115,19 @@ public class BluetoothStateReceiver extends BroadcastReceiver {
         }
     }
 
-    /*--------------------------getter & setter--------------------------*/
+    /*------------------------自定义库内函数----------------------------*/
 
     /**
-     * 设置当蓝牙状态改变时进行的回调
-     *
-     * @param onBluetoothStateChangedListener 当蓝牙状态改变时进行的回调
+     * 释放内存
      */
-    public void setOnBluetoothStateChangedListener(OnBluetoothStateChangedListener onBluetoothStateChangedListener) {
-        this.onBluetoothStateChangedListener = onBluetoothStateChangedListener;
+    void releaseData() {
+        bleScanner = null;
     }
 
-    /*--------------------------接口定义--------------------------*/
-
     /**
-     * 当蓝牙状态改变时进行的回调
+     * 设置蓝牙状态更改时进行的回调
      */
-    public interface OnBluetoothStateChangedListener {
-        /**
-         * 蓝牙已开启
-         */
-        void onBluetoothOpened();
-
-        /**
-         * 蓝牙已关闭
-         */
-        void onBluetoothClosed();
-
-        /**
-         * 蓝牙正在关闭
-         */
-        void onBluetoothClosing();
-
-        /**
-         * 蓝牙正在打开
-         */
-        void onBluetoothOpening();
+    void setOnBluetoothSwitchChangedListener(BleInterface.OnBluetoothSwitchChangedListener onBluetoothStateChangedListener) {
+        this.onBluetoothStateChangedListener = onBluetoothStateChangedListener;
     }
 }

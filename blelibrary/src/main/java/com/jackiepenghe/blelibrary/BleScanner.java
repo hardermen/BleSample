@@ -59,7 +59,7 @@ public class BleScanner {
     /**
      * 检测蓝牙状态的广播接收者
      */
-    private BluetoothStateReceiver bluetoothStateReceiver;
+    private BleScannerBluetoothStateReceiver bleScannerBluetoothStateReceiver;
 
     /**
      * BLE扫描器是否被打开的标志
@@ -176,7 +176,7 @@ public class BleScanner {
             initBleScanCallBack18();
         }
 
-        bluetoothStateReceiver = new BluetoothStateReceiver(BleScanner.this);
+        bleScannerBluetoothStateReceiver = new BleScannerBluetoothStateReceiver(BleScanner.this);
 
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager == null) {
@@ -407,7 +407,7 @@ public class BleScanner {
             return false;
         }
         mScanResults = scanResults;
-        context.registerReceiver(bluetoothStateReceiver, filter);
+        context.registerReceiver(bleScannerBluetoothStateReceiver, filter);
         mScanResults.clear();
         mOpened = true;
         this.onScanFindOneNewDeviceListener = onScanFindOneNewDeviceListener;
@@ -566,10 +566,10 @@ public class BleScanner {
             stopScan();
         }
 
-        if (bluetoothStateReceiver != null) {
-            bluetoothStateReceiver.setOnBluetoothSwitchChangedListener(null);
-            bluetoothStateReceiver.releaseData();
-            context.unregisterReceiver(bluetoothStateReceiver);
+        if (bleScannerBluetoothStateReceiver != null) {
+            bleScannerBluetoothStateReceiver.setOnBluetoothSwitchChangedListener(null);
+            bleScannerBluetoothStateReceiver.releaseData();
+            context.unregisterReceiver(bleScannerBluetoothStateReceiver);
         }
 
         scanPeriod = 0;
@@ -577,7 +577,7 @@ public class BleScanner {
         scanning = false;
         scanContinue = false;
         mScanResults = null;
-        bluetoothStateReceiver = null;
+        bleScannerBluetoothStateReceiver = null;
         this.context = null;
         mBluetoothAdapter = null;
         mLeScanCallback = null;
@@ -727,7 +727,7 @@ public class BleScanner {
      * 设置蓝牙状态更改时进行的回调
      */
     public void setOnBluetoothSwitchChangedListener(BleInterface.OnBluetoothSwitchChangedListener onBluetoothStateChangedListener) {
-        bluetoothStateReceiver.setOnBluetoothSwitchChangedListener(onBluetoothStateChangedListener);
+        bleScannerBluetoothStateReceiver.setOnBluetoothSwitchChangedListener(onBluetoothStateChangedListener);
     }
 
     /*------------------------私有函数----------------------------*/

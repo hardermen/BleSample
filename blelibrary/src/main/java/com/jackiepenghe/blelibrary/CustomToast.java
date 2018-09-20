@@ -2,175 +2,236 @@ package com.jackiepenghe.blelibrary;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Build;
-import android.os.IBinder;
+import android.os.Message;
 import android.support.annotation.StringRes;
-import android.widget.Toast;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
- * 自定义Toast，可实现自定义显示时间
- * Created by alm on 17-6-5.
+ * 自定义Toast，可实现自定义显示时间,兼容至安卓N及以上版本
  */
 class CustomToast {
 
-    /*------------------------静态常量----------------------------*/
+    /**
+     * 长时间的吐司持续时间
+     */
+    static final int LENGTH_LONG = 3500;
+    /**
+     * 短时间的吐司持续时间
+     */
+    static final int LENGTH_SHORT = 2000;
+
+    /*--------------------------------静态变量--------------------------------*/
 
     /**
-     * 短时间
+     * 自定义吐司本类单例
      */
-    @SuppressWarnings("WeakerAccess")
-    public static final int LENGTH_SHORT = 2000;
+    @SuppressLint("StaticFieldLeak")
+    private static CustomToast customToast;
 
     /**
-     * 长时间
+     * 吐司专用的handler(使用Handler可以避免定时器在非主线程中导致的线程问题)
      */
-    @SuppressWarnings("WeakerAccess")
-    public static final int LENGTH_LONG = 3000;
+    @SuppressLint("StaticFieldLeak")
+    private static ToastHandler toastHandler;
+    /**
+     * 是否重用上次未消失的Toast的标志（缓存标志），实际标志在handler中
+     */
+    private static boolean reuse = false;
+    /**
+     * showToast的定时任务
+     */
+    private static ScheduledExecutorService SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE;
+    /**
+     * hideToast的定时任务
+     */
+    private static ScheduledExecutorService HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE;
+
+    /*--------------------------------成员变量--------------------------------*/
 
     /**
-     * 总是显示，不消失
+     * 上下文
      */
-    public static final int LENGTH_ALWAYS = 0;
+    private Context context;
+    /**
+     * Toast文本内容
+     */
+    private String messageText;
+    /**
+     * Toast持续时长
+     */
+    private int duration;
 
-    /*------------------------成员变量----------------------------*/
+    /*--------------------------------构造方法--------------------------------*/
 
     /**
-     * 系统吐司类
+     * 构造方法
+     *
+     * @param context     上下文
+     * @param messageText Toast文本内容
+     * @param duration    Toast持续时间（单位：毫秒）
      */
-    private Toast mToast;
+    private CustomToast(Context context, String messageText, int duration) {
+        this.context = context;
+        this.messageText = messageText;
+        this.duration = duration;
+    }
+
+    /*--------------------------------私有静态方法--------------------------------*/
+
     /**
-     * 吐司持续时间
+     * 显示Toast
+     *
+     * @param context     上下文
+     * @param messageText Toast文本内容
+     * @param duration    Toast持续时间（单位：毫秒）
      */
-    private static int mDuration;
-    /**
-     * 系统吐司的mTN对象（反射获取）
-     */
-    private Object mTN;
-    /**
-     * 系统吐司的show方法（反射获取）
-     */
-    private Method showMethod;
-    /**
-     * 系统吐司的hide方法（反射获取）
-     */
-    private Method hideMethod;
-    /**
-     * 隐藏吐司
-     */
-    private Runnable mHide = new Runnable() {
-        @Override
-        public void run() {
-            hide();
+    @SuppressLint("ShowToast")
+    private static void showMyToast(final Context context, final String messageText, int duration) {
+        if (toastHandler == null) {
+            toastHandler = new ToastHandler(context.getApplicationContext());
         }
-    };
+        setHandlerReuse();
+        if (SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE != null) {
+            SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.shutdownNow();
+            SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = null;
+        }
 
-    /*------------------------构造函数----------------------------*/
-
-    /**
-     * 构造函数
-     *
-     * @param toast 系统吐司
-     */
-    private CustomToast(Toast toast) {
-        mToast = toast;
-
-    }
-
-    /*------------------------公开静态函数----------------------------*/
-
-    /**
-     * 生成一个自定义吐司本类
-     *
-     * @param context  上下文
-     * @param message  吐司信息文本
-     * @param duration 吐司持续时间
-     * @return 自定义吐司本类
-     */
-    static CustomToast makeText(Context context, String message, int duration) {
-        @SuppressLint("ShowToast") Toast toast = Toast.makeText(context, message, duration);
-        mDuration = duration;
-        return new CustomToast(toast);
-    }
-
-    /**
-     * 生成一个自定义吐司本类
-     *
-     * @param context    上下文
-     * @param messageRes 吐司信息资源id
-     * @param duration   吐司持续时间
-     * @return 自定义吐司本类
-     */
-    static CustomToast makeText(Context context, @StringRes int messageRes, int duration) {
-        @SuppressLint("ShowToast") Toast toast = Toast.makeText(context, messageRes, duration);
-        mDuration = duration;
-        return new CustomToast(toast);
-    }
-
-    /*------------------------私有函数----------------------------*/
-
-    private void initTN() {
-        try {
-            Field tnField = mToast.getClass().getDeclaredField("mTN");
-            tnField.setAccessible(true);
-            mTN = tnField.get(mToast);
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                showMethod = mTN.getClass().getDeclaredMethod("show");
-            } else {
-                showMethod = mTN.getClass().getDeclaredMethod("show", IBinder.class);
+        if (HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE != null) {
+            HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.shutdownNow();
+            HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = null;
+        }
+        SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = BleManager.newScheduledExecutorService();
+        HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = BleManager.newScheduledExecutorService();
+        final boolean[] first = {true};
+        SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                if (first[0]) {
+                    handlerShowToast(messageText, ToastHandler.FIRST_SEND);
+                    first[0] = false;
+                } else {
+                    handlerShowToast(messageText, ToastHandler.KEEP_TOAST);
+                }
             }
-            hideMethod = mTN.getClass().getDeclaredMethod("hide");
+        }, 0, 3000, TimeUnit.MILLISECONDS);
 
-            Field tnTextViewField = mTN.getClass().getDeclaredField("mNextView");
-            tnTextViewField.setAccessible(true);
-            tnTextViewField.set(mTN, mToast.getView());
-
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }
+        HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.schedule(new Runnable() {
+            @Override
+            public void run() {
+                SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.shutdownNow();
+                SHOW_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = null;
+                handlerCancelToast();
+                HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE.shutdownNow();
+                HIDE_TOAST_KEEP_SCHEDULED_EXECUTOR_SERVICE = null;
+            }
+        }, duration, TimeUnit.MILLISECONDS);
     }
 
     /**
-     * 隐藏吐司
+     * 使用Handler显示Toast
+     *
+     * @param messageText Toast文本内容
+     * @param arg         是否为定时器保持消息显示
      */
-    private void hide() {
-        try {
-            hideMethod.invoke(mTN);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+    private static void handlerShowToast(String messageText, int arg) {
+        Message message = new Message();
+        message.obj = messageText;
+        message.what = ToastHandler.MESSAGE;
+        message.arg1 = arg;
+        toastHandler.sendMessage(message);
     }
+
+    /**
+     * 使用Handler取消Toast
+     */
+    private static void handlerCancelToast() {
+        Message message = new Message();
+        message.what = ToastHandler.CANCEL;
+        toastHandler.sendMessage(message);
+    }
+
+    /**
+     * 设置Handler是否重用未消失的Toast
+     */
+    private static void setHandlerReuse() {
+        Message message = new Message();
+        message.what = ToastHandler.SET_RE_USE;
+        message.obj = reuse;
+        toastHandler.sendMessage(message);
+    }
+
+    /*--------------------------------公开方法--------------------------------*/
 
     /**
      * 显示吐司
      */
-    void show() {
-        initTN();
-        try {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                showMethod.invoke(mTN);
-            } else {
-                showMethod.invoke(mTN, (IBinder) null);
-            }
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+    @SuppressWarnings("TryWithIdenticalCatches")
+    public void show() {
+        showMyToast(context, messageText, duration);
+    }
 
-        if (mDuration > 0) {
-            BleManager.getHandler().postDelayed(mHide, mDuration);
-        } else if (mDuration < 0) {
-            BleManager.getHandler().postDelayed(mHide, LENGTH_LONG);
+    /**
+     * 设置是否重用（缓存位，每次在显示Toast前会将其设置到Handler中）
+     *
+     * @param reuse true表示开启重用
+     */
+    @SuppressWarnings("WeakerAccess")
+    static void setReuse(boolean reuse) {
+        CustomToast.reuse = reuse;
+    }
+
+    /*--------------------------------公开静态方法--------------------------------*/
+
+    /**
+     * 获取CustomToast本类
+     *
+     * @param context  上下文
+     * @param message  吐司显示信息
+     * @param duration 吐司显示时长
+     * @return CustomToast本类
+     */
+    public static CustomToast makeText(Context context, String message, int duration) {
+        if (customToast == null) {
+            synchronized (CustomToast.class) {
+                if (customToast == null) {
+                    customToast = new CustomToast(context.getApplicationContext(), message, duration);
+                } else {
+                    customToast.messageText = message;
+                    customToast.duration = duration;
+                }
+            }
+        } else {
+            customToast.messageText = message;
+            customToast.duration = duration;
         }
+        return customToast;
+    }
+
+    /**
+     * CustomToast本类
+     *
+     * @param context    上下文
+     * @param messageRes 吐司显示信息
+     * @param duration   吐司显示时长
+     * @return CustomToast本类
+     */
+    public static CustomToast makeText(Context context, @StringRes int messageRes, int duration) {
+        String message = context.getString(messageRes);
+        if (customToast == null) {
+            synchronized (CustomToast.class) {
+                if (customToast == null) {
+                    customToast = new CustomToast(context.getApplicationContext(), message, duration);
+                } else {
+                    customToast.messageText = message;
+                    customToast.duration = duration;
+                }
+            }
+        } else {
+            customToast.messageText = message;
+            customToast.duration = duration;
+        }
+        return customToast;
     }
 }

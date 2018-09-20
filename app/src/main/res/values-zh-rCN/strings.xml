@@ -76,4 +76,5 @@
     <string name="connect_time_out">连接超时</string>
     <string name="write_big_data_without_format">传输大量数据，不自动格式化</string>
     <string name="write_big_data_with_notification_without_format">传输大量数据，不自动格式化(需要通知回调)</string>
+    <string name="request_sent">请求已发送</string>
 </resources>
