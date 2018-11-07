@@ -1033,27 +1033,7 @@ public class BleConnector {
                     @Override
                     public void onReceiveNotification(String uuid, final byte[] values) {
                         if (uuid.equalsIgnoreCase(notificationCharacteristicUUID)) {
-                            BleManager.getHandler().post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                                        boolean result = onBigDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, getCurrentPackageData(writeBigDataWithNotificationCurrentPackageCount[0], bigData, writeBigDataWithNotificationPackageCount, autoFormat));
-                                        Tool.warnOut(TAG, "onBigDataWriteWithNotificationSendStateChangedListener onReceiveNotification result = " + result);
-                                        if (!result) {
-                                            if (wrongNotificationResultCount[0] >= maxTryCount) {
-                                                performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataListener(onBigDataWriteWithNotificationSendStateChangedListener);
-                                                writeBigDataWithNotificationContinueFlag = false;
-                                            } else {
-                                                wrongNotificationResultCount[0]++;
-                                                performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onBigDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, getCurrentPackageData(writeBigDataWithNotificationCurrentPackageCount[0], bigData, writeBigDataWithNotificationPackageCount, autoFormat));
-                                            }
-                                        } else {
-                                            wrongNotificationResultCount[0] = 0;
-                                        }
-                                    }
-                                    receivedNotification[0] = true;
-                                }
-                            });
+                            performBigDataWriteWithNotificationSendStateChangedListener(values, onBigDataWriteWithNotificationSendStateChangedListener, writeBigDataWithNotificationCurrentPackageCount, writeBigDataWithNotificationPackageCount, bigData, autoFormat, wrongNotificationResultCount, maxTryCount, receivedNotification);
                         }
                     }
                 };
@@ -1070,69 +1050,97 @@ public class BleConnector {
                 setOnCharacteristicWriteListener(onCharacteristicWriteListener);
                 performBigDataWriteWithNotificationSendStartListener(onBigDataWriteWithNotificationSendStateChangedListener);
                 long lastSystemTime = System.currentTimeMillis();
-                while (writeBigDataWithNotificationContinueFlag) {
-                    if (!characteristicWriteSuccess[0]) {
-                        if (System.currentTimeMillis() - lastSystemTime >= sendBigDataTimeOut) {
-                            if (writeBigDataWithNotificationTryCount[0] >= maxTryCount) {
-                                performBigDataWriteWithNotificationSendTimeOut(onBigDataWriteWithNotificationSendStateChangedListener, writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, data[0]);
-                                break;
-                            }
-                            lastSystemTime = System.currentTimeMillis();
-                            writeBigDataWithNotificationTryCount[0]++;
-                            if (data[0] != null) {
-                                if (writeData(writeDataServiceUUID, writeDataCharacteristicUUID, data[0])) {
-                                    performBigDataWriteWithNotificationSendTimeOutAndRetry(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationTryCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
-                                    continue;
-                                }
-                                sleepTime(RETRY_DELAY_TIME);
-                            }
-                        }
-                        continue;
-                    }
-                    Tool.warnOut(TAG, "send state characteristicWriteSuccess");
-                    if (!receivedNotification[0]) {
-                        if (System.currentTimeMillis() - lastSystemTime >= sendBigDataTimeOut) {
-                            if (writeBigDataWithNotificationTryCount[0] >= maxTryCount) {
-                                performBigDataWriteWithNotificationSendTimeOut(onBigDataWriteWithNotificationSendStateChangedListener, writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, data[0]);
-                                break;
-                            }
-                            writeBigDataWithNotificationTryCount[0]++;
-                            lastSystemTime = System.currentTimeMillis();
-                            if (data[0] != null) {
-                                if (writeData(writeDataServiceUUID, writeDataCharacteristicUUID, data[0])) {
-                                    performBigDataWriteWithNotificationSendTimeOutAndRetry(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationTryCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
-                                    sleepTime(RETRY_DELAY_TIME);
-                                    continue;
-                                }
-                            }
-                        }
-                        continue;
-                    }
-                    Tool.warnOut(TAG, "send state receivedNotification");
-                    sleepTime(packageDelayTime);
-                    data[0] = getCurrentPackageData(writeBigDataWithNotificationCurrentPackageCount[0], bigData, writeBigDataWithNotificationPackageCount, autoFormat);
-                    if (data[0] == null) {
-                        performBigDataWriteWithNotificationSendFinishedListener(onBigDataWriteWithNotificationSendStateChangedListener);
-                        break;
-                    }
-                    if (writeBigDataWithNotificationTryCount[0] >= maxTryCount) {
-                        performBigDataWriteWithNotificationSendFailedListener(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
-                        break;
-                    }
-                    if (!writeData(writeDataServiceUUID, writeDataCharacteristicUUID, data[0])) {
-                        performBigDataWriteWithNotificationSendFailedAndRetryListener(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationTryCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
-                        writeBigDataWithNotificationTryCount[0]++;
-                        Tool.warnOut(TAG, "writeData failed");
-                        sleepTime(RETRY_DELAY_TIME);
-                        continue;
-                    }
-                    Tool.warnOut(TAG, "packageDelayTime = " + packageDelayTime);
-                }
+                doTransmission(data, writeBigDataWithNotificationPackageCount, writeBigDataWithNotificationCurrentPackageCount, writeBigDataWithNotificationTryCount, receivedNotification, characteristicWriteSuccess, lastSystemTime, maxTryCount, onBigDataWriteWithNotificationSendStateChangedListener, writeDataServiceUUID, writeDataCharacteristicUUID, packageDelayTime, bigData, autoFormat);
                 setOnReceiveNotificationListener(null);
                 setOnCharacteristicWriteListener(null);
             }
         };
         BleManager.getThreadFactory().newThread(runnable).start();
+    }
+
+    private void doTransmission(byte[][] data, int writeBigDataWithNotificationPackageCount, int[] writeBigDataWithNotificationCurrentPackageCount, int[] writeBigDataWithNotificationTryCount, boolean[] receivedNotification, boolean[] characteristicWriteSuccess, long lastSystemTime, int maxTryCount, BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, String writeDataServiceUUID, String writeDataCharacteristicUUID, int packageDelayTime, byte[] bigData, boolean autoFormat) {
+        while (writeBigDataWithNotificationContinueFlag) {
+            if (!characteristicWriteSuccess[0]) {
+                if (System.currentTimeMillis() - lastSystemTime >= sendBigDataTimeOut) {
+                    if (writeBigDataWithNotificationTryCount[0] >= maxTryCount) {
+                        performBigDataWriteWithNotificationSendTimeOut(onBigDataWriteWithNotificationSendStateChangedListener, writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, data[0]);
+                        break;
+                    }
+                    lastSystemTime = System.currentTimeMillis();
+                    writeBigDataWithNotificationTryCount[0]++;
+                    if (data[0] != null) {
+                        if (writeData(writeDataServiceUUID, writeDataCharacteristicUUID, data[0])) {
+                            performBigDataWriteWithNotificationSendTimeOutAndRetry(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationTryCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
+                            continue;
+                        }
+                        sleepTime(RETRY_DELAY_TIME);
+                    }
+                }
+                continue;
+            }
+            Tool.warnOut(TAG, "send state characteristicWriteSuccess");
+            if (!receivedNotification[0]) {
+                if (System.currentTimeMillis() - lastSystemTime >= sendBigDataTimeOut) {
+                    if (writeBigDataWithNotificationTryCount[0] >= maxTryCount) {
+                        performBigDataWriteWithNotificationSendTimeOut(onBigDataWriteWithNotificationSendStateChangedListener, writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, data[0]);
+                        break;
+                    }
+                    writeBigDataWithNotificationTryCount[0]++;
+                    lastSystemTime = System.currentTimeMillis();
+                    if (data[0] != null) {
+                        if (writeData(writeDataServiceUUID, writeDataCharacteristicUUID, data[0])) {
+                            performBigDataWriteWithNotificationSendTimeOutAndRetry(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationTryCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
+                            sleepTime(RETRY_DELAY_TIME);
+                            continue;
+                        }
+                    }
+                }
+                continue;
+            }
+            Tool.warnOut(TAG, "send state receivedNotification");
+            sleepTime(packageDelayTime);
+            data[0] = getCurrentPackageData(writeBigDataWithNotificationCurrentPackageCount[0], bigData, writeBigDataWithNotificationPackageCount, autoFormat);
+            if (data[0] == null) {
+                performBigDataWriteWithNotificationSendFinishedListener(onBigDataWriteWithNotificationSendStateChangedListener);
+                break;
+            }
+            if (writeBigDataWithNotificationTryCount[0] >= maxTryCount) {
+                performBigDataWriteWithNotificationSendFailedListener(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
+                break;
+            }
+            if (!writeData(writeDataServiceUUID, writeDataCharacteristicUUID, data[0])) {
+                performBigDataWriteWithNotificationSendFailedAndRetryListener(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationTryCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
+                writeBigDataWithNotificationTryCount[0]++;
+                Tool.warnOut(TAG, "writeData failed");
+                sleepTime(RETRY_DELAY_TIME);
+                continue;
+            }
+            Tool.warnOut(TAG, "packageDelayTime = " + packageDelayTime);
+        }
+    }
+
+    private void performBigDataWriteWithNotificationSendStateChangedListener(final byte[] values, final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, final int[] writeBigDataWithNotificationCurrentPackageCount, final int writeBigDataWithNotificationPackageCount, final byte[] bigData, final boolean autoFormat, final int[] wrongNotificationResultCount, final int maxTryCount, final boolean[] receivedNotification) {
+        BleManager.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
+                    boolean result = onBigDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, getCurrentPackageData(writeBigDataWithNotificationCurrentPackageCount[0], bigData, writeBigDataWithNotificationPackageCount, autoFormat));
+                    Tool.warnOut(TAG, "onBigDataWriteWithNotificationSendStateChangedListener onReceiveNotification result = " + result);
+                    if (!result) {
+                        if (wrongNotificationResultCount[0] >= maxTryCount) {
+                            performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataListener(onBigDataWriteWithNotificationSendStateChangedListener);
+                            writeBigDataWithNotificationContinueFlag = false;
+                        } else {
+                            wrongNotificationResultCount[0]++;
+                            performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onBigDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, getCurrentPackageData(writeBigDataWithNotificationCurrentPackageCount[0], bigData, writeBigDataWithNotificationPackageCount, autoFormat));
+                        }
+                    } else {
+                        wrongNotificationResultCount[0] = 0;
+                    }
+                }
+                receivedNotification[0] = true;
+            }
+        });
     }
 
     private void performBigDataWriteWithNotificationSendStartListener(final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
