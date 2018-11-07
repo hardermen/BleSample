@@ -751,11 +751,6 @@ public class BleConnector {
      */
     public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, int packageDelayTime, int maxTryCount, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener, boolean autoFormat) {
         int dataLength = bigData.length;
-
-        if (dataLength <= PACKAGE_MAX_LENGTH || dataLength > LARGE_DATA_MAX_LENGTH) {
-            throw new WrongBigDataArrayException();
-        }
-
         startThreadToWriteBigData(serviceUuid, characteristicUuid, bigData, dataLength, packageDelayTime, maxTryCount, onBigDataSendStateChangedListener, autoFormat);
     }
 
@@ -982,9 +977,6 @@ public class BleConnector {
                                                         OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener,
                                                 final boolean autoFormat) {
         final int length = bigData.length;
-        if (length <= PACKAGE_MAX_LENGTH) {
-            throw new WrongBigDataArrayException();
-        }
         if (!canWrite(writeDataServiceUUID, writeDataCharacteristicUUID)) {
             return false;
         }
@@ -1397,7 +1389,6 @@ public class BleConnector {
             if (dataLength % PACKAGE_MAX_LENGTH == 0) {
                 return dataLength / PACKAGE_MAX_LENGTH;
             } else {
-//                PACKAGE_MAX_LENGTH
                 return (dataLength / PACKAGE_MAX_LENGTH) + 1;
             }
         }
@@ -1464,56 +1455,6 @@ public class BleConnector {
             }
         }
     }
-
-//    /**
-//     * 发起一个线程开始进行数据传输
-//     *
-//     * @param serviceUuid                       服务UUID
-//     * @param characteristicUuid                特征UUID
-//     * @param bigData                           大数据内容
-//     * @param dataLength                        数据长度
-//     * @param packageDelayTime                  每一包数据之间的间隔时间
-//     * @param maxTryCount                       最大的重发次数
-//     * @param onBigDataSendStateChangedListener 大数据传输时的相关回调
-//     * @param autoFormat                        是否自动格式化数据包
-//     */
-//   private void startThreadToWriteBigData(final String serviceUuid,
-//                                           final String characteristicUuid, final byte[] bigData, final int dataLength,
-//                                           final int packageDelayTime, final int maxTryCount,
-//                                           final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener, final boolean autoFormat) {
-//        Runnable runnable = new Runnable() {
-//            @Override
-//            public void run() {
-//                final int pageCount = getPageCount(dataLength, autoFormat);
-//                int currentPackageCount = 0;
-//                //记录数据重发的次数
-//                int tryCount = 0;
-//                performBigDataSendStartedListener(onBigDataSendStateChangedListener);
-//                writeBigDataContinueFlag = true;
-//                while (writeBigDataContinueFlag) {
-//                    final byte[] data = getCurrentPackageData(currentPackageCount, bigData, pageCount, autoFormat);
-//                    if (data == null) {
-//                        performBigDataSendFinishedListener(onBigDataSendStateChangedListener);
-//                        break;
-//                    }
-//                    if (tryCount >= maxTryCount) {
-//                        performBigDataSendFailedListener(pageCount, data, currentPackageCount, onBigDataSendStateChangedListener);
-//                        break;
-//                    }
-//                    if (writeData(serviceUuid, characteristicUuid, data)) {
-//                        performBigDataSendProgressChangedListener(pageCount, data, currentPackageCount, onBigDataSendStateChangedListener);
-//                        tryCount = 0;
-//                        currentPackageCount++;
-//                    } else {
-//                        performBigDataSendFailedAndRetryListener(pageCount, data, tryCount, currentPackageCount, onBigDataSendStateChangedListener);
-//                        tryCount++;
-//                    }
-//                    sleepTime(packageDelayTime);
-//                }
-//            }
-//        };
-//        BleManager.getThreadFactory().newThread(runnable).start();
-//    }
 
     /**
      * 发起一个线程开始进行数据传输
