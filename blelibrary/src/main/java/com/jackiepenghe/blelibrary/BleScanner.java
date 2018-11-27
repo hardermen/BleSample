@@ -200,149 +200,6 @@ public class BleScanner {
         }
     }
 
-    /*------------------------私有函数----------------------------*/
-
-    /**
-     * 初始化BLE扫描回调(API21以下且不包含API21)
-     */
-    private void initBleScanCallBack18() {
-        mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
-            @Override
-            public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-                final Context context = BleScanner.this.context;
-                if (context == null) {
-                    return;
-                }
-                if (scanRecord == null) {
-                    return;
-                }
-                String name = device.getName();
-
-                if (null == name || "".equals(name)) {
-                    com.jackiepenghe.blelibrary.ScanRecord scanRecordParseFromBytes = com.jackiepenghe.blelibrary.ScanRecord.parseFromBytes(scanRecord);
-                    name = scanRecordParseFromBytes.getDeviceName();
-                }
-
-                final BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, name);
-                callOnScanFindOneDeviceListener(bleDevice);
-                if (mScanResults == null) {
-                    mScanResults = new ArrayList<>();
-                }
-                if (!mScanResults.contains(bleDevice)) {
-                    mScanResults.add(bleDevice);
-                    callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice, mScanResults);
-                }
-            }
-        };
-    }
-
-    /**
-     * 初始化扫描回调(API21及以上的设备)
-     */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void initBleScanCallBack21() {
-        mScanCallback = new ScanCallback() {
-            /**
-             * BaseConnectCallback when a BLE advertisement has been found.
-             *
-             * @param callbackType Determines how this callback was triggered. Could be one of
-             *                     {@link ScanSettings#CALLBACK_TYPE_ALL_MATCHES},
-             *                     {@link ScanSettings#CALLBACK_TYPE_FIRST_MATCH} or
-             *                     {@link ScanSettings#CALLBACK_TYPE_MATCH_LOST}
-             * @param result       A Bluetooth LE scan result.
-             */
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                onApi21ScanResultProcessor(result);
-            }
-
-            /**
-             * BaseConnectCallback when batch results are delivered.
-             *
-             * @param results List of scan results that are previously scanned.
-             */
-            @Override
-            public void onBatchScanResults(final List<ScanResult> results) {
-                BleManager.getHandler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (on21ScanCallback != null) {
-                            on21ScanCallback.onBatchScanResults(results);
-                        }
-                    }
-                });
-            }
-
-            /**
-             * BaseConnectCallback when scan could not be started.
-             *
-             * @param errorCode Error code (one of SCAN_FAILED_*) for scan failure.
-             */
-            @Override
-            public void onScanFailed(final int errorCode) {
-                BleManager.getHandler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (on21ScanCallback != null) {
-                            on21ScanCallback.onScanFailed(errorCode);
-                        }
-                    }
-                });
-            }
-        };
-    }
-
-    /**
-     * API21以上扫描处理的方法
-     *
-     * @param result 扫描结果
-     */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void onApi21ScanResultProcessor(ScanResult result) {
-        Context context = BleScanner.this.context;
-        if (context == null) {
-            return;
-        }
-        ScanRecord scanRecord = result.getScanRecord();
-
-        if (scanRecord == null) {
-            return;
-        }
-
-        BluetoothDevice device = result.getDevice();
-        int rssi = result.getRssi();
-        byte[] scanRecordBytes;
-        scanRecordBytes = scanRecord.getBytes();
-        String deviceName;
-        deviceName = result.getDevice().getName();
-        if (null == deviceName || "".equals(deviceName)) {
-            deviceName = scanRecord.getDeviceName();
-        }
-        if (null == deviceName || "".equals(deviceName)) {
-            com.jackiepenghe.blelibrary.ScanRecord scanRecordParseFromBytes = com.jackiepenghe.blelibrary.ScanRecord.parseFromBytes(scanRecordBytes);
-            deviceName = scanRecordParseFromBytes.getDeviceName();
-        }
-        final BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
-        bleDevice.setScanRecord(scanRecord);
-
-        callOnScanFindOneDeviceListener(bleDevice);
-
-        if (mScanResults == null) {
-            return;
-        }
-        if (!mScanResults.contains(bleDevice)) {
-            mScanResults.add(bleDevice);
-            callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice, mScanResults);
-        } else {
-            int index = mScanResults.indexOf(bleDevice);
-            BleDevice bleDevice1 = mScanResults.get(index);
-            if (bleDevice1.getDeviceName() == null && bleDevice.getDeviceName() != null) {
-                mScanResults.set(index, bleDevice);
-                callOnScanFindOneNewDeviceListener(index, null, mScanResults);
-            }
-        }
-    }
-
     /*------------------------库内函数----------------------------*/
 
 
@@ -591,6 +448,8 @@ public class BleScanner {
         return true;
     }
 
+
+
     /**
      * 获取扫描过滤器列表
      *
@@ -730,6 +589,10 @@ public class BleScanner {
         bleScannerBluetoothStateReceiver.setOnBluetoothSwitchChangedListener(onBluetoothStateChangedListener);
     }
 
+    public ArrayList<BleDevice> getScanResults() {
+        return mScanResults;
+    }
+
     /*------------------------私有函数----------------------------*/
 
     /**
@@ -763,5 +626,148 @@ public class BleScanner {
                 }
             }
         });
+    }
+
+    /*------------------------私有函数----------------------------*/
+
+    /**
+     * 初始化BLE扫描回调(API21以下且不包含API21)
+     */
+    private void initBleScanCallBack18() {
+        mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
+            @Override
+            public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
+                final Context context = BleScanner.this.context;
+                if (context == null) {
+                    return;
+                }
+                if (scanRecord == null) {
+                    return;
+                }
+                String name = device.getName();
+
+                if (null == name || "".equals(name)) {
+                    com.jackiepenghe.blelibrary.ScanRecord scanRecordParseFromBytes = com.jackiepenghe.blelibrary.ScanRecord.parseFromBytes(scanRecord);
+                    name = scanRecordParseFromBytes.getDeviceName();
+                }
+
+                final BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, name);
+                callOnScanFindOneDeviceListener(bleDevice);
+                if (mScanResults == null) {
+                    mScanResults = new ArrayList<>();
+                }
+                if (!mScanResults.contains(bleDevice)) {
+                    mScanResults.add(bleDevice);
+                    callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice, mScanResults);
+                }
+            }
+        };
+    }
+
+    /**
+     * 初始化扫描回调(API21及以上的设备)
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void initBleScanCallBack21() {
+        mScanCallback = new ScanCallback() {
+            /**
+             * BaseConnectCallback when a BLE advertisement has been found.
+             *
+             * @param callbackType Determines how this callback was triggered. Could be one of
+             *                     {@link ScanSettings#CALLBACK_TYPE_ALL_MATCHES},
+             *                     {@link ScanSettings#CALLBACK_TYPE_FIRST_MATCH} or
+             *                     {@link ScanSettings#CALLBACK_TYPE_MATCH_LOST}
+             * @param result       A Bluetooth LE scan result.
+             */
+            @Override
+            public void onScanResult(int callbackType, ScanResult result) {
+                onApi21ScanResultProcessor(result);
+            }
+
+            /**
+             * BaseConnectCallback when batch results are delivered.
+             *
+             * @param results List of scan results that are previously scanned.
+             */
+            @Override
+            public void onBatchScanResults(final List<ScanResult> results) {
+                BleManager.getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (on21ScanCallback != null) {
+                            on21ScanCallback.onBatchScanResults(results);
+                        }
+                    }
+                });
+            }
+
+            /**
+             * BaseConnectCallback when scan could not be started.
+             *
+             * @param errorCode Error code (one of SCAN_FAILED_*) for scan failure.
+             */
+            @Override
+            public void onScanFailed(final int errorCode) {
+                BleManager.getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (on21ScanCallback != null) {
+                            on21ScanCallback.onScanFailed(errorCode);
+                        }
+                    }
+                });
+            }
+        };
+    }
+
+    /**
+     * API21以上扫描处理的方法
+     *
+     * @param result 扫描结果
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void onApi21ScanResultProcessor(ScanResult result) {
+        Context context = BleScanner.this.context;
+        if (context == null) {
+            return;
+        }
+        ScanRecord scanRecord = result.getScanRecord();
+
+        if (scanRecord == null) {
+            return;
+        }
+
+        BluetoothDevice device = result.getDevice();
+        int rssi = result.getRssi();
+        byte[] scanRecordBytes;
+        scanRecordBytes = scanRecord.getBytes();
+        String deviceName;
+        deviceName = result.getDevice().getName();
+        if (null == deviceName || "".equals(deviceName)) {
+            deviceName = scanRecord.getDeviceName();
+        }
+        if (null == deviceName || "".equals(deviceName)) {
+            com.jackiepenghe.blelibrary.ScanRecord scanRecordParseFromBytes = com.jackiepenghe.blelibrary.ScanRecord.parseFromBytes(scanRecordBytes);
+            deviceName = scanRecordParseFromBytes.getDeviceName();
+        }
+        final BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
+        bleDevice.setScanRecord(scanRecord);
+
+        callOnScanFindOneDeviceListener(bleDevice);
+
+        if (mScanResults == null) {
+            return;
+        }
+        if (!mScanResults.contains(bleDevice)) {
+            mScanResults.add(bleDevice);
+            callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice, mScanResults);
+        } else {
+            int index = mScanResults.indexOf(bleDevice);
+            BleDevice bleDevice1 = mScanResults.get(index);
+            if (bleDevice1.getDeviceName() == null && bleDevice.getDeviceName() != null) {
+                mScanResults.set(index, bleDevice);
+                callOnScanFindOneNewDeviceListener(index, null, mScanResults);
+            }
+        }
     }
 }
