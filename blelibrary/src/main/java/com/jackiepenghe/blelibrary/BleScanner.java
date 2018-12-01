@@ -449,7 +449,6 @@ public class BleScanner {
     }
 
 
-
     /**
      * 获取扫描过滤器列表
      *
@@ -598,7 +597,7 @@ public class BleScanner {
     /**
      * 调用相关回调
      *
-     * @param bleDevice BleDevice
+     * @param bleDevice    BleDevice
      * @param mScanResults
      */
     private void callOnScanFindOneNewDeviceListener(final int inedx, final BleDevice bleDevice, final ArrayList<BleDevice> mScanResults) {
@@ -646,12 +645,13 @@ public class BleScanner {
                 }
                 String name = device.getName();
 
+                BleScanRecord bleScanRecordParseFromBytes = BleScanRecord.parseFromBytes(scanRecord);
                 if (null == name || "".equals(name)) {
-                    com.jackiepenghe.blelibrary.ScanRecord scanRecordParseFromBytes = com.jackiepenghe.blelibrary.ScanRecord.parseFromBytes(scanRecord);
-                    name = scanRecordParseFromBytes.getDeviceName();
+                    name = bleScanRecordParseFromBytes.getDeviceName();
                 }
 
                 final BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, name);
+                bleDevice.setBleScanRecord(bleScanRecordParseFromBytes);
                 callOnScanFindOneDeviceListener(bleDevice);
                 if (mScanResults == null) {
                     mScanResults = new ArrayList<>();
@@ -746,12 +746,12 @@ public class BleScanner {
         if (null == deviceName || "".equals(deviceName)) {
             deviceName = scanRecord.getDeviceName();
         }
+            BleScanRecord bleScanRecordParseFromBytes = BleScanRecord.parseFromBytes(scanRecordBytes);
         if (null == deviceName || "".equals(deviceName)) {
-            com.jackiepenghe.blelibrary.ScanRecord scanRecordParseFromBytes = com.jackiepenghe.blelibrary.ScanRecord.parseFromBytes(scanRecordBytes);
-            deviceName = scanRecordParseFromBytes.getDeviceName();
+            deviceName = bleScanRecordParseFromBytes.getDeviceName();
         }
         final BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
-        bleDevice.setScanRecord(scanRecord);
+        bleDevice.setBleScanRecord(bleScanRecordParseFromBytes);
 
         callOnScanFindOneDeviceListener(bleDevice);
 

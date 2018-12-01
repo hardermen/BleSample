@@ -1,6 +1,7 @@
 package cn.almsound.www.myblesample.activity.bleconnect;
 
 import android.Manifest;
+import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -14,6 +15,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,15 +27,18 @@ import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
 import com.jackiepenghe.baselibrary.DefaultItemDecoration;
 import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.blelibrary.AdRecord;
 import com.jackiepenghe.blelibrary.BleDevice;
 import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleScanner;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import cn.almsound.www.myblesample.R;
+import cn.almsound.www.myblesample.activity.AdRecordParseActivity;
 import cn.almsound.www.myblesample.adapter.DeviceListAdapter;
 import cn.almsound.www.myblesample.utils.Constants;
 import cn.almsound.www.myblesample.watcher.EditTextWatcherForMacAddress;
@@ -178,7 +183,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         @Override
         public boolean onItemLongClick(BaseQuickAdapter adapter, View view, int position) {
             BleDevice bleDevice = adapterList.get(position);
-            showScanRecordDataDialog(bleDevice.getScanRecordBytes());
+            showScanRecordDataDialog(bleDevice);
             return true;
         }
     };
@@ -422,9 +427,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         }
         BleDevice bleDevice = adapterList.get(position);
         Intent intent = new Intent(DeviceListActivity.this, ConnectActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putParcelable(Constants.DEVICE, bleDevice);
-        intent.putExtra(Constants.BUNDLE, bundle);
+        intent.putExtra(Constants.DEVICE, (Serializable) bleDevice);
         startActivity(intent);
     }
 
@@ -451,35 +454,12 @@ public class DeviceListActivity extends BaseAppCompatActivity {
     /**
      * 显示广播包内容的对话框
      *
-     * @param scanRecordBytes 广播包
+     * @param bleDevice 广播包
      */
-    private void showScanRecordDataDialog(byte[] scanRecordBytes) {
-        if (scanRecordBytes == null) {
-            return;
-        }
-        View view = View.inflate(DeviceListActivity.this, R.layout.dialog_scan_record, null);
-        if (scanRecordBytes.length > BROADCAST_PACKAGE_LENGTH) {
-            EditText scanRecordEditText = view.findViewById(R.id.scan_record);
-            byte[] scanRecord = new byte[31];
-            System.arraycopy(scanRecordBytes, 0, scanRecord, 0, scanRecord.length);
-            scanRecordEditText.setText(Tool.bytesToHexStr(scanRecord));
-            EditText responseEditText = view.findViewById(R.id.response_record);
-            byte[] responseRecord = new byte[scanRecordBytes.length - 31];
-            System.arraycopy(scanRecordBytes, 31, responseRecord, 0, responseRecord.length);
-            responseEditText.setText(Tool.bytesToHexStr(responseRecord));
-        } else {
-            EditText scanRecordEditText = view.findViewById(R.id.scan_record);
-            scanRecordEditText.setText(Tool.bytesToHexStr(scanRecordBytes));
-            EditText responseEditText = view.findViewById(R.id.response_record);
-            responseEditText.setText(R.string.no_response_record);
-        }
-
-        new AlertDialog.Builder(DeviceListActivity.this)
-                .setTitle(R.string.scan_record)
-                .setView(view)
-                .setNegativeButton(R.string.cancel, null)
-                .setCancelable(false)
-                .show();
+    private void showScanRecordDataDialog(BleDevice bleDevice) {
+       Intent intent = new Intent(DeviceListActivity.this,AdRecordParseActivity.class);
+       intent.putExtra(Constants.DEVICE,(Serializable) bleDevice);
+       startActivity(intent);
     }
 
     /**

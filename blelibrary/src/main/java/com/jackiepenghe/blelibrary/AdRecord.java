@@ -1,5 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -8,7 +9,12 @@ import java.util.Arrays;
  *
  * @author jacke
  */
-class AdRecord {
+@SuppressWarnings("WeakerAccess")
+public class AdRecord implements Serializable {
+
+    private static final long serialVersionUID = 3717564472877619153L;
+
+
 
     /*-------------------------成员变量-------------------------*/
 
@@ -19,7 +25,7 @@ class AdRecord {
     /**
      * 数据类型
      */
-    private int type;
+    private byte type;
     /**
      * 数据内容
      */
@@ -34,7 +40,7 @@ class AdRecord {
      * @param type   数据类型
      * @param data   数内容
      */
-    private AdRecord(int length, int type, byte[] data) {
+    AdRecord(int length, byte type, byte[] data) {
         this.length = length;
         this.type = type;
         this.data = data;
@@ -47,7 +53,7 @@ class AdRecord {
      *
      * @return 数据长度
      */
-    int getLength() {
+    public int getLength() {
         return length;
     }
 
@@ -56,7 +62,7 @@ class AdRecord {
      *
      * @return 数据类型
      */
-    int getType() {
+    public byte getType() {
         return type;
     }
 
@@ -65,7 +71,7 @@ class AdRecord {
      *
      * @return 数据内容
      */
-    byte[] getData() {
+    public byte[] getData() {
         return data;
     }
 
@@ -75,7 +81,7 @@ class AdRecord {
      * @param scanRecord 完整的广播包
      * @return AdRecord集合
      */
-    static ArrayList<AdRecord> parseScanRecord(byte[] scanRecord) {
+    public static ArrayList<AdRecord> parseScanRecord(byte[] scanRecord) {
         ArrayList<AdRecord> records = new ArrayList<>();
 
         if (scanRecord == null) {
@@ -95,7 +101,7 @@ class AdRecord {
             }
 
             byte[] data = Arrays.copyOfRange(scanRecord, index + 1, index + length);
-            records.add(new AdRecord(length, type, data));
+            records.add(new AdRecord(length, (byte) type, data));
         }
         return records;
     }

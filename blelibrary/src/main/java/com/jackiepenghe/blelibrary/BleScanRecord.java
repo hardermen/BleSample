@@ -1,10 +1,12 @@
 package com.jackiepenghe.blelibrary;
 
+import android.os.Parcel;
 import android.os.ParcelUuid;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import android.util.SparseArray;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,10 +18,12 @@ import java.util.Map;
  *
  * @author jackie
  */
-@SuppressWarnings("unused")
-class ScanRecord {
+@SuppressWarnings({"unused", "WeakerAccess"})
+public class BleScanRecord implements Serializable, Parcelable {
 
-    private static final String TAG = "ScanRecord";
+    private static final String TAG = "BleScanRecord";
+
+    private static final long serialVersionUID = 366536345375961707L;
 
     /**
      * The following data type values are assigned by Bluetooth SIG.
@@ -46,11 +50,11 @@ class ScanRecord {
     private final int mAdvertiseFlags;
 
     @Nullable
-    private final List<ParcelUuid> mServiceUuids;
+    private final List<BleParcelUuid> mServiceUuids;
 
-    private final SparseArray<byte[]> mManufacturerSpecificData;
+    private final BleSparseArray<byte[]> mManufacturerSpecificData;
 
-    private final Map<ParcelUuid, byte[]> mServiceData;
+    private final Map<BleParcelUuid, byte[]> mServiceData;
 
     /**
      * Transmission power level(in dB).
@@ -71,7 +75,7 @@ class ScanRecord {
      * Returns the advertising flags indicating the discoverable mode and capability of the device.
      * Returns -1 if the flag field is not set.
      */
-    int getAdvertiseFlags() {
+    public int getAdvertiseFlags() {
         return mAdvertiseFlags;
     }
 
@@ -79,7 +83,7 @@ class ScanRecord {
      * Returns a list of service UUIDs within the advertisement that are used to identify the
      * bluetooth GATT services.
      */
-    List<ParcelUuid> getServiceUuids() {
+    public List<BleParcelUuid> getServiceUuids() {
         return mServiceUuids;
     }
 
@@ -87,7 +91,7 @@ class ScanRecord {
      * Returns a sparse array of manufacturer identifier and its corresponding manufacturer specific
      * data.
      */
-    SparseArray<byte[]> getManufacturerSpecificData() {
+    public BleSparseArray<byte[]> getManufacturerSpecificData() {
         return mManufacturerSpecificData;
     }
 
@@ -96,14 +100,14 @@ class ScanRecord {
      * {@code null} if the {@code manufacturerId} is not found.
      */
     @Nullable
-    byte[] getManufacturerSpecificData(int manufacturerId) {
+    public  byte[] getManufacturerSpecificData(int manufacturerId) {
         return mManufacturerSpecificData.get(manufacturerId);
     }
 
     /**
      * Returns a map of service UUID and its corresponding service data.
      */
-    Map<ParcelUuid, byte[]> getServiceData() {
+    public Map<BleParcelUuid, byte[]> getServiceData() {
         return mServiceData;
     }
 
@@ -112,7 +116,7 @@ class ScanRecord {
      * {@code null} if the {@code serviceDataUuid} is not found.
      */
     @Nullable
-    byte[] getServiceData(ParcelUuid serviceDataUuid) {
+    public byte[] getServiceData(BleParcelUuid serviceDataUuid) {
         if (serviceDataUuid == null) {
             return null;
         }
@@ -134,22 +138,22 @@ class ScanRecord {
      * Returns the local name of the BLE device. The is a UTF-8 encoded string.
      */
     @Nullable
-    String getDeviceName() {
+    public String getDeviceName() {
         return mDeviceName;
     }
 
     /**
      * Returns raw bytes of scan record.
      */
-    byte[] getBytes() {
+    public byte[] getBytes() {
         return mBytes;
     }
 
-    private ScanRecord(@Nullable List<ParcelUuid> serviceUuids,
-                       SparseArray<byte[]> manufacturerData,
-                       Map<ParcelUuid, byte[]> serviceData,
-                       int advertiseFlags, int txPowerLevel,
-                       String localName, byte[] bytes) {
+    private BleScanRecord(@Nullable List<BleParcelUuid> serviceUuids,
+                          BleSparseArray<byte[]> manufacturerData,
+                          Map<BleParcelUuid, byte[]> serviceData,
+                          int advertiseFlags, int txPowerLevel,
+                          String localName, byte[] bytes) {
         mServiceUuids = serviceUuids;
         mManufacturerSpecificData = manufacturerData;
         mServiceData = serviceData;
@@ -169,19 +173,19 @@ class ScanRecord {
      *
      * @param scanRecord The scan record of Bluetooth LE advertisement and/or scan response.
      */
-    static ScanRecord parseFromBytes(byte[] scanRecord) {
+    public static BleScanRecord parseFromBytes(byte[] scanRecord) {
         if (scanRecord == null) {
             return null;
         }
 
         int currentPos = 0;
         int advertiseFlag = -1;
-        List<ParcelUuid> serviceUuids = new ArrayList<>();
+        List<BleParcelUuid> serviceUuids = new ArrayList<>();
         String localName = null;
         int txPowerLevel = Integer.MIN_VALUE;
 
-        SparseArray<byte[]> manufacturerData = new SparseArray<>();
-        Map<ParcelUuid, byte[]> serviceData = new HashMap<>(5);
+        BleSparseArray<byte[]> manufacturerData = new BleSparseArray<>();
+        Map<BleParcelUuid, byte[]> serviceData = new HashMap<>(5);
 
         try {
             while (currentPos < scanRecord.length) {
@@ -204,19 +208,19 @@ class ScanRecord {
             if (serviceUuids.isEmpty()) {
                 serviceUuids = null;
             }
-            return new ScanRecord(serviceUuids, manufacturerData, serviceData,
+            return new BleScanRecord(serviceUuids, manufacturerData, serviceData,
                     advertiseFlag, txPowerLevel, localName, scanRecord);
         } catch (Exception e) {
             Log.e(TAG, "unable to parse scan record: " + Arrays.toString(scanRecord));
             // As the record is invalid, ignore all the parsed results for this packet
             // and return an empty record with raw scanRecord bytes in results
-            return new ScanRecord(null, null, null, -1, Integer.MIN_VALUE, null, scanRecord);
+            return new BleScanRecord(null, null, null, -1, Integer.MIN_VALUE, null, scanRecord);
         }
     }
 
     @Override
     public String toString() {
-        return "ScanRecord [mAdvertiseFlags=" + mAdvertiseFlags + ", mServiceUuids=" + mServiceUuids
+        return "BleScanRecord [mAdvertiseFlags=" + mAdvertiseFlags + ", mServiceUuids=" + mServiceUuids
                 + ", mManufacturerSpecificData=" + BluetoothLeUtils.toString(mManufacturerSpecificData)
                 + ", mServiceData=" + BluetoothLeUtils.toString(mServiceData)
                 + ", mTxPowerLevel=" + mTxPowerLevel + ", mDeviceName=" + mDeviceName + "]";
@@ -234,11 +238,13 @@ class ScanRecord {
      */
     @SuppressWarnings("UnusedReturnValue")
     private static int parseServiceUuid(byte[] scanRecord, int currentPos, int dataLength,
-                                        int uuidLength, List<ParcelUuid> serviceUuids) {
+                                        int uuidLength, List<BleParcelUuid> serviceUuids) {
         while (dataLength > 0) {
             byte[] uuidBytes = extractBytes(scanRecord, currentPos,
                     uuidLength);
-            serviceUuids.add(BluetoothUuid.parseUuidFrom(uuidBytes));
+            ParcelUuid parcelUuid = BluetoothUuid.parseUuidFrom(uuidBytes);
+            BleParcelUuid  bleParcelUuid = new BleParcelUuid(parcelUuid);
+            serviceUuids.add(bleParcelUuid);
             dataLength -= uuidLength;
             currentPos += uuidLength;
         }
@@ -263,15 +269,15 @@ class ScanRecord {
         private byte[] scanRecord;
         private int currentPos;
         private int advertiseFlag;
-        private List<ParcelUuid> serviceUuids;
+        private List<BleParcelUuid> serviceUuids;
         private String localName;
         private int txPowerLevel;
-        private SparseArray<byte[]> manufacturerData;
-        private Map<ParcelUuid, byte[]> serviceData;
+        private BleSparseArray<byte[]> manufacturerData;
+        private Map<BleParcelUuid, byte[]> serviceData;
         private int dataLength;
         private int fieldType;
 
-        ParseData(byte[] scanRecord, int currentPos, int advertiseFlag, List<ParcelUuid> serviceUuids, String localName, int txPowerLevel, SparseArray<byte[]> manufacturerData, Map<ParcelUuid, byte[]> serviceData, int dataLength, int fieldType) {
+        ParseData(byte[] scanRecord, int currentPos, int advertiseFlag, List<BleParcelUuid> serviceUuids, String localName, int txPowerLevel, BleSparseArray<byte[]> manufacturerData, Map<BleParcelUuid, byte[]> serviceData, int dataLength, int fieldType) {
             this.scanRecord = scanRecord;
             this.currentPos = currentPos;
             this.advertiseFlag = advertiseFlag;
@@ -336,8 +342,8 @@ class ScanRecord {
 
                     byte[] serviceDataUuidBytes = extractBytes(scanRecord, currentPos,
                             serviceUuidLength);
-                    ParcelUuid serviceDataUuid = BluetoothUuid.parseUuidFrom(
-                            serviceDataUuidBytes);
+                    ParcelUuid parcelUuid = BluetoothUuid.parseUuidFrom(serviceDataUuidBytes);
+                    BleParcelUuid serviceDataUuid = new BleParcelUuid(parcelUuid);
                     byte[] serviceDataArray = extractBytes(scanRecord,
                             currentPos + serviceUuidLength, dataLength - serviceUuidLength);
                     serviceData.put(serviceDataUuid, serviceDataArray);
@@ -358,4 +364,53 @@ class ScanRecord {
             return this;
         }
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(this.mAdvertiseFlags);
+        dest.writeTypedList(this.mServiceUuids);
+        dest.writeParcelable(this.mManufacturerSpecificData, flags);
+        dest.writeInt(this.mServiceData.size());
+        for (Map.Entry<BleParcelUuid, byte[]> entry : this.mServiceData.entrySet()) {
+            dest.writeParcelable(entry.getKey(), flags);
+            dest.writeByteArray(entry.getValue());
+        }
+        dest.writeInt(this.mTxPowerLevel);
+        dest.writeString(this.mDeviceName);
+        dest.writeByteArray(this.mBytes);
+    }
+
+    protected BleScanRecord(Parcel in) {
+        this.mAdvertiseFlags = in.readInt();
+        this.mServiceUuids = in.createTypedArrayList(BleParcelUuid.CREATOR);
+        this.mManufacturerSpecificData = in.readParcelable(BleSparseArray.class.getClassLoader());
+        int mServiceDataSize = in.readInt();
+        this.mServiceData = new HashMap<>(mServiceDataSize);
+        for (int i = 0; i < mServiceDataSize; i++) {
+            BleParcelUuid key = in.readParcelable(ParcelUuid.class.getClassLoader());
+            byte[] value = in.createByteArray();
+            this.mServiceData.put(key, value);
+        }
+        this.mTxPowerLevel = in.readInt();
+        this.mDeviceName = in.readString();
+        this.mBytes = in.createByteArray();
+    }
+
+    public static final Parcelable.Creator<BleScanRecord> CREATOR = new Parcelable.Creator<BleScanRecord>() {
+        @Override
+        public BleScanRecord createFromParcel(Parcel source) {
+            return new BleScanRecord(source);
+        }
+
+        @Override
+        public BleScanRecord[] newArray(int size) {
+            return new BleScanRecord[size];
+        }
+    };
 }

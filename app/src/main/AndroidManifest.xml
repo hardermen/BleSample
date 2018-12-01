@@ -14,7 +14,6 @@
     <!-- 6.0以上的手机需要定位权限权限 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -27,14 +26,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
 
-        <!--<service-->
-            <!--android:name="com.jackiepenghe.blelibrary.BluetoothLeService"-->
-            <!--android:enabled="true"-->
-            <!--android:exported="false" />-->
-        <!--<service-->
-            <!--android:name="com.jackiepenghe.blelibrary.BluetoothMultiService"-->
-            <!--android:enabled="true"-->
-            <!--android:exported="false" />-->
+        <!-- <service -->
+        <!-- android:name="com.jackiepenghe.blelibrary.BluetoothLeService" -->
+        <!-- android:enabled="true" -->
+        <!-- android:exported="false" /> -->
+        <!-- <service -->
+        <!-- android:name="com.jackiepenghe.blelibrary.BluetoothMultiService" -->
+        <!-- android:enabled="true" -->
+        <!-- android:exported="false" /> -->
 
         <activity android:name=".guid.SplashActivity">
             <intent-filter>
@@ -62,12 +61,12 @@
         </activity>
         <activity android:name=".activity.bleconnect.ConnectActivity" />
         <activity android:name=".activity.blemulticonnect.MultiConnectActivity" />
-
         <activity
             android:name=".guid.WelcomeActivity"
             android:theme="@style/AppTheme.NoActionBar.FullScreen" />
         <activity android:name=".activity.bleadvertisement.BleAdvertiseActivity" />
-        <activity android:name=".activity.blemulticonnect.MultiConnectDeviceListActivity"/>
+        <activity android:name=".activity.blemulticonnect.MultiConnectDeviceListActivity" />
+        <activity android:name=".activity.AdRecordParseActivity"/>
     </application>
 
 </manifest>

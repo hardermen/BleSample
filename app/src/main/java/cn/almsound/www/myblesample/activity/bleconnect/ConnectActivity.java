@@ -563,10 +563,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
     protected void doBeforeSetLayout() {
         //获取intent,因为蓝牙的对象从上一个activity通过intent传递
         Intent intent = getIntent();
-        //获取Bundle
-        Bundle bundleExtra = intent.getBundleExtra(Constants.BUNDLE);
         //获取BleDevice对象
-        BleDevice bleDevice = bundleExtra.getParcelable(Constants.DEVICE);
+        BleDevice bleDevice = (BleDevice) intent.getSerializableExtra(Constants.DEVICE);
         if (bleDevice == null) {
             Tool.toastL(ConnectActivity.this, R.string.device_info_error);
             finish();

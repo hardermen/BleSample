@@ -5,7 +5,7 @@ import android.bluetooth.le.ScanRecord;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.RequiresApi;
+import android.util.SparseArray;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -17,8 +17,11 @@ import java.util.HashMap;
  * @author alm
  */
 
+@SuppressWarnings("WeakerAccess")
 public class BleDevice implements Serializable, Parcelable {
 
+
+    private static final long serialVersionUID = -2219219185665113265L;
     /**
      * 设备名
      */
@@ -40,16 +43,13 @@ public class BleDevice implements Serializable, Parcelable {
     private byte[] scanRecordBytes;
 
     /**
-     * ScanRecord.在5.0以上才用得上
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    private ScanRecord scanRecord;
-
-    /**
      * 解析广播包后保存的数据
      */
     private ArrayList<AdRecord> adRecords;
-
+    /**
+     * BleScanRecord
+     */
+    private BleScanRecord bleScanRecord;
 
     /**
      * 构造器
@@ -109,26 +109,6 @@ public class BleDevice implements Serializable, Parcelable {
     }
 
     /**
-     * 获取广播包（API21以上才有内容）
-     *
-     * @return ScanRecord对象
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    public ScanRecord getScanRecord() {
-        return scanRecord;
-    }
-
-    /**
-     * 设置广播包内容
-     *
-     * @param scanRecord ScanRecord对象
-     */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    void setScanRecord(ScanRecord scanRecord) {
-        this.scanRecord = scanRecord;
-    }
-
-    /**
      * 获取设备名称
      *
      * @return 设备名称
@@ -166,6 +146,22 @@ public class BleDevice implements Serializable, Parcelable {
      * @return 广播包的解析结果集合
      */
     public ArrayList<AdRecord> getAdRecords() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            if (bleScanRecord != null) {
+                ArrayList<AdRecord> adRecords = new ArrayList<>();
+                SparseArray<byte[]> manufacturerSpecificDatas = bleScanRecord.getManufacturerSpecificData();
+                for (int i = 0; i < manufacturerSpecificDatas.size(); i++) {
+                    int type = manufacturerSpecificDatas.keyAt(i);
+                    byte[] data = manufacturerSpecificDatas.valueAt(i);
+                    int length = data.length + 1;
+                    AdRecord adRecord = new AdRecord(length, (byte) type, data);
+                    adRecords.add(adRecord);
+                }
+                if (adRecords.size() != 0) {
+                    return adRecords;
+                }
+            }
+        }
         return adRecords;
     }
 
@@ -176,12 +172,10 @@ public class BleDevice implements Serializable, Parcelable {
      * @return 广播包字段
      */
     public byte[] getManufacturerSpecificData(int type) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (scanRecord != null) {
-                byte[] manufacturerSpecificData = scanRecord.getManufacturerSpecificData(type);
-                if (manufacturerSpecificData != null) {
-                    return manufacturerSpecificData;
-                }
+        if (bleScanRecord != null) {
+            byte[] manufacturerSpecificData = bleScanRecord.getManufacturerSpecificData(type);
+            if (manufacturerSpecificData != null) {
+                return manufacturerSpecificData;
             }
         }
 
@@ -257,7 +251,14 @@ public class BleDevice implements Serializable, Parcelable {
         return bleDevice.getBluetoothDevice().equals(getBluetoothDevice());
     }
 
-    /*------------------------Parcelable接口----------------------------*/
+    public BleScanRecord getBleScanRecord() {
+        return bleScanRecord;
+    }
+
+    public void setBleScanRecord(BleScanRecord bleScanRecord) {
+        this.bleScanRecord = bleScanRecord;
+    }
+
 
     @Override
     public int describeContents() {
@@ -266,16 +267,22 @@ public class BleDevice implements Serializable, Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.mDeviceName);
         dest.writeParcelable(this.mBluetoothDevice, flags);
         dest.writeInt(this.mRssi);
         dest.writeByteArray(this.scanRecordBytes);
+        dest.writeList(this.adRecords);
+        dest.writeSerializable(this.bleScanRecord);
     }
 
-    @SuppressWarnings("WeakerAccess")
     protected BleDevice(Parcel in) {
+        this.mDeviceName = in.readString();
         this.mBluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
         this.mRssi = in.readInt();
         this.scanRecordBytes = in.createByteArray();
+        this.adRecords = new ArrayList<>();
+        in.readList(this.adRecords, AdRecord.class.getClassLoader());
+        this.bleScanRecord = (BleScanRecord) in.readSerializable();
     }
 
     public static final Parcelable.Creator<BleDevice> CREATOR = new Parcelable.Creator<BleDevice>() {
