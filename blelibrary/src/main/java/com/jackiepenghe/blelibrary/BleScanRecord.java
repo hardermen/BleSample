@@ -3,6 +3,7 @@ package com.jackiepenghe.blelibrary;
 import android.os.Parcel;
 import android.os.ParcelUuid;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -218,6 +219,7 @@ public class BleScanRecord implements Serializable, Parcelable {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "BleScanRecord [mAdvertiseFlags=" + mAdvertiseFlags + ", mServiceUuids=" + mServiceUuids
@@ -242,8 +244,7 @@ public class BleScanRecord implements Serializable, Parcelable {
         while (dataLength > 0) {
             byte[] uuidBytes = extractBytes(scanRecord, currentPos,
                     uuidLength);
-            ParcelUuid parcelUuid = BluetoothUuid.parseUuidFrom(uuidBytes);
-            BleParcelUuid  bleParcelUuid = new BleParcelUuid(parcelUuid);
+            BleParcelUuid bleParcelUuid = BluetoothUuid.parseUuidFrom(uuidBytes);
             serviceUuids.add(bleParcelUuid);
             dataLength -= uuidLength;
             currentPos += uuidLength;
@@ -342,11 +343,10 @@ public class BleScanRecord implements Serializable, Parcelable {
 
                     byte[] serviceDataUuidBytes = extractBytes(scanRecord, currentPos,
                             serviceUuidLength);
-                    ParcelUuid parcelUuid = BluetoothUuid.parseUuidFrom(serviceDataUuidBytes);
-                    BleParcelUuid serviceDataUuid = new BleParcelUuid(parcelUuid);
+                    BleParcelUuid bleParcelUuid = BluetoothUuid.parseUuidFrom(serviceDataUuidBytes);
                     byte[] serviceDataArray = extractBytes(scanRecord,
                             currentPos + serviceUuidLength, dataLength - serviceUuidLength);
-                    serviceData.put(serviceDataUuid, serviceDataArray);
+                    serviceData.put(bleParcelUuid, serviceDataArray);
                     break;
                 case DATA_TYPE_MANUFACTURER_SPECIFIC_DATA:
                     // The first two bytes of the manufacturer specific data are
@@ -395,7 +395,9 @@ public class BleScanRecord implements Serializable, Parcelable {
         for (int i = 0; i < mServiceDataSize; i++) {
             BleParcelUuid key = in.readParcelable(ParcelUuid.class.getClassLoader());
             byte[] value = in.createByteArray();
-            this.mServiceData.put(key, value);
+            if (key != null && value != null) {
+                this.mServiceData.put(key, value);
+            }
         }
         this.mTxPowerLevel = in.readInt();
         this.mDeviceName = in.readString();

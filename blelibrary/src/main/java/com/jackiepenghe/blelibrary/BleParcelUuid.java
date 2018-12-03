@@ -1,12 +1,15 @@
 package com.jackiepenghe.blelibrary;
 
 import android.os.Parcel;
-import android.os.ParcelUuid;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import java.io.Serializable;
 import java.util.UUID;
 
+/**
+ * @author jackie
+ */
 @SuppressWarnings("WeakerAccess")
 public class BleParcelUuid implements Serializable, Parcelable {
 
@@ -23,10 +26,6 @@ public class BleParcelUuid implements Serializable, Parcelable {
      */
     public BleParcelUuid(UUID uuid) {
         mUuid = uuid;
-    }
-
-    public BleParcelUuid(ParcelUuid parcelUuid) {
-        mUuid = parcelUuid.getUuid();
     }
 
     /**
@@ -59,6 +58,7 @@ public class BleParcelUuid implements Serializable, Parcelable {
      *
      * @return a String instance.
      */
+    @NonNull
     @Override
     public String toString() {
         return mUuid.toString();
