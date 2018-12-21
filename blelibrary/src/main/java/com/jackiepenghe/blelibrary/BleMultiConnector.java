@@ -22,11 +22,6 @@ import static com.jackiepenghe.blelibrary.BleManager.resetBleMultiConnector;
 public class BleMultiConnector {
 
     /*------------------------成员变量----------------------------*/
-
-    /**
-     * 上下文
-     */
-    private Context context;
     /**
      * 多连接服务连接工具
      */
@@ -41,13 +36,11 @@ public class BleMultiConnector {
     /**
      * 构造器 protected 禁止外部直接构造
      *
-     * @param context 上下文
      */
-    BleMultiConnector(Context context) {
-        this.context = context;
+    BleMultiConnector() {
         bleServiceMultiConnection = new BleServiceMultiConnection(this);
-        Intent intent = new Intent(context.getApplicationContext(), BluetoothMultiService.class);
-        context.getApplicationContext().bindService(intent, bleServiceMultiConnection, Context.BIND_AUTO_CREATE);
+        Intent intent = new Intent(BleManager.getContext().getApplicationContext(), BluetoothMultiService.class);
+        BleManager.getContext().getApplicationContext().bindService(intent, bleServiceMultiConnection, Context.BIND_AUTO_CREATE);
     }
 
     /*------------------------库内函数----------------------------*/
@@ -128,15 +121,6 @@ public class BleMultiConnector {
     }
 
     /**
-     * 获取上下文
-     *
-     * @return 上下文
-     */
-    Context getContext() {
-        return context;
-    }
-
-    /**
      * 根据设备地址获取该设备的所有服务
      *
      * @param address 设备地址
@@ -214,19 +198,16 @@ public class BleMultiConnector {
         }
 
         bluetoothMultiService.closeAll();
-        Context context = this.context;
-        if (context == null) {
+        if (BleManager.getContext() == null) {
             return false;
         }
         try {
-            context.getApplicationContext().unbindService(bleServiceMultiConnection);
+            BleManager.getContext().getApplicationContext().unbindService(bleServiceMultiConnection);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        this.context = null;
         bleServiceMultiConnection = null;
         bluetoothMultiService = null;
-        this.context = null;
         resetBleMultiConnector();
         return true;
     }

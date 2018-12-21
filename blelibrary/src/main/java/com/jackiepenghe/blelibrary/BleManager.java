@@ -202,6 +202,8 @@ public class BleManager {
         return new BleConnector(context);
     }
 
+
+
     /**
      * 获取BLE连接实例的单例
      *
@@ -245,7 +247,7 @@ public class BleManager {
         if (!isSupportBle()) {
             return null;
         }
-        return new BleScanner(context);
+        return new BleScanner();
     }
 
     /**
@@ -261,19 +263,7 @@ public class BleManager {
         if (bleScanner == null) {
             synchronized (BleManager.class) {
                 if (bleScanner == null) {
-                    bleScanner = new BleScanner(context);
-                }
-            }
-        } else {
-            if (bleScanner.getContext() == null) {
-                bleScanner = null;
-            }
-
-            if (bleScanner == null) {
-                synchronized (BleManager.class) {
-                    if (bleScanner == null) {
-                        bleScanner = new BleScanner(context);
-                    }
+                    bleScanner = new BleScanner();
                 }
             }
         }
@@ -295,7 +285,7 @@ public class BleManager {
         if (bleAdvertiser == null) {
             synchronized (BleManager.class) {
                 if (bleAdvertiser == null) {
-                    bleAdvertiser = new BleAdvertiser(context);
+                    bleAdvertiser = new BleAdvertiser();
                 }
             }
         }
@@ -315,7 +305,7 @@ public class BleManager {
             return null;
         }
 
-        return new BleAdvertiser(context);
+        return new BleAdvertiser();
     }
 
 
@@ -332,7 +322,7 @@ public class BleManager {
         if (bleMultiConnector == null) {
             synchronized (BleManager.class) {
                 if (bleMultiConnector == null) {
-                    bleMultiConnector = new BleMultiConnector(context.getApplicationContext());
+                    bleMultiConnector = new BleMultiConnector();
                 }
             }
         }
@@ -350,7 +340,7 @@ public class BleManager {
         if (!isSupportBle()) {
             return null;
         }
-        return new BleMultiConnector(context);
+        return new BleMultiConnector();
     }
 
     /**
@@ -441,6 +431,10 @@ public class BleManager {
             bleMultiConnector.closeAll();
             bleConnector = null;
         }
+    }
+
+    public static Context getContext() {
+        return context;
     }
 
     /**

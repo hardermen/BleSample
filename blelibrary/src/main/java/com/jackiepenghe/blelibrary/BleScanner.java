@@ -67,11 +67,6 @@ public class BleScanner {
     private boolean mOpened;
 
     /**
-     * 上下文
-     */
-    private Context context;
-
-    /**
      * 安卓5.0以上的API才拥有的接口
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -158,14 +153,11 @@ public class BleScanner {
 
     /**
      * 构造器
-     *
-     * @param context 上下文
      */
-    BleScanner(Context context) {
-        this.context = context;
+    BleScanner() {
         scanTimer = new ScanTimer(BleScanner.this);
-        if (!(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
-            Tool.toastL(context, R.string.ble_not_supported);
+        if (!(BleManager.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
+            Tool.toastL(BleManager.getContext(), R.string.ble_not_supported);
             return;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -178,23 +170,17 @@ public class BleScanner {
 
         bleScannerBluetoothStateReceiver = new BleScannerBluetoothStateReceiver(BleScanner.this);
 
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothManager bluetoothManager = (BluetoothManager) BleManager.getContext().getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager == null) {
             return;
         }
         mBluetoothAdapter = bluetoothManager.getAdapter();
 
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
-            //如果是由activity创建的，可以直接请求打开蓝牙
-            if (context instanceof Activity) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                context.startActivity(enableBtIntent);
-            } else {
-                if (mBluetoothAdapter != null) {
-                    boolean enable = mBluetoothAdapter.enable();
-                    if (!enable) {
-                        Tool.toastL(context, R.string.bluetooth_not_enable);
-                    }
+            if (mBluetoothAdapter != null) {
+                boolean enable = mBluetoothAdapter.enable();
+                if (!enable) {
+                    Tool.toastL(BleManager.getContext(), R.string.bluetooth_not_enable);
                 }
             }
         }
@@ -253,18 +239,17 @@ public class BleScanner {
             onScanFindOneNewDeviceListener, @SuppressWarnings("SameParameterValue") long scanPeriod,
                         @SuppressWarnings("SameParameterValue") boolean scanContinueFlag,
                         @NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
-        Context context = this.context;
-        if (scanPeriod <= 0 || context == null) {
+        if (scanPeriod <= 0 || BleManager.getContext() == null) {
             return false;
         }
 
         //广播接收者过滤器
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-        if (this.context == null) {
+        if (BleManager.getContext() == null) {
             return false;
         }
         mScanResults = scanResults;
-        context.registerReceiver(bleScannerBluetoothStateReceiver, filter);
+        BleManager.getContext().registerReceiver(bleScannerBluetoothStateReceiver, filter);
         mScanResults.clear();
         mOpened = true;
         this.onScanFindOneNewDeviceListener = onScanFindOneNewDeviceListener;
@@ -300,12 +285,11 @@ public class BleScanner {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean startScan(boolean clearScanResult) {
-        Context context = this.context;
-        if (context == null) {
+        if (BleManager.getContext() == null) {
             return false;
         }
         if (mBluetoothAdapter == null) {
-            Tool.toastL(context, R.string.no_bluetooth_mode);
+            Tool.toastL(BleManager.getContext(), R.string.no_bluetooth_mode);
             return false;
         }
 
@@ -314,7 +298,7 @@ public class BleScanner {
         }
 
         if (!mBluetoothAdapter.isEnabled()) {
-            Tool.toastL(context, R.string.bluetooth_not_enable);
+            Tool.toastL(BleManager.getContext(), R.string.bluetooth_not_enable);
             return false;
         }
 
@@ -365,8 +349,7 @@ public class BleScanner {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean stopScan() {
-        Context context = this.context;
-        if (context == null) {
+        if (BleManager.getContext() == null) {
             return false;
         }
         if (!mOpened) {
@@ -378,7 +361,7 @@ public class BleScanner {
         }
 
         if (mBluetoothAdapter == null) {
-            Tool.toastL(context, R.string.no_bluetooth_mode);
+            Tool.toastL(BleManager.getContext(), R.string.no_bluetooth_mode);
             return false;
         }
 
@@ -411,8 +394,7 @@ public class BleScanner {
      * @return true表示成功
      */
     public boolean close() {
-        Context context = this.context;
-        if (context == null) {
+        if (BleManager.getContext() == null) {
             return false;
         }
         if (!mOpened) {
@@ -426,7 +408,7 @@ public class BleScanner {
         if (bleScannerBluetoothStateReceiver != null) {
             bleScannerBluetoothStateReceiver.setOnBluetoothSwitchChangedListener(null);
             bleScannerBluetoothStateReceiver.releaseData();
-            context.unregisterReceiver(bleScannerBluetoothStateReceiver);
+            BleManager.getContext().unregisterReceiver(bleScannerBluetoothStateReceiver);
         }
 
         scanPeriod = 0;
@@ -435,7 +417,6 @@ public class BleScanner {
         scanContinue = false;
         mScanResults = null;
         bleScannerBluetoothStateReceiver = null;
-        this.context = null;
         mBluetoothAdapter = null;
         mLeScanCallback = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -573,15 +554,6 @@ public class BleScanner {
     }
 
     /**
-     * 获取上下文
-     *
-     * @return 上下文
-     */
-    public Context getContext() {
-        return context;
-    }
-
-    /**
      * 设置蓝牙状态更改时进行的回调
      */
     public void setOnBluetoothSwitchChangedListener(BleInterface.OnBluetoothSwitchChangedListener onBluetoothStateChangedListener) {
@@ -636,8 +608,7 @@ public class BleScanner {
         mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
             @Override
             public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-                final Context context = BleScanner.this.context;
-                if (context == null) {
+                if (BleManager.getContext() == null) {
                     return;
                 }
                 if (scanRecord == null) {
@@ -727,8 +698,7 @@ public class BleScanner {
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void onApi21ScanResultProcessor(ScanResult result) {
-        Context context = BleScanner.this.context;
-        if (context == null) {
+        if (BleManager.getContext() == null) {
             return;
         }
         ScanRecord scanRecord = result.getScanRecord();
@@ -745,7 +715,7 @@ public class BleScanner {
         if (null == deviceName || "".equals(deviceName)) {
             deviceName = scanRecord.getDeviceName();
         }
-            BleScanRecord bleScanRecordParseFromBytes = BleScanRecord.parseFromBytes(scanRecordBytes);
+        BleScanRecord bleScanRecordParseFromBytes = BleScanRecord.parseFromBytes(scanRecordBytes);
         if (null == deviceName || "".equals(deviceName)) {
             deviceName = bleScanRecordParseFromBytes.getDeviceName();
         }

@@ -31,11 +31,6 @@ public class BleAdvertiser {
     private static final String TAG = BleAdvertiser.class.getSimpleName();
 
     /*---------------------成员变量---------------------*/
-
-    /**
-     * 上下文
-     */
-    private Context context;
     /**
      * 蓝牙适配器
      */
@@ -202,19 +197,16 @@ public class BleAdvertiser {
 
     /**
      * 构造函数
-     *
-     * @param context 上下文
      */
-    BleAdvertiser(Context context) {
-        this.context = context;
+    BleAdvertiser() {
 
         // Use this check to determine whether BLE is supported on the device.
-        if (!(this.context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
-            Tool.toastL(context, R.string.ble_not_supported);
+        if (!(BleManager.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
+            Tool.toastL(BleManager.getContext(), R.string.ble_not_supported);
             return;
         }
 
-        bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        bluetoothManager = (BluetoothManager) BleManager.getContext().getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager == null) {
             return;
         }
@@ -225,22 +217,15 @@ public class BleAdvertiser {
         }
 
         if (!mBluetoothAdapter.isMultipleAdvertisementSupported()) {
-            Tool.toastL(context, R.string.multiple_advertisement_not_supported);
+            Tool.toastL(BleManager.getContext(), R.string.multiple_advertisement_not_supported);
             return;
         }
 
         if (!mBluetoothAdapter.isEnabled()) {
-            //如果是由activity创建的，可以通过请求码打开蓝牙
-            if (this.context instanceof Activity) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                this.context.startActivity(enableBtIntent);
-            }
-            //如果不是由activity创建的，直接通过蓝牙适配器打开蓝牙
-            else {
-                boolean enable = mBluetoothAdapter.enable();
-                if (!enable) {
-                    Tool.toastL(context, R.string.bluetooth_not_enable);
-                }
+
+            boolean enable = mBluetoothAdapter.enable();
+            if (!enable) {
+                Tool.toastL(BleManager.getContext(), R.string.bluetooth_not_enable);
             }
         }
     }
@@ -376,8 +361,7 @@ public class BleAdvertiser {
             return false;
         }
 
-        Context context = this.context;
-        if (context == null) {
+        if (BleManager.getContext() == null) {
             initSuccess = false;
             return false;
         }
@@ -390,7 +374,7 @@ public class BleAdvertiser {
             if (defaultBluetoothGattServerCallback == null) {
                 defaultBluetoothGattServerCallback = new DefaultBluetoothGattServerCallback();
             }
-            bluetoothGattServer = bluetoothManager.openGattServer(context, defaultBluetoothGattServerCallback);
+            bluetoothGattServer = bluetoothManager.openGattServer(BleManager.getContext(), defaultBluetoothGattServerCallback);
         }
         this.baseAdvertiseCallback = defaultAdvertiseCallback;
         initSuccess = true;
@@ -415,7 +399,7 @@ public class BleAdvertiser {
         if (!initSuccess) {
             return false;
         }
-        if (isAdvertising){
+        if (isAdvertising) {
             return false;
         }
         mBluetoothAdvertiser.startAdvertising(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, advertiseCallback);
@@ -441,7 +425,7 @@ public class BleAdvertiser {
         if (mBluetoothAdvertiser == null) {
             return false;
         }
-        if (!isAdvertising){
+        if (!isAdvertising) {
             return false;
         }
         try {
@@ -472,7 +456,6 @@ public class BleAdvertiser {
             stopAdvertising();
         }
         initSuccess = false;
-        context = null;
         mBluetoothAdvertiser = null;
         mBluetoothAdapter = null;
         defaultAdvertiseSettings = null;
