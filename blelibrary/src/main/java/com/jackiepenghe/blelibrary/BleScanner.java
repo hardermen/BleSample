@@ -739,8 +739,7 @@ public class BleScanner {
 
         BluetoothDevice device = result.getDevice();
         int rssi = result.getRssi();
-        byte[] scanRecordBytes;
-        scanRecordBytes = scanRecord.getBytes();
+        byte[] scanRecordBytes = scanRecord.getBytes();
         String deviceName;
         deviceName = result.getDevice().getName();
         if (null == deviceName || "".equals(deviceName)) {

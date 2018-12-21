@@ -21,8 +21,6 @@ import java.util.concurrent.ThreadFactory;
  *
  * @author alm
  */
-
-@SuppressWarnings("unused")
 public class BleManager {
 
     /*------------------------静态常量----------------------------*/
