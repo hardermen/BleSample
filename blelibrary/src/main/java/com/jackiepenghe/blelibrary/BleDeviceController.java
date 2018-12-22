@@ -138,19 +138,6 @@ public class BleDeviceController {
     }
 
     /**
-     * 获取上下文
-     *
-     * @return 上下文
-     */
-    public Context getContext() {
-        BleMultiConnector bleMultiConnector = this.bleMultiConnector;
-        if (bleMultiConnector == null) {
-            return null;
-        }
-        return bleMultiConnector.getContext();
-    }
-
-    /**
      * 根据指定UUID获取服务
      *
      * @param uuid BLUETOOTH_GATT_CHARACTERISTIC
