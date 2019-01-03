@@ -1,28 +1,18 @@
-package com.jackiepenghe.blelibrary;
+package cn.almsound.www.myblesample.callback;
 
-import android.annotation.TargetApi;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.AdvertisingSet;
 import android.bluetooth.le.BluetoothLeAdvertiser;
-import android.os.Build;
+
+import com.jackiepenghe.baselibrary.tools.Tool;
+import com.jackiepenghe.blelibrary.interfaces.OnBleAdvertiseStateChangedListener;
 
 /**
- * BLE广播回调
- *
- * @author jacke
+ * @author jackie
  */
+public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertiseStateChangedListener {
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
-
-    /*-------------------------静态常量-------------------------*/
-
-    /**
-     * TAG
-     */
-    private static final String TAG = DefaultAdvertiseCallback.class.getSimpleName();
-
-    /*-------------------------重写父类函数-------------------------*/
+    private static final String TAG = DefaultOnBleAdvertiseStateChangedListener.class.getSimpleName();
 
     /**
      * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
@@ -33,7 +23,7 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect) {
-
+        Tool.warnOut(TAG,"onBroadCastStartSuccess");
     }
 
     /**
@@ -44,7 +34,7 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onBroadCastStartFailure(int errorCode) {
-
+        Tool.warnOut(TAG,"onBroadCastStartFailure");
     }
 
     /**
@@ -52,7 +42,7 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onBroadCastStopped() {
-        Tool.warnOut(TAG, "广播已经停止");
+        Tool.warnOut(TAG,"onBroadCastStopped");
     }
 
     /**
@@ -67,7 +57,7 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onAdvertisingSetStarted(AdvertisingSet advertisingSet, int txPower, int status) {
-
+        Tool.warnOut(TAG,"onAdvertisingSetStarted");
     }
 
     /**
@@ -78,7 +68,7 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onAdvertisingSetStopped(AdvertisingSet advertisingSet) {
-
+        Tool.warnOut(TAG,"onAdvertisingSetStopped");
     }
 
     /**
@@ -91,7 +81,7 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status) {
-
+        Tool.warnOut(TAG,"onAdvertisingEnabled");
     }
 
     /**
@@ -103,7 +93,7 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onScanResponseDataSet(AdvertisingSet advertisingSet, int status) {
-
+        Tool.warnOut(TAG,"onScanResponseDataSet");
     }
 
     /**
@@ -116,7 +106,7 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int txPower, int status) {
-
+        Tool.warnOut(TAG,"onAdvertisingParametersUpdated");
     }
 
     /**
@@ -128,7 +118,7 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onPeriodicAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int status) {
-
+        Tool.warnOut(TAG,"onPeriodicAdvertisingParametersUpdated");
     }
 
     /**
@@ -140,7 +130,7 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onPeriodicAdvertisingDataSet(AdvertisingSet advertisingSet, int status) {
-
+        Tool.warnOut(TAG,"onPeriodicAdvertisingDataSet");
     }
 
     /**
@@ -153,7 +143,7 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onPeriodicAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status) {
-
+        Tool.warnOut(TAG,"onPeriodicAdvertisingEnabled");
     }
 
     /**
@@ -165,6 +155,6 @@ public class DefaultAdvertiseCallback extends BaseAdvertiseCallback {
      */
     @Override
     public void onAdvertisingDataSet(AdvertisingSet advertisingSet, int status) {
-
+        Tool.warnOut(TAG,"onAdvertisingDataSet");
     }
 }

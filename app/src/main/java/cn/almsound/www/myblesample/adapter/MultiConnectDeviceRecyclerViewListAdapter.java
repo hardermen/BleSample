@@ -7,7 +7,7 @@ import android.widget.CompoundButton;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
-import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.blelibrary.BleDevice;
 
 import java.util.ArrayList;

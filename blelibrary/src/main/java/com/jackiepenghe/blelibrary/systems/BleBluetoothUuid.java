@@ -1,147 +1,202 @@
-package com.jackiepenghe.blelibrary;
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.jackiepenghe.blelibrary.systems;
 
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.UUID;
 
 /**
- * Copy from Android source code
+ * Static helper methods and constants to decode the BleParcelUuid of remote devices.
  *
  * @author jackie
  */
-@SuppressWarnings({"WeakerAccess", "unused", "SpellCheckingInspection"})
-class BluetoothUuid {
+public final class BleBluetoothUuid implements Serializable {
 
-    /**
-     * See Bluetooth Assigned Numbers document - SDP section, to get the values of UUIDs
+
+    private static final long serialVersionUID = -6971552374569074712L;
+
+    /** See Bluetooth Assigned Numbers document - SDP section, to get the values of UUIDs
      * for the various services.
-     * <p>
+     *
      * The following 128 bit values are calculated as:
-     * uuid * 2^96 + BASE_UUID
+     *  uuid * 2^96 + BASE_UUID
      */
-    static final BleParcelUuid PARCEL_UUID =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid AUDIO_SINK =
             BleParcelUuid.fromString("0000110B-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid AUDIO_SOURCE =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid AUDIO_SOURCE =
             BleParcelUuid.fromString("0000110A-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid ADV_AUDIO_DIST =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid ADV_AUDIO_DIST =
             BleParcelUuid.fromString("0000110D-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid HSP =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid HSP =
             BleParcelUuid.fromString("00001108-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid HSP_AG =
+    @SuppressWarnings("unused")
+    public static final BleParcelUuid HSP_AG =
             BleParcelUuid.fromString("00001112-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid HANDSFREE =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid HANDSFREE =
             BleParcelUuid.fromString("0000111E-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid HANDSFREE_AG =
+    @SuppressWarnings("unused")
+    public static final BleParcelUuid HANDSFREE_AG =
             BleParcelUuid.fromString("0000111F-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid AVRCP_CONTROLLER =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid AVRCP_CONTROLLER =
             BleParcelUuid.fromString("0000110E-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid AVRCP_TARGET =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid AVRCP_TARGET =
             BleParcelUuid.fromString("0000110C-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid OBEX_OBJECT_PUSH =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid OBEX_OBJECT_PUSH =
             BleParcelUuid.fromString("00001105-0000-1000-8000-00805f9b34fb");
-    static final BleParcelUuid HID =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid HID =
             BleParcelUuid.fromString("00001124-0000-1000-8000-00805f9b34fb");
-    static final BleParcelUuid HOGP =
+    @SuppressWarnings("unused")
+    public static final BleParcelUuid HOGP =
             BleParcelUuid.fromString("00001812-0000-1000-8000-00805f9b34fb");
-    static final BleParcelUuid PANU =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid PANU =
             BleParcelUuid.fromString("00001115-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid NAP =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid NAP =
             BleParcelUuid.fromString("00001116-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid BNEP =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid BNEP =
             BleParcelUuid.fromString("0000000f-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid PBAP_PCE =
+    @SuppressWarnings("unused")
+    public static final BleParcelUuid PBAP_PCE =
             BleParcelUuid.fromString("0000112e-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid PBAP_PSE =
+    @SuppressWarnings("unused")
+    public static final BleParcelUuid PBAP_PSE =
             BleParcelUuid.fromString("0000112f-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid MAP =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid MAP =
             BleParcelUuid.fromString("00001134-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid MNS =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid MNS =
             BleParcelUuid.fromString("00001133-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid MAS =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid MAS =
             BleParcelUuid.fromString("00001132-0000-1000-8000-00805F9B34FB");
-    static final BleParcelUuid SAP =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid SAP =
             BleParcelUuid.fromString("0000112D-0000-1000-8000-00805F9B34FB");
+    @SuppressWarnings("unused")
+    public static final BleParcelUuid HEARING_AID =
+            BleParcelUuid.fromString("0000FDF0-0000-1000-8000-00805f9b34fb");
 
-    static final BleParcelUuid BASE_UUID =
+    @SuppressWarnings("WeakerAccess")
+    public static final BleParcelUuid BASE_UUID =
             BleParcelUuid.fromString("00000000-0000-1000-8000-00805F9B34FB");
 
-    /**
-     * Length of bytes for 16 bit UUID
-     */
-    static final int UUID_BYTES_16_BIT = 2;
-    /**
-     * Length of bytes for 32 bit UUID
-     */
-    static final int UUID_BYTES_32_BIT = 4;
-    /**
-     * Length of bytes for 128 bit UUID
-     */
-    static final int UUID_BYTES_128_BIT = 16;
+    /** Length of bytes for 16 bit UUID */
+    @SuppressWarnings("WeakerAccess")
+    public static final int UUID_BYTES_16_BIT = 2;
+    /** Length of bytes for 32 bit UUID */
+    @SuppressWarnings("WeakerAccess")
+    public static final int UUID_BYTES_32_BIT = 4;
+    /** Length of bytes for 128 bit UUID */
+    @SuppressWarnings("WeakerAccess")
+    public static final int UUID_BYTES_128_BIT = 16;
 
-    static final BleParcelUuid[] RESERVED_UUIDS = {
-            PARCEL_UUID, AUDIO_SOURCE, ADV_AUDIO_DIST, HSP, HANDSFREE, AVRCP_CONTROLLER, AVRCP_TARGET,
+    @SuppressWarnings("unused")
+    public static final BleParcelUuid[] RESERVED_UUIDS = {
+            AUDIO_SINK, AUDIO_SOURCE, ADV_AUDIO_DIST, HSP, HANDSFREE, AVRCP_CONTROLLER, AVRCP_TARGET,
             OBEX_OBJECT_PUSH, PANU, NAP, MAP, MNS, MAS, SAP};
 
-    static boolean isAudioSource(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isAudioSource(BleParcelUuid uuid) {
         return uuid.equals(AUDIO_SOURCE);
     }
 
-    static boolean isAudioSink(BleParcelUuid uuid) {
-        return uuid.equals(PARCEL_UUID);
+    @SuppressWarnings("unused")
+    public static boolean isAudioSink(BleParcelUuid uuid) {
+        return uuid.equals(AUDIO_SINK);
     }
 
-    static boolean isAdvAudioDist(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isAdvAudioDist(BleParcelUuid uuid) {
         return uuid.equals(ADV_AUDIO_DIST);
     }
 
-    static boolean isHandsfree(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isHandsfree(BleParcelUuid uuid) {
         return uuid.equals(HANDSFREE);
     }
 
-    static boolean isHeadset(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isHeadset(BleParcelUuid uuid) {
         return uuid.equals(HSP);
     }
 
-    static boolean isAvrcpController(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isAvrcpController(BleParcelUuid uuid) {
         return uuid.equals(AVRCP_CONTROLLER);
     }
 
-    static boolean isAvrcpTarget(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isAvrcpTarget(BleParcelUuid uuid) {
         return uuid.equals(AVRCP_TARGET);
     }
 
-    static boolean isInputDevice(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isInputDevice(BleParcelUuid uuid) {
         return uuid.equals(HID);
     }
 
-    static boolean isPanu(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isPanu(BleParcelUuid uuid) {
         return uuid.equals(PANU);
     }
 
-    static boolean isNap(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isNap(BleParcelUuid uuid) {
         return uuid.equals(NAP);
     }
 
-    static boolean isBnep(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isBnep(BleParcelUuid uuid) {
         return uuid.equals(BNEP);
     }
 
-    static boolean isMap(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isMap(BleParcelUuid uuid) {
         return uuid.equals(MAP);
     }
 
-    static boolean isMns(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isMns(BleParcelUuid uuid) {
         return uuid.equals(MNS);
     }
 
-    static boolean isMas(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isMas(BleParcelUuid uuid) {
         return uuid.equals(MAS);
     }
 
-    static boolean isSap(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static boolean isSap(BleParcelUuid uuid) {
         return uuid.equals(SAP);
     }
 
@@ -149,11 +204,12 @@ class BluetoothUuid {
      * Returns true if BleParcelUuid is present in uuidArray
      *
      * @param uuidArray - Array of ParcelUuids
-     * @param uuid      BleParcelUuid
+     * @param uuid BleParcelUuid
      */
-    static boolean isUuidPresent(BleParcelUuid[] uuidArray, BleParcelUuid uuid) {
-        boolean uuidArrayEmpty = uuidArray == null || uuidArray.length == 0;
-        if (uuidArrayEmpty && uuid == null) {
+    @SuppressWarnings("unused")
+    public static boolean isUuidPresent(BleParcelUuid[] uuidArray, BleParcelUuid uuid) {
+        boolean result = uuidArray == null || uuidArray.length == 0;
+        if ( result && uuid == null) {
             return true;
         }
 
@@ -175,7 +231,8 @@ class BluetoothUuid {
      * @param uuidA - List of ParcelUuids
      * @param uuidB - List of ParcelUuids
      */
-    static boolean containsAnyUuid(BleParcelUuid[] uuidA, BleParcelUuid[] uuidB) {
+    @SuppressWarnings("unused")
+    public static boolean containsAnyUuid(BleParcelUuid[] uuidA, BleParcelUuid[] uuidB) {
         if (uuidA == null && uuidB == null) {
             return true;
         }
@@ -188,7 +245,7 @@ class BluetoothUuid {
             return uuidA.length == 0;
         }
 
-        HashSet<BleParcelUuid> uuidSet = new HashSet<>(Arrays.asList(uuidA));
+        BleHashSet<BleParcelUuid> uuidSet = new BleHashSet<>(Arrays.asList(uuidA));
         for (BleParcelUuid uuid : uuidB) {
             if (uuidSet.contains(uuid)) {
                 return true;
@@ -204,7 +261,8 @@ class BluetoothUuid {
      * @param uuidA - Array of ParcelUuidsA
      * @param uuidB - Array of ParcelUuidsB
      */
-    static boolean containsAllUuids(BleParcelUuid[] uuidA, BleParcelUuid[] uuidB) {
+    @SuppressWarnings("unused")
+    public static boolean containsAllUuids(BleParcelUuid[] uuidA, BleParcelUuid[] uuidB) {
         if (uuidA == null && uuidB == null) {
             return true;
         }
@@ -217,7 +275,7 @@ class BluetoothUuid {
             return true;
         }
 
-        HashSet<BleParcelUuid> uuidSet = new HashSet<>(Arrays.asList(uuidA));
+        BleHashSet<BleParcelUuid> uuidSet = new BleHashSet<>(Arrays.asList(uuidA));
         for (BleParcelUuid uuid : uuidB) {
             if (!uuidSet.contains(uuid)) {
                 return false;
@@ -234,9 +292,10 @@ class BluetoothUuid {
      * @param parcelUuid BleParcelUuid
      * @return the service identifier.
      */
-    static int getServiceIdentifierFromParcelUuid(BleParcelUuid parcelUuid) {
+    @SuppressWarnings("WeakerAccess")
+    public static int getServiceIdentifierFromParcelUuid(BleParcelUuid parcelUuid) {
         UUID uuid = parcelUuid.getUuid();
-        long value = (uuid.getMostSignificantBits() & 0x0000FFFF00000000L) >>> 32;
+        long value = (uuid.getMostSignificantBits() & 0xFFFFFFFF00000000L) >>> 32;
         return (int) value;
     }
 
@@ -249,13 +308,14 @@ class BluetoothUuid {
      * @return {@link BleParcelUuid} parsed from bytes.
      * @throws IllegalArgumentException If the {@code uuidBytes} cannot be parsed.
      */
-    static BleParcelUuid parseUuidFrom(byte[] uuidBytes) {
+    @SuppressWarnings("WeakerAccess")
+    public static BleParcelUuid parseUuidFrom(byte[] uuidBytes) {
         if (uuidBytes == null) {
             throw new IllegalArgumentException("uuidBytes cannot be null");
         }
         int length = uuidBytes.length;
-        if (length != UUID_BYTES_16_BIT && length != UUID_BYTES_32_BIT &&
-                length != UUID_BYTES_128_BIT) {
+        if (length != UUID_BYTES_16_BIT && length != UUID_BYTES_32_BIT
+                && length != UUID_BYTES_128_BIT) {
             throw new IllegalArgumentException("uuidBytes length invalid - " + length);
         }
 
@@ -285,14 +345,15 @@ class BluetoothUuid {
     }
 
     /**
-     * Parse UUID to bytes. The returned value is shortest representation, a 16-bit, 32-bit or 128-bit UUID,
-     * Note returned value is little endian (Bluetooth).
+     * Parse UUID to bytes. The returned value is shortest representation, a 16-bit, 32-bit or
+     * 128-bit UUID, Note returned value is little endian (Bluetooth).
      *
      * @param uuid uuid to parse.
      * @return shortest representation of {@code uuid} as bytes.
      * @throws IllegalArgumentException If the {@code uuid} is null.
      */
-    static byte[] uuidToBytes(BleParcelUuid uuid) {
+    @SuppressWarnings("unused")
+    public static byte[] uuidToBytes(BleParcelUuid uuid) {
         if (uuid == null) {
             throw new IllegalArgumentException("uuid cannot be null");
         }
@@ -332,9 +393,13 @@ class BluetoothUuid {
      * @param parcelUuid BleParcelUuid
      * @return true if the parcelUuid can be converted to 16 bit uuid, false otherwise.
      */
-    static boolean is16BitUuid(BleParcelUuid parcelUuid) {
+    @SuppressWarnings("WeakerAccess")
+    public static boolean is16BitUuid(BleParcelUuid parcelUuid) {
         UUID uuid = parcelUuid.getUuid();
-        return uuid.getLeastSignificantBits() == BASE_UUID.getUuid().getLeastSignificantBits() && ((uuid.getMostSignificantBits() & 0xFFFF0000FFFFFFFFL) == 0x1000L);
+        if (uuid.getLeastSignificantBits() != BASE_UUID.getUuid().getLeastSignificantBits()) {
+            return false;
+        }
+        return ((uuid.getMostSignificantBits() & 0xFFFF0000FFFFFFFFL) == 0x1000L);
     }
 
 
@@ -344,8 +409,15 @@ class BluetoothUuid {
      * @param parcelUuid BleParcelUuid
      * @return true if the parcelUuid can be converted to 32 bit uuid, false otherwise.
      */
-    static boolean is32BitUuid(BleParcelUuid parcelUuid) {
+    @SuppressWarnings("WeakerAccess")
+    public static boolean is32BitUuid(BleParcelUuid parcelUuid) {
         UUID uuid = parcelUuid.getUuid();
-        return uuid.getLeastSignificantBits() == BASE_UUID.getUuid().getLeastSignificantBits() && !is16BitUuid(parcelUuid) && ((uuid.getMostSignificantBits() & 0xFFFFFFFFL) == 0x1000L);
+        if (uuid.getLeastSignificantBits() != BASE_UUID.getUuid().getLeastSignificantBits()) {
+            return false;
+        }
+        if (is16BitUuid(parcelUuid)) {
+            return false;
+        }
+        return ((uuid.getMostSignificantBits() & 0xFFFFFFFFL) == 0x1000L);
     }
 }

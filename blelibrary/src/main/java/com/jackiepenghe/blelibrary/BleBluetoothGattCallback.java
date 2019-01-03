@@ -1,386 +1,367 @@
 package com.jackiepenghe.blelibrary;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import android.content.Intent;
+import android.bluetooth.BluetoothProfile;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.jackiepenghe.blelibrary.interfaces.OnBleCharacteristicWriteListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBleConnectStateChangedListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBleDescriptorWriteListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBleReceiveNotificationListener;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * BLE Gatt服务的回调
+ * BLE Gatt callback
  *
- * @author alm
+ * @author jackie
  */
 
-class BleBluetoothGattCallback extends BluetoothGattCallback {
+final class BleBluetoothGattCallback extends BluetoothGattCallback {
 
-    /*-------------------------静态常量-------------------------*/
+    /*-----------------------------------static constant-----------------------------------*/
 
     /**
      * TAG
      */
     private static final String TAG = BleBluetoothGattCallback.class.getSimpleName();
 
-    /*-------------------------成员变量-------------------------*/
+    /*-----------------------------------field variables-----------------------------------*/
 
     /**
-     * BLE连接服务
+     * callback list triggered when gatt descriptor write successful
      */
-    private BluetoothLeService bluetoothLeService;
+    private ArrayList<OnBleDescriptorWriteListener> onBleDescriptorWriteListeners = new ArrayList<>();
     /**
-     * BluetoothGatt客户端
+     * callback list triggered when gatt received notification data
      */
+    private ArrayList<OnBleReceiveNotificationListener> onBleReceiveNotificationListeners = new ArrayList<>();
+    /**
+     * callback list triggered when gatt characteristic write data successful
+     */
+    private ArrayList<OnBleCharacteristicWriteListener> onBleCharacteristicWriteListeners = new ArrayList<>();
+    /**
+     * BluetoothGatt client
+     */
+    @Nullable
     private BluetoothGatt gatt;
     /**
-     * BLE设备的连接状态
+     * BLE device connect status
      */
     private boolean connected;
     /**
-     * BLE设备的服务被发现的状态
+     * BLE device uuid discover status
      */
     private boolean serviceDiscovered;
 
-    /*-------------------------构造函数-------------------------*/
-
     /**
-     * 构造器
-     *
-     * @param bluetoothLeService BLE连接服务
+     * connect status changed listener
      */
-    BleBluetoothGattCallback(BluetoothLeService bluetoothLeService) {
-        this.bluetoothLeService = bluetoothLeService;
-    }
+    @Nullable
+    private OnBleConnectStateChangedListener onBleConnectStateChangedListener;
 
-    /*-------------------------重写父类函数-------------------------*/
+
+    /*-----------------------------------override method-----------------------------------*/
 
     /**
-     * 连接状态被改变的回调
-     * 根据新的连接状态发送对应的广播
+     * Callback indicating when GATT client has connected/disconnected to/from a remote
+     * GATT server.
      *
-     * @param gatt     蓝牙Gatt服务
-     * @param status   上一次的状态
-     * @param newState 新的状态
+     * @param gatt     GATT client
+     * @param status   Status of the connect or disconnect operation. {@link
+     *                 BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
+     * @param newState Returns the new connection state. Can be one of {@link
+     *                 BluetoothProfile#STATE_DISCONNECTED} or {@link BluetoothProfile#STATE_CONNECTED}
      */
     @Override
-    public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-        //创建intent对象
-        final Intent intent = new Intent();
-        //判断当前的连接状态
+    public void onConnectionStateChange(final BluetoothGatt gatt, int status, int newState) {
+        this.gatt = gatt;
+        //Judge the current state
         switch (newState) {
-            //连接断开
+            //disconnected
             case BluetoothGatt.STATE_DISCONNECTED:
-                Tool.warnOut(TAG, "status = " + status);
+                DebugUtil.warnOut(TAG, "status = " + status);
                 if (status == BluetoothGatt.STATE_CONNECTED || status == BluetoothGatt.STATE_CONNECTING || status == BluetoothGatt.STATE_DISCONNECTED || status == BluetoothGatt.STATE_DISCONNECTING) {
-                    Tool.warnOut(TAG, "STATE_DISCONNECTED");
-                    intent.setAction(BleConstants.ACTION_GATT_DISCONNECTED);
+                    DebugUtil.warnOut(TAG, "STATE_DISCONNECTED");
+                    performDeviceDisconnectedListener();
                     connected = false;
+                    serviceDiscovered = false;
                 } else {
-                    intent.putExtra(LibraryConstants.STATUS_ERROR, status);
-                    intent.setAction(BleConstants.ACTION_GATT_STATUS_ERROR);
+                    performGattStatusErrorListener(status);
+                    connected = false;
+                    serviceDiscovered=false;
                 }
                 break;
-            //正在连接
+            //connecting
             case BluetoothGatt.STATE_CONNECTING:
-                Tool.warnOut(TAG, "STATE_CONNECTING");
-                intent.setAction(BleConstants.ACTION_GATT_CONNECTING);
+                DebugUtil.warnOut(TAG, "STATE_CONNECTING");
+                performDeviceConnectingListener();
                 break;
-            //已连接
+            //connected
             case BluetoothGatt.STATE_CONNECTED:
                 connected = true;
-                Tool.warnOut(TAG, "STATE_CONNECTED");
-                intent.setAction(BleConstants.ACTION_GATT_CONNECTED);
+                DebugUtil.warnOut(TAG, "STATE_CONNECTED");
+                performDeviceConnectedListener();
                 if (!gatt.discoverServices()) {
-                    Tool.warnOut(TAG, "无法进行服务发现");
-                    intent.setAction(BleConstants.ACTION_GATT_DISCOVER_SERVICES_FAILED);
+                    DebugUtil.warnOut(TAG, "gatt.discoverServices() return false");
+                    performAutoDiscoverServicesFailedListener();
                 }
                 break;
-            //正在断开连接
+            //disconnecting
             case BluetoothGatt.STATE_DISCONNECTING:
-                Tool.warnOut(TAG, "STATE_DISCONNECTING");
-                intent.setAction(BleConstants.ACTION_GATT_DISCONNECTING);
+                DebugUtil.warnOut(TAG, "STATE_DISCONNECTING");
+                performDeviceDisconnectingListener();
                 break;
+            //others
             default:
-                //其他情况
-                Tool.warnOut(TAG, "other state:" + newState);
+                DebugUtil.warnOut(TAG, "other state:" + newState);
+                performGattUnknownStatusListener(newState);
                 break;
         }
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                //发送广播
-                bluetoothLeService.sendBroadcast(intent);
-            }
-        });
     }
 
     /**
-     * 服务扫描完成
+     * Callback invoked when the list of remote services, characteristics and descriptors
+     * for the remote device have been updated, ie new services have been discovered.
      *
-     * @param gatt   BluetoothGatt客户端
-     * @param status BluetoothGatt客户端配置状态
+     * @param gatt   GATT client invoked {@link BluetoothGatt#discoverServices}
+     * @param status {@link BluetoothGatt#GATT_SUCCESS} if the remote device has been explored
+     *               successfully.
      */
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-
-        Tool.warnOut(TAG, "onServicesDiscovered");
-        //BluetoothGatt客户端配置失败了
+        DebugUtil.warnOut(TAG, "onServicesDiscovered");
         if (BluetoothGatt.GATT_SUCCESS != status) {
-            broadcastUpdate(BleConstants.ACTION_GATT_NOT_SUCCESS, "onServicesDiscovered", status);
-        }
-        //BluetoothGatt客户端配置成功
-        else {
+            performGattPerformTaskFailedListener(status,"onServicesDiscovered");
+        } else {
             serviceDiscovered = true;
-            broadcastUpdate(BleConstants.ACTION_GATT_SERVICES_DISCOVERED);
-            this.gatt = gatt;
+            performDeviceServicesDiscoveredListener();
         }
     }
 
     /**
-     * 获取到远端设备的数据
+     * Callback reporting the result of a characteristic read operation.
      *
-     * @param gatt           BluetoothGatt客户端
-     * @param characteristic 远端设备的特征
-     * @param status         BluetoothGatt客户端配置状态
+     * @param gatt           GATT client invoked {@link BluetoothGatt#readCharacteristic}
+     * @param characteristic Characteristic that was read from the associated remote device.
+     * @param status         {@link BluetoothGatt#GATT_SUCCESS} if the read operation was completed
+     *                       successfully.
      */
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        Tool.warnOut(TAG, "onCharacteristicRead");
-        //BluetoothGatt客户端配置失败了
+        DebugUtil.warnOut(TAG, "onCharacteristicRead");
         if (BluetoothGatt.GATT_SUCCESS != status) {
-            broadcastUpdate(BleConstants.ACTION_GATT_NOT_SUCCESS, "onCharacteristicRead", status);
-        }
-        //BluetoothGatt客户端配置成功
-        else {
+            performGattPerformTaskFailedListener(status, "onCharacteristicRead");
+        } else {
             byte[] value = characteristic.getValue();
-            broadcastUpdate(characteristic.getUuid().toString(), BleConstants.ACTION_CHARACTERISTIC_READ, value);
+            performGattReadCharacteristicDataListener(characteristic, value);
         }
     }
 
     /**
-     * 向远端设备写入数据
+     * Callback indicating the result of a characteristic write operation.
      *
-     * @param gatt           BluetoothGatt客户端
-     * @param characteristic 远端设备的特征
-     * @param status         BluetoothGatt客户端配置状态
+     * <p>If this callback is invoked while a reliable write transaction is
+     * in progress, the value of the characteristic represents the value
+     * reported by the remote device. An application should compare this
+     * value to the desired value to be written. If the values don't match,
+     * the application must abort the reliable write transaction.
+     *
+     * @param gatt           GATT client invoked {@link BluetoothGatt#writeCharacteristic}
+     * @param characteristic Characteristic that was written to the associated remote device.
+     * @param status         The result of the write operation {@link BluetoothGatt#GATT_SUCCESS} if the
+     *                       operation succeeds.
      */
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        Tool.warnOut(TAG, "onCharacteristicWrite");
-        //BluetoothGatt客户端配置失败了
+        DebugUtil.warnOut(TAG, "onCharacteristicWrite");
         if (BluetoothGatt.GATT_SUCCESS != status) {
-            broadcastUpdate(BleConstants.ACTION_GATT_NOT_SUCCESS, "onCharacteristicWrite", status);
-        }
-        //BluetoothGatt客户端配置成功
-        else {
+            performGattPerformTaskFailedListener(status, "onCharacteristicWrite");
+        } else {
             byte[] value = characteristic.getValue();
-            broadcastUpdate(characteristic.getUuid().toString(), BleConstants.ACTION_CHARACTERISTIC_WRITE, value);
+            performGattWriteCharacteristicDataListener(characteristic, value);
         }
     }
 
     /**
-     * 远端设备的特征改变了（有通知数据来了）
+     * Callback triggered as a result of a remote characteristic notification.
      *
-     * @param gatt           BluetoothGatt客户端
-     * @param characteristic 远端设备的特征
+     * @param gatt           GATT client the characteristic is associated with
+     * @param characteristic Characteristic that has been updated as a result of a remote
+     *                       notification event.
      */
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-        Tool.warnOut(TAG, "onReceivedNotification");
+        DebugUtil.warnOut(TAG, "onReceivedNotification");
         byte[] value = characteristic.getValue();
-        broadcastUpdate(characteristic.getUuid().toString(), BleConstants.ACTION_CHARACTERISTIC_CHANGED, value);
+        performReceivedNotificationListener(characteristic, value);
     }
 
     /**
-     * 获取到远端设备的描述
+     * Callback reporting the result of a descriptor read operation.
      *
-     * @param gatt       BluetoothGatt客户端
-     * @param descriptor 远端设备的描述
-     * @param status     BluetoothGatt客户端配置状态
+     * @param gatt       GATT client invoked {@link BluetoothGatt#readDescriptor}
+     * @param descriptor Descriptor that was read from the associated remote device.
+     * @param status     {@link BluetoothGatt#GATT_SUCCESS} if the read operation was completed
+     *                   successfully
      */
     @Override
     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        Tool.warnOut(TAG, "onDescriptorRead");
-        //BluetoothGatt客户端配置失败了
+        DebugUtil.warnOut(TAG, "onDescriptorRead");
         if (BluetoothGatt.GATT_SUCCESS != status) {
-            broadcastUpdate(BleConstants.ACTION_GATT_NOT_SUCCESS, "onDescriptorRead", status);
-        }
-        //BluetoothGatt客户端配置成功
-        else {
+            performGattPerformTaskFailedListener(status, "onDescriptorRead");
+        } else {
             byte[] value = descriptor.getValue();
-            broadcastUpdate(descriptor.getUuid().toString(), BleConstants.ACTION_DESCRIPTOR_READ, value);
+            performGattReadDescriptorListener(descriptor, value);
         }
     }
 
     /**
-     * 向远端设备写入描述
+     * Callback indicating the result of a descriptor write operation.
      *
-     * @param gatt       BluetoothGatt客户端
-     * @param descriptor 远端设备的描述
-     * @param status     BluetoothGatt客户端配置状态
+     * @param gatt       GATT client invoked {@link BluetoothGatt#writeDescriptor}
+     * @param descriptor Descriptor that was writte to the associated remote device.
+     * @param status     The result of the write operation {@link BluetoothGatt#GATT_SUCCESS} if the
+     *                   operation succeeds.
      */
     @Override
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        Tool.warnOut(TAG, "onDescriptorWrite");
-        //BluetoothGatt客户端配置失败了
+        DebugUtil.warnOut(TAG, "onDescriptorWrite");
         if (BluetoothGatt.GATT_SUCCESS != status) {
-            broadcastUpdate(BleConstants.ACTION_GATT_NOT_SUCCESS, "onDescriptorWrite", status);
-        }
-        //BluetoothGatt客户端配置成功
-        else {
+            performGattPerformTaskFailedListener(status, "onDescriptorWrite");
+        } else {
             byte[] value = descriptor.getValue();
-            broadcastUpdate(descriptor.getUuid().toString(), BleConstants.ACTION_DESCRIPTOR_WRITE, value);
+            performGattWriteDescriptorListener(descriptor, value);
         }
 
     }
 
     /**
-     * 向远端设备写入可靠数据完成
+     * Callback invoked when a reliable write transaction has been completed.
      *
-     * @param gatt   BluetoothGatt客户端
-     * @param status BluetoothGatt客户端配置状态
+     * @param gatt   GATT client invoked {@link BluetoothGatt#executeReliableWrite}
+     * @param status {@link BluetoothGatt#GATT_SUCCESS} if the reliable write transaction was
+     *               executed successfully
      */
     @Override
     public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
-        Tool.warnOut(TAG, "onReliableWriteCompleted");
-        //BluetoothGatt客户端配置失败了
+        DebugUtil.warnOut(TAG, "onReliableWriteCompleted");
         if (BluetoothGatt.GATT_SUCCESS != status) {
-            broadcastUpdate(BleConstants.ACTION_GATT_NOT_SUCCESS, "onReliableWriteCompleted", status);
-        }
-        //BluetoothGatt客户端配置成功
-        else {
-            broadcastUpdate(BleConstants.ACTION_RELIABLE_WRITE_COMPLETED);
+            performGattPerformTaskFailedListener(status, "onReliableWriteCompleted");
+        } else {
+            performGattReliableWriteCompletedListener();
         }
     }
 
     /**
-     * 获取到远端设备的RSSI
+     * Callback reporting the RSSI for a remote device connection.
+     * <p>
+     * This callback is triggered in response to the
+     * {@link BluetoothGatt#readRemoteRssi} function.
      *
-     * @param gatt   BluetoothGatt客户端
-     * @param rssi   信号强度
-     * @param status BluetoothGatt客户端配置状态
+     * @param gatt   GATT client invoked {@link BluetoothGatt#readRemoteRssi}
+     * @param rssi   The RSSI value for the remote device
+     * @param status {@link BluetoothGatt#GATT_SUCCESS} if the RSSI was read successfully
      */
     @Override
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-        Tool.warnOut(TAG, "onReadRemoteRssi");
-        //BluetoothGatt客户端配置失败了
+        DebugUtil.warnOut(TAG, "onReadRemoteRssi");
         if (BluetoothGatt.GATT_SUCCESS != status) {
-            broadcastUpdate(BleConstants.ACTION_GATT_NOT_SUCCESS, "onReadRemoteRssi", status);
-        }
-        //BluetoothGatt客户端配置成功
-        else {
-            byte[] value = new byte[]{(byte) rssi};
-            broadcastUpdate(BleConstants.ACTION_READ_REMOTE_RSSI, value);
+            performGattPerformTaskFailedListener(status, "onReadRemoteRssi");
+        } else {
+            performGattReadRemoteRssiListener(rssi);
         }
     }
 
     /**
-     * mtu被更改
+     * Callback indicating the MTU for a given device connection has changed.
+     * <p>
+     * This callback is triggered in response to the
+     * {@link BluetoothGatt#requestMtu} function, or in response to a connection
+     * event.
      *
-     * @param gatt   BluetoothGatt客户端
-     * @param mtu    mtu值
-     * @param status BluetoothGatt客户端配置状态
+     * @param gatt   GATT client invoked {@link BluetoothGatt#requestMtu}
+     * @param mtu    The new MTU size
+     * @param status {@link BluetoothGatt#GATT_SUCCESS} if the MTU has been changed successfully
      */
     @Override
     public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-        Tool.warnOut(TAG, "onMtuChanged");
-        //BluetoothGatt客户端配置失败了
+        DebugUtil.warnOut(TAG, "onMtuChanged");
         if (BluetoothGatt.GATT_SUCCESS != status) {
-            broadcastUpdate(BleConstants.ACTION_GATT_NOT_SUCCESS, "onMtuChanged", status);
+            performGattPerformTaskFailedListener(status, "onMtuChanged");
         } else {
-            byte[] value = new byte[]{(byte) mtu};
-            broadcastUpdate(BleConstants.ACTION_MTU_CHANGED, value);
+            performGattMtuChangedListener(mtu);
         }
     }
 
-    /*-------------------------私有函数-------------------------*/
-
     /**
-     * 发送广播
+     * Callback triggered as result of {@link BluetoothGatt#setPreferredPhy}, or as a result of
+     * remote device changing the PHY.
      *
-     * @param action 广播中需要包含的action
+     * @param gatt   GATT client
+     * @param txPhy  the transmitter PHY in use. One of {@link BluetoothDevice#PHY_LE_1M}, {@link
+     *               BluetoothDevice#PHY_LE_2M}, and {@link BluetoothDevice#PHY_LE_CODED}.
+     * @param rxPhy  the receiver PHY in use. One of {@link BluetoothDevice#PHY_LE_1M}, {@link
+     *               BluetoothDevice#PHY_LE_2M}, and {@link BluetoothDevice#PHY_LE_CODED}.
+     * @param status Status of the PHY update operation. {@link BluetoothGatt#GATT_SUCCESS} if the
      */
-    private void broadcastUpdate(String action) {
-        final Intent intent = new Intent();
-        intent.setAction(action);
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                //发送广播
-                bluetoothLeService.sendBroadcast(intent);
-            }
-        });
+    @Override
+    public void onPhyUpdate(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
+        super.onPhyUpdate(gatt, txPhy, rxPhy, status);
+        if (BluetoothGatt.GATT_SUCCESS != status) {
+            performGattPerformTaskFailedListener(status, "onPhyUpdate");
+        } else {
+            performGattPhyUpdateListener(txPhy, rxPhy);
+        }
     }
 
     /**
-     * 发送广播
+     * Callback triggered as result of {@link BluetoothGatt#readPhy}
      *
-     * @param action 广播中需要包含的action
-     * @param value  广播中需要包含的数据
+     * @param gatt   GATT client
+     * @param txPhy  the transmitter PHY in use. One of {@link BluetoothDevice#PHY_LE_1M}, {@link
+     *               BluetoothDevice#PHY_LE_2M}, and {@link BluetoothDevice#PHY_LE_CODED}.
+     * @param rxPhy  the receiver PHY in use. One of {@link BluetoothDevice#PHY_LE_1M}, {@link
+     *               BluetoothDevice#PHY_LE_2M}, and {@link BluetoothDevice#PHY_LE_CODED}.
+     * @param status Status of the PHY read operation. {@link BluetoothGatt#GATT_SUCCESS} if the
      */
-    private void broadcastUpdate(String uuid, String action, byte[] value) {
-        final Intent intent = new Intent();
-        intent.putExtra(BleConstants.UUID, uuid);
-        intent.setAction(action);
-        intent.putExtra(LibraryConstants.VALUE, value);
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                //发送广播
-                bluetoothLeService.sendBroadcast(intent);
-            }
-        });
+    @Override
+    public void onPhyRead(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
+        super.onPhyRead(gatt, txPhy, rxPhy, status);
+        if (BluetoothGatt.GATT_SUCCESS != status) {
+            performGattPerformTaskFailedListener(status, "onPhyRead");
+        } else {
+            performGattReadPhyListener(txPhy, rxPhy);
+        }
     }
 
+    /*-----------------------------------setter-----------------------------------*/
+
     /**
-     * 发送广播
+     * set BLE device connect status changed listener
      *
-     * @param action 广播中需要包含的action
-     * @param value  广播中需要包含的数据
+     * @param onBleConnectStateChangedListener BLE device connect status changed listener
      */
-    private void broadcastUpdate(String action, byte[] value) {
-        final Intent intent = new Intent();
-        intent.setAction(action);
-        intent.putExtra(LibraryConstants.VALUE, value);
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                //发送广播
-                bluetoothLeService.sendBroadcast(intent);
-            }
-        });
+    void setOnBleConnectStateChangedListener(@Nullable OnBleConnectStateChangedListener onBleConnectStateChangedListener) {
+        this.onBleConnectStateChangedListener = onBleConnectStateChangedListener;
     }
 
-    /**
-     * 发送广播
-     *
-     * @param action 广播中需要包含的action
-     * @param method 广播中需要包含的数据
-     */
-    private void broadcastUpdate(String action, String method, int status) {
-        final Intent intent = new Intent();
-        intent.setAction(action);
-        intent.putExtra(LibraryConstants.METHOD, method);
-        intent.putExtra(LibraryConstants.STATUS, status);
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                //发送广播
-                bluetoothLeService.sendBroadcast(intent);
-            }
-        });
-    }
-
-    /*-------------------------库内可使用函数-------------------------*/
+    /*-----------------------------------package private method-----------------------------------*/
 
     /**
-     * 获取服务列表
+     * get remote device service list
      *
-     * @return 服务列表
+     * @return service uuid list
      */
+    @Nullable
     List<BluetoothGattService> getServices() {
         if (gatt == null) {
             return null;
@@ -389,36 +370,353 @@ class BleBluetoothGattCallback extends BluetoothGattCallback {
     }
 
     /**
-     * 根据UUID获取指定的服务
+     * get remote device service by uuid
      *
      * @param uuid UUID
      * @return BluetoothGattService
      */
-    BluetoothGattService getService(UUID uuid) {
+    @SuppressWarnings("unused")
+    @Nullable
+    BluetoothGattService getService(@NonNull UUID uuid) {
         if (gatt == null) {
-            return null;
-        }
-        if (uuid == null) {
             return null;
         }
         return gatt.getService(uuid);
     }
 
     /**
-     * 当前设备的连接状态
+     * get connection status
      *
-     * @return 当前设备的连接状态
+     * @return connection status
      */
-    boolean isConnected() {
+    public boolean isConnected() {
         return connected;
     }
 
     /**
-     * 设备是否已经完成发现服务
+     * get service discover status
      *
-     * @return 设备是否已经完成发现服务
+     * @return service discover status
      */
-    boolean isServiceDiscovered() {
+    @SuppressWarnings("WeakerAccess")
+    public boolean isServiceDiscovered() {
         return serviceDiscovered;
+    }
+
+    /**
+     * add a callback triggered when descriptor write successful
+     *
+     * @param onDescriptorWriteListener callback triggered when descriptor write successful
+     * @return true means successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean addOnBleDescriptorWriteListener(@NonNull OnBleDescriptorWriteListener onDescriptorWriteListener) {
+        if (onBleDescriptorWriteListeners == null) {
+            return false;
+        }
+        onBleDescriptorWriteListeners.add(onDescriptorWriteListener);
+        return true;
+    }
+
+    /**
+     * remove a callback triggered when descriptor write successful
+     *
+     * @param onBleDescriptorWriteListener callback triggered when descriptor write successful
+     * @return true means successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean removeOnBleDescriptorWriteListener(@NonNull OnBleDescriptorWriteListener onBleDescriptorWriteListener) {
+        if (onBleDescriptorWriteListeners == null) {
+            return false;
+        }
+        return onBleDescriptorWriteListeners.remove(onBleDescriptorWriteListener);
+    }
+
+    /**
+     * add a callback triggered when received notification data
+     *
+     * @param onBleReceiveNotificationListener callback triggered when descriptor write successful
+     * @return true means successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean addOnBleReceiveNotificationListener(@NonNull OnBleReceiveNotificationListener onBleReceiveNotificationListener) {
+        if (onBleReceiveNotificationListeners == null) {
+            return false;
+        }
+        onBleReceiveNotificationListeners.add(onBleReceiveNotificationListener);
+        return true;
+    }
+
+    /**
+     * remove a callback triggered when received notification data
+     *
+     * @param onBleReceiveNotificationListener callback triggered when received notification data
+     * @return true means successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean removeOnBleReceiveNotificationListener(@NonNull OnBleReceiveNotificationListener onBleReceiveNotificationListener) {
+        if (onBleReceiveNotificationListeners == null) {
+            return false;
+        }
+        return onBleReceiveNotificationListeners.remove(onBleReceiveNotificationListener);
+    }
+
+    /**
+     * add a callback triggered when gatt characteristic write data successful
+     *
+     * @param onBleCharacteristicWriteListener callback triggered when gatt characteristic write data successful
+     * @return true means successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean addOnBleCharacteristicWriteListener(@NonNull OnBleCharacteristicWriteListener onBleCharacteristicWriteListener) {
+        if (onBleCharacteristicWriteListeners == null) {
+            return false;
+        }
+        onBleCharacteristicWriteListeners.add(onBleCharacteristicWriteListener);
+        return true;
+    }
+
+    /**
+     * remove a callback triggered when gatt characteristic write data successful
+     *
+     * @param onBleCharacteristicWriteListener callback triggered when gatt characteristic write data successful
+     * @return true means successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean removeOnBleCharacteristicWriteListener(@NonNull OnBleCharacteristicWriteListener onBleCharacteristicWriteListener) {
+        if (onBleCharacteristicWriteListeners == null) {
+            return false;
+        }
+        return onBleCharacteristicWriteListeners.remove(onBleCharacteristicWriteListener);
+    }
+
+    /*-----------------------------------private method-----------------------------------*/
+
+    private void performDeviceDisconnectedListener() {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.disconnected();
+                }
+            }
+        });
+    }
+
+    private void performGattStatusErrorListener(final int status) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.gattStatusError(status);
+                }
+            }
+        });
+    }
+
+    private void performDeviceConnectingListener() {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.connecting();
+                }
+            }
+        });
+    }
+
+    private void performDeviceConnectedListener() {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.connected();
+                }
+            }
+        });
+    }
+
+    private void performAutoDiscoverServicesFailedListener() {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.autoDiscoverServicesFailed();
+                }
+            }
+        });
+    }
+
+    private void performDeviceDisconnectingListener() {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.disconnecting();
+                }
+            }
+        });
+    }
+
+    private void performGattUnknownStatusListener(final int newState) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.unknownStatus(newState);
+                }
+            }
+        });
+    }
+
+    private void performGattPerformTaskFailedListener(final int status, final String methodName) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.gattPerformTaskFailed(status,methodName);
+                }
+            }
+        });
+    }
+
+    private void performDeviceServicesDiscoveredListener() {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.servicesDiscovered();
+                }
+            }
+        });
+    }
+
+    private void performGattReadCharacteristicDataListener(final BluetoothGattCharacteristic characteristic, final byte[] value) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.readCharacteristicData(characteristic, value);
+                }
+            }
+        });
+    }
+
+    private void performGattWriteCharacteristicDataListener(final BluetoothGattCharacteristic characteristic, final byte[] value) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.writeCharacteristicData(characteristic, value);
+                }
+
+                for (int i = 0; i < onBleCharacteristicWriteListeners.size(); i++) {
+                    OnBleCharacteristicWriteListener onBleCharacteristicWriteListener = onBleCharacteristicWriteListeners.get(i);
+                    if (onBleCharacteristicWriteListener != null) {
+                        onBleCharacteristicWriteListener.onBleCharacteristicWrite(characteristic, value);
+                    }
+                }
+            }
+        });
+    }
+
+    private void performReceivedNotificationListener(final BluetoothGattCharacteristic characteristic, final byte[] value) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.receivedNotification(characteristic, value);
+                }
+                for (int i = 0; i < onBleReceiveNotificationListeners.size(); i++) {
+                    OnBleReceiveNotificationListener onBleReceiveNotificationListener = onBleReceiveNotificationListeners.get(i);
+                    if (onBleReceiveNotificationListener != null) {
+                        onBleReceiveNotificationListener.onBleReceiveNotification(characteristic, value);
+                    }
+                }
+            }
+        });
+    }
+
+    private void performGattReadDescriptorListener(final BluetoothGattDescriptor descriptor, final byte[] value) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.readDescriptor(descriptor, value);
+                }
+            }
+        });
+    }
+
+    private void performGattWriteDescriptorListener(final BluetoothGattDescriptor descriptor, final byte[] value) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.writeDescriptor(descriptor, value);
+                }
+                for (int i = 0; i < onBleDescriptorWriteListeners.size(); i++) {
+                    OnBleDescriptorWriteListener onBleDescriptorWriteListener = onBleDescriptorWriteListeners.get(i);
+                    if (onBleDescriptorWriteListener != null) {
+                        onBleDescriptorWriteListener.onBleDescriptorWrite(descriptor, value);
+                    }
+                }
+            }
+        });
+    }
+
+    private void performGattReliableWriteCompletedListener() {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.reliableWriteCompleted();
+                }
+            }
+        });
+    }
+
+    private void performGattReadRemoteRssiListener(final int rssi) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.readRemoteRssi(rssi);
+                }
+            }
+        });
+    }
+
+    private void performGattMtuChangedListener(final int mtu) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.mtuChanged(mtu);
+                }
+            }
+        });
+    }
+
+    private void performGattPhyUpdateListener(final int txPhy, final int rxPhy) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.phyUpdate(txPhy, rxPhy);
+                }
+            }
+        });
+    }
+
+    private void performGattReadPhyListener(final int txPhy, final int rxPhy) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.readPhy(txPhy, rxPhy);
+                }
+            }
+        });
     }
 }

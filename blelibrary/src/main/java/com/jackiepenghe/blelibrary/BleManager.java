@@ -1,8 +1,8 @@
 package com.jackiepenghe.blelibrary;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.IntentFilter;
@@ -10,28 +10,41 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
+
+import com.jackiepenghe.blelibrary.interfaces.OnBluetoothStateChangedListener;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * BlE管理类
+ * BlE Manager
  *
- * @author alm
+ * @author jackie
  */
-public class BleManager {
 
-    /*------------------------静态常量----------------------------*/
+@SuppressWarnings("unused")
+public final class BleManager {
+
+    /*-----------------------------------static constant-----------------------------------*/
+
+    private static final String TAG = BleManager.class.getSimpleName();
 
     /**
-     * Handler
+     * Broadcast receiver listening to Bluetooth status
+     */
+    private static final BluetoothStateReceiver BLUETOOTH_STATE_RECEIVER = new BluetoothStateReceiver();
+    /**
+     * handler
      */
     private static final Handler HANDLER = new Handler();
-
     /**
-     * 线程工厂
+     * 线程池工厂
      */
     private static final ThreadFactory THREAD_FACTORY = new ThreadFactory() {
         @Override
@@ -39,55 +52,47 @@ public class BleManager {
             return new Thread(r);
         }
     };
-    /**
-     * 定时器
-     */
-    private static final ScheduledExecutorService SCHEDULED_THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(20, THREAD_FACTORY);
-    /**
-     * 监听蓝牙状态的广播接收者
-     */
-    private static final BluetoothStateReceiver BLUETOOTH_STATE_RECEIVER = new BluetoothStateReceiver();
 
-    /*------------------------静态变量----------------------------*/
+    /*-----------------------------------field variables-----------------------------------*/
 
     /**
-     * Ble连接实例
+     * BleConnector singleton
      */
+    @Nullable
     @SuppressLint("StaticFieldLeak")
     private static BleConnector bleConnector;
     /**
-     * Ble扫描实例
+     * BleScanner singleton
      */
+    @Nullable
     @SuppressLint("StaticFieldLeak")
     private static BleScanner bleScanner;
     /**
-     * Ble多连接实例
+     * BleMultiConnector singleton
      */
+    @Nullable
     @SuppressLint("StaticFieldLeak")
     private static BleMultiConnector bleMultiConnector;
     /**
-     * Ble广播实例
+     * BleAdvertiser singleton
      */
+    @Nullable
     @SuppressLint("StaticFieldLeak")
     private static BleAdvertiser bleAdvertiser;
     /**
-     * 重置Ble广播实例的标志（避免无限循环调用）
+     * Ble broadcast instance has been reset (Avoid infinite loop calls)
      */
     private static boolean resetBleAdvertiserFlag;
     /**
-     * 上下文
+     * Context
      */
     @SuppressLint("StaticFieldLeak")
     private static Context context;
-    /**
-     * 记录蓝牙状态广播接收者是否已注册的标志
-     */
-    private static boolean bluetoothStateReceiverRegistered;
 
-    /*------------------------库内静态函数----------------------------*/
+    /*-----------------------------------Package private method-----------------------------------*/
 
     /**
-     * 重置bleMultiConnector避免内存泄漏
+     * Reset bleMultiConnector
      */
     static void resetBleMultiConnector() {
         if (bleMultiConnector != null) {
@@ -97,9 +102,9 @@ public class BleManager {
     }
 
     /**
-     * 重置Ble广播实例
+     * Reset the Ble broadcast instance
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     static void resetBleAdvertiser() {
         if (resetBleAdvertiserFlag) {
             return;
@@ -113,84 +118,90 @@ public class BleManager {
         resetBleAdvertiserFlag = false;
     }
 
+    /*-----------------------------------public static method-----------------------------------*/
+
     /**
-     * 获取Handler
+     * Unbind a device directly from the device address
      *
-     * @return Handler
+     * @param context Context
+     * @param address Device address
+     * @return true means request send success
      */
-    static Handler getHandler() {
-        return HANDLER;
+    @SuppressWarnings("WeakerAccess")
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
+    public static boolean unBound(@Nullable Context context,@NonNull String address) {
+
+        if (context == null) {
+            return false;
+        }
+
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            return false;
+        }
+
+        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+
+        if (bluetoothManager == null) {
+            return false;
+        }
+
+        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
+
+        if (bluetoothAdapter == null) {
+            return false;
+        }
+
+        BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(address);
+
+        if (remoteDevice.getBondState() != BluetoothDevice.BOND_BONDED) {
+            return false;
+        }
+
+        Method removeBondMethod;
+        boolean result = false;
+        try {
+            //noinspection JavaReflectionMemberAccess
+            removeBondMethod = BluetoothDevice.class.getMethod("removeBond");
+            result = (boolean) removeBondMethod.invoke(remoteDevice);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        if (result) {
+            DebugUtil.warnOut(TAG, "remove bound request success");
+        } else {
+            DebugUtil.warnOut(TAG, "remove bound request failed");
+        }
+
+        return result;
     }
 
     /**
-     * 获取线程工厂
+     * Determine if the phone supports BLE
      *
-     * @return 线程工厂
-     */
-    static ThreadFactory getThreadFactory() {
-        return THREAD_FACTORY;
-    }
-
-    /*------------------------公开静态函数----------------------------*/
-
-    /**
-     * 设置是否重用未消失的Toast
-     *
-     * @param reuse true表示开启重用
-     */
-    @SuppressWarnings("unused")
-    public static void setToastReuse(boolean reuse) {
-        CustomToast.setReuse(reuse);
-    }
-
-    /**
-     * 获取当前Toast是否开启重用
-     *
-     * @return true表示开启重用
-     */
-    @SuppressWarnings("unused")
-    public static boolean isToastReuse() {
-        return ToastHandler.isReuse();
-    }
-
-    /**
-     * 判断手机是否支持BLE
-     *
-     * @return true表示支持BLE
+     * @return true means support
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isSupportBle() {
         checkInitStatus();
+        if (context == null){
+            return false;
+        }
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
     }
 
     /**
-     * 初始化
+     * initialization
      *
-     * @param context 上下文
+     * @param context Context
      */
     public static void init(@NonNull Context context) {
         BleManager.context = context.getApplicationContext();
-    }
-
-    /**
-     * 注册蓝牙状态的广播监听
-     */
-    public static void registerBluetoothStateReceiver() {
         BleManager.context.registerReceiver(BLUETOOTH_STATE_RECEIVER, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-        bluetoothStateReceiverRegistered = true;
     }
 
     /**
-     * 注册蓝牙状态的广播监听
-     */
-    public static void unregisterBluetoothStateReceiver() {
-        BleManager.context.unregisterReceiver(BLUETOOTH_STATE_RECEIVER);
-        bluetoothStateReceiverRegistered = false;
-    }
-
-    /**
-     * 创建一个新的BLE连接实例
+     * Create a new BleConnector
      *
      * @return BleConnector
      */
@@ -199,15 +210,17 @@ public class BleManager {
         if (!isSupportBle()) {
             return null;
         }
-        return new BleConnector(context);
+        return new BleConnector();
     }
 
-
+    public static Context getContext() {
+        return context;
+    }
 
     /**
-     * 获取BLE连接实例的单例
+     * Get a singleton of BleConnector
      *
-     * @return BleConnector单例
+     * @return singleton of BleConnector
      */
     public static BleConnector getBleConnectorInstance() {
         checkInitStatus();
@@ -218,19 +231,7 @@ public class BleManager {
         if (bleConnector == null) {
             synchronized (BleManager.class) {
                 if (bleConnector == null) {
-                    bleConnector = new BleConnector(context);
-                }
-            }
-        } else {
-            if (bleConnector.getContext() == null) {
-                bleConnector = null;
-            }
-
-            if (bleConnector == null) {
-                synchronized (BleManager.class) {
-                    if (bleConnector == null) {
-                        bleConnector = new BleConnector(context);
-                    }
+                    bleConnector = new BleConnector();
                 }
             }
         }
@@ -238,7 +239,7 @@ public class BleManager {
     }
 
     /**
-     * 创建一个新的BLE扫描实例
+     * Create a new BleScanner
      *
      * @return BleScanner
      */
@@ -247,13 +248,13 @@ public class BleManager {
         if (!isSupportBle()) {
             return null;
         }
-        return new BleScanner();
+        return new BleScanner(context);
     }
 
     /**
-     * 获取BLE扫描实例的单例
+     * Get a singleton of BleScanner
      *
-     * @return BleScanner单例
+     * @return singleton of BleScanner
      */
     public static BleScanner getBleScannerInstance() {
         checkInitStatus();
@@ -263,7 +264,19 @@ public class BleManager {
         if (bleScanner == null) {
             synchronized (BleManager.class) {
                 if (bleScanner == null) {
-                    bleScanner = new BleScanner();
+                    bleScanner = new BleScanner(context);
+                }
+            }
+        } else {
+            if (bleScanner.getContext() == null) {
+                bleScanner = null;
+            }
+
+            if (bleScanner == null) {
+                synchronized (BleManager.class) {
+                    if (bleScanner == null) {
+                        bleScanner = new BleScanner(context);
+                    }
                 }
             }
         }
@@ -271,12 +284,11 @@ public class BleManager {
     }
 
     /**
-     * 获取蓝牙广播单例实例
+     *  Get a singleton of BleAdvertiser
      *
      * @return BleAdvertiser
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static BleAdvertiser getBleAdvertiserInstance() {
         checkInitStatus();
         if (!isSupportBle()) {
@@ -285,7 +297,7 @@ public class BleManager {
         if (bleAdvertiser == null) {
             synchronized (BleManager.class) {
                 if (bleAdvertiser == null) {
-                    bleAdvertiser = new BleAdvertiser();
+                    bleAdvertiser = new BleAdvertiser(context);
                 }
             }
         }
@@ -293,24 +305,23 @@ public class BleManager {
     }
 
     /**
-     * 获取蓝牙广播单例实例
+     * Create a new BleAdvertiser
      *
      * @return BleAdvertiser
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static BleAdvertiser newBleAdvertiser() {
         checkInitStatus();
         if (!isSupportBle()) {
             return null;
         }
 
-        return new BleAdvertiser();
+        return new BleAdvertiser(context);
     }
 
 
     /**
-     * 获取BLE多连接单例
+     * Get a singleton of BleMultiConnector
      *
      * @return BleMultiConnector
      */
@@ -331,7 +342,7 @@ public class BleManager {
 
 
     /**
-     * 获取BLE多连接单例
+     * Create a new BleMultiConnector
      *
      * @return BleMultiConnector
      */
@@ -344,11 +355,10 @@ public class BleManager {
     }
 
     /**
-     * 判断当前手机蓝牙是否打开
+     * Determine if Bluetooth is enable
      *
-     * @return true表示蓝牙已打开
+     * @return true means enable
      */
-    @SuppressWarnings("unused")
     public static boolean isBluetoothOpened() {
         checkInitStatus();
         if (!isSupportBle()) {
@@ -363,11 +373,10 @@ public class BleManager {
     }
 
     /**
-     * 请求关闭蓝牙
+     * request to enable or disable bluetooth
      *
-     * @return true表示请求发起成功（只是发起关闭蓝牙的请求成功，并不是关闭蓝牙成功）
+     * @return true means request success
      */
-    @SuppressWarnings("UnusedReturnValue")
     public static boolean enableBluetooth(boolean enable) {
         checkInitStatus();
         if (!isSupportBle()) {
@@ -389,21 +398,18 @@ public class BleManager {
     }
 
     /**
-     * 释放BLE连接工具的资源
+     * Release the resources of the BleConnector
      */
-    @SuppressWarnings("WeakerAccess")
     public static void releaseBleConnector() {
         checkInitStatus();
         if (bleConnector != null) {
-            if (bleConnector.getContext() != null) {
-                bleConnector.close();
-            }
+            bleConnector.close();
             bleConnector = null;
         }
     }
 
     /**
-     * 释放BLE扫描器的资源
+     * Release the resources of the BleScanner
      */
     @SuppressWarnings("WeakerAccess")
     public static void releaseBleScanner() {
@@ -414,15 +420,15 @@ public class BleManager {
         }
     }
 
-    public static void setOnBluetoothStateChangedListener(BluetoothStateReceiver.OnBluetoothStateChangedListener onBluetoothStateChangedListener) {
-        if (!bluetoothStateReceiverRegistered) {
-            throw new IllegalStateException("BluetoothStateChangedReceiver not Registered");
-        }
-        BLUETOOTH_STATE_RECEIVER.setOnBluetoothStateChangedListener(onBluetoothStateChangedListener);
+    /**
+     * Release the resources of the BleScanner
+     */
+    public static void addOnBluetoothStateChangedListener(OnBluetoothStateChangedListener onBluetoothStateChangedListener) {
+        BLUETOOTH_STATE_RECEIVER.addOnBluetoothStateChangedListener(onBluetoothStateChangedListener);
     }
 
     /**
-     * 释放BLE多连接器的资源
+     * Release the resources of the BleMultiConnector
      */
     @SuppressWarnings("WeakerAccess")
     public static void releaseBleMultiConnector() {
@@ -433,15 +439,11 @@ public class BleManager {
         }
     }
 
-    public static Context getContext() {
-        return context;
-    }
-
     /**
-     * 释放BLE广播实例的资源
+     * Release the resources of the BleAdvertiser
      */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @SuppressWarnings("WeakerAccess")
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static void releaseBleAdvertiser() {
         checkInitStatus();
         if (bleAdvertiser != null) {
@@ -451,61 +453,40 @@ public class BleManager {
     }
 
     /**
-     * 释放全部实例的资源
+     * Release all resources
      */
     public static void releaseAll() {
         checkInitStatus();
         releaseBleConnector();
         releaseBleScanner();
         releaseBleMultiConnector();
-        BLUETOOTH_STATE_RECEIVER.setOnBluetoothStateChangedListener(null);
+        BLUETOOTH_STATE_RECEIVER.removeAllOnBluetoothStateChangedListener();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             releaseBleAdvertiser();
         }
     }
 
-    /**
-     * 设置是否要打印出调式信息
-     *
-     * @param debugFlag true表示要打印
-     */
-    public static void setDebugFlag(boolean debugFlag) {
-        Tool.setDebugFlag(debugFlag);
-    }
-
-    private static ThreadFactory newThreadFactory() {
-        return new ThreadFactory() {
-            /**
-             * Constructs a new {@code Thread}.  Implementations may also initialize
-             * priority, name, daemon status, {@code ThreadGroup}, etc.
-             *
-             * @param r a runnable to be executed by new thread instance
-             * @return constructed thread, or {@code null} if the request to
-             * create a thread is rejected
-             */
-            @Override
-            public Thread newThread(@NonNull Runnable r) {
-                return new Thread(r);
-            }
-        };
-    }
-
-    static ScheduledExecutorService getScheduledThreadPoolExecutor() {
-        return SCHEDULED_THREAD_POOL_EXECUTOR;
-    }
-
-    static ScheduledExecutorService newScheduledExecutorService() {
-        return new ScheduledThreadPoolExecutor(20, newThreadFactory());
-    }
-
-    /*------------------------私有静态函数----------------------------*/
+    /*-----------------------------------private static method-----------------------------------*/
 
     /**
-     * 校验是否初始化成功
+     * Check if the initialization is successful
      */
     private static void checkInitStatus() {
         if (context == null) {
             throw new IllegalStateException("Please invoke method \"init(Context context)\" in your Applications class");
         }
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public static ScheduledExecutorService newScheduledExecutorService() {
+        return new ScheduledThreadPoolExecutor(20, THREAD_FACTORY);
+    }
+
+    public static Handler getHANDLER() {
+        return HANDLER;
+    }
+
+    public static ThreadFactory getThreadFactory() {
+        return THREAD_FACTORY;
     }
 }

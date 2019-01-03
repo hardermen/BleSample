@@ -4,8 +4,8 @@ import android.support.annotation.Nullable;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
-import com.jackiepenghe.baselibrary.Tool;
-import com.jackiepenghe.blelibrary.AdRecord;
+import com.jackiepenghe.baselibrary.tools.Tool;
+import com.jackiepenghe.blelibrary.AdvertiseRecord;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ import cn.almsound.www.myblesample.R;
 /**
  * @author jackie
  */
-public class AdRecordRecyclerAdapter extends BaseQuickAdapter<AdRecord,BaseViewHolder> {
+public class AdRecordRecyclerAdapter extends BaseQuickAdapter<AdvertiseRecord,BaseViewHolder> {
 
     /**
      * Same as QuickAdapter#QuickAdapter(Context,int) but with
@@ -22,7 +22,7 @@ public class AdRecordRecyclerAdapter extends BaseQuickAdapter<AdRecord,BaseViewH
      *
      * @param data        A new list is created out of this one to avoid mutable list
      */
-    public AdRecordRecyclerAdapter(@Nullable List<AdRecord> data) {
+    public AdRecordRecyclerAdapter(@Nullable List<AdvertiseRecord> data) {
         super(R.layout.adapter_ad_record_recycler, data);
     }
 
@@ -33,9 +33,13 @@ public class AdRecordRecyclerAdapter extends BaseQuickAdapter<AdRecord,BaseViewH
      * @param item   The item that needs to be displayed.
      */
     @Override
-    protected void convert(BaseViewHolder helper, AdRecord item) {
+    protected void convert(BaseViewHolder helper, AdvertiseRecord item) {
+        byte[] data = item.getData();
+        if (data == null){
+            data = new byte[0];
+        }
         helper.setText(R.id.length,String.valueOf(item.getLength()))
                 .setText(R.id.type,Tool.bytesToHexStr(new byte[]{item.getType()}))
-                .setText(R.id.data,Tool.bytesToHexStr(item.getData()));
+                .setText(R.id.data,Tool.bytesToHexStr(data));
     }
 }

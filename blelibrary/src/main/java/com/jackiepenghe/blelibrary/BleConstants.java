@@ -1,50 +1,62 @@
 package com.jackiepenghe.blelibrary;
 
 /**
- * BLE常量
+ * BLE constant
  *
- * @author alm
+ * @author jackie
  */
+@SuppressWarnings("WeakerAccess")
+public  final class BleConstants {
 
-public class BleConstants {
-
-    /*库内常量定义区域*/
+    /*-----------------------------------package private constants-----------------------------------*/
 
     /**
-     * 用于传输远端设备的特征的KEY
-     */
-    static final String UUID = "UUID";
-    /**
-     * 打开通知时会使用到的UUID
+     * UUID that will be used when enable a notification
      */
     static final String CLIENT_CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb";
 
-    /*库内ACTION定义区域*/
+    /*-----------------------------------public constants-----------------------------------*/
 
-    static final String ACTION_GATT_CONNECTED = "com.jackiepenghe.blelibrary.ACTION_GATT_CONNECTED";
-    static final String ACTION_GATT_DISCONNECTED = "com.jackiepenghe.blelibrary.ACTION_GATT_DISCONNECTED";
-    static final String ACTION_GATT_SERVICES_DISCOVERED = "com.jackiepenghe.blelibrary.ACTION_GATT_SERVICES_DISCOVERED";
-    static final String ACTION_GATT_CONNECTING = "com.jackiepenghe.blelibrary.ACTION_GATT_CONNECTING";
-    static final String ACTION_GATT_DISCONNECTING = "com.jackiepenghe.blelibrary.ACTION_GATT_DISCONNECTING";
-    static final String ACTION_CHARACTERISTIC_READ = "com.jackiepenghe.blelibrary.ACTION_CHARACTERISTIC_READ";
-    static final String ACTION_CHARACTERISTIC_CHANGED = "com.jackiepenghe.blelibrary.ACTION_CHARACTERISTIC_CHANGED";
-    static final String ACTION_CHARACTERISTIC_WRITE = "com.jackiepenghe.blelibrary.ACTION_CHARACTERISTIC_WRITE";
-    static final String ACTION_DESCRIPTOR_READ = "com.jackiepenghe.blelibrary.ACTION_DESCRIPTOR_READ";
-    static final String ACTION_DESCRIPTOR_WRITE = "com.jackiepenghe.blelibrary.ACTION_DESCRIPTOR_WRITE";
-    static final String ACTION_RELIABLE_WRITE_COMPLETED = "com.jackiepenghe.blelibrary.ACTION_RELIABLE_WRITE_COMPLETED";
-    static final String ACTION_READ_REMOTE_RSSI = "com.jackiepenghe.blelibrary.ACTION_READ_REMOTE_RSSI";
-    static final String ACTION_MTU_CHANGED = "com.jackiepenghe.blelibrary.ACTION_MTU_CHANGED";
-    static final String ACTION_GATT_NOT_SUCCESS = "com.jackiepenghe.blelibrary.ACTION_GATT_NOT_SUCCESS";
-    public static final String ACTION_GATT_DISCOVER_SERVICES_FAILED = "com.jackiepenghe.blelibrary.ACTION_GATT_DISCOVER_SERVICES_FAILED";
-    public static final String ACTION_GATT_STATUS_ERROR = "com.jackiepenghe.blelibrary.ACTION_GATT_STATUS_ERROR";
-
-    /*开放常量定义区*/
-
-    public static final int DEVICE_BOND_START_SUCCESS = 0;
-    public static final int DEVICE_BOND_START_FAILED = 1;
+    /**
+     * device bound request success
+     */
+    public static final int DEVICE_BOND_REQUEST_SUCCESS = 0;
+    /**
+     * device bound request failed
+     */
+    public static final int DEVICE_BOND_REQUEST_FAILED = 1;
+    /**
+     * Bluetooth manager is null
+     */
     public static final int BLUETOOTH_MANAGER_NULL = 2;
+    /**
+     * Bluetooth adapter is null
+     */
     public static final int BLUETOOTH_ADAPTER_NULL = 3;
+    /**
+     * Device is bound
+     */
     public static final int DEVICE_BOND_BONDED = 4;
+    /**
+     * Device is bounding
+     */
     public static final int DEVICE_BOND_BONDING = 5;
+    /**
+     * Wrong device address
+     */
     public static final int BLUETOOTH_ADDRESS_INCORRECT = 6;
+    /**
+     * Context is null
+     */
+    public static final int CONTEXT_NULL = 7;
+
+    /*-----------------------------------Constructor-----------------------------------*/
+
+    /**
+     * Constructor
+     * @throws InstantiationException Prohibit creating instances
+     */
+    private BleConstants() throws InstantiationException {
+        throw new InstantiationException("Do not create an instance!");
+    }
 }

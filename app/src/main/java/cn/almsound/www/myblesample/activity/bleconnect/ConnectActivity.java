@@ -2,12 +2,13 @@ package cn.almsound.www.myblesample.activity.bleconnect;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
-import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,16 +20,18 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.chad.library.adapter.base.entity.MultiItemEntity;
-import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
-import com.jackiepenghe.baselibrary.DefaultItemDecoration;
-import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.tools.Tool;
+import com.jackiepenghe.baselibrary.view.utils.DefaultItemDecoration;
 import com.jackiepenghe.blelibrary.BleConnector;
 import com.jackiepenghe.blelibrary.BleDevice;
-import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleUtils;
-import com.jackiepenghe.blelibrary.DefaultBigDataSendStateChangedListener;
-import com.jackiepenghe.blelibrary.DefaultBigDataWriteWithNotificationSendStateChangedListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBleConnectStateChangedListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBleDescriptorWriteListener;
+import com.jackiepenghe.blelibrary.interfaces.OnDeviceBondStateChangedListener;
+import com.jackiepenghe.blelibrary.interfaces.implementations.DefaultLargeDataWriteWithNotificationSendStateChangedListener;
+import com.jackiepenghe.blelibrary.interfaces.implementations.DefaultOnLargeDataSendStateChangedListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -113,12 +116,210 @@ public class ConnectActivity extends BaseAppCompatActivity {
         }
     };
 
-    /**
-     * 连接成功的回调（在设备连接成功之后会触发此回调）
-     */
-    private BleInterface.OnConnectedListener onConnectedListener = new BleInterface.OnConnectedListener() {
+    private int toastKeepTime = 500;
+
+    private DefaultOnLargeDataSendStateChangedListener defaultOnLargeDataSendStateChangedListener = new DefaultOnLargeDataSendStateChangedListener() {
+        /**
+         * 传输开始
+         */
         @Override
-        public void onConnected() {
+        public void sendStarted() {
+            super.sendStarted();
+            Tool.toast(ConnectActivity.this, "sendStarted", toastKeepTime);
+        }
+
+        /**
+         * 传输完成
+         */
+        @Override
+        public void sendFinished() {
+            super.sendFinished();
+            Tool.toast(ConnectActivity.this, "sendFinished", toastKeepTime);
+        }
+
+        /**
+         * 数据发送进度更改
+         *
+         * @param currentPackageCount 当前发送成功的包数
+         * @param pageCount           总包数
+         * @param data                本包发送的数据
+         */
+        @Override
+        public void packageSendProgressChanged(int currentPackageCount, int pageCount, @NonNull byte[] data) {
+            super.packageSendProgressChanged(currentPackageCount, pageCount, data);
+            Tool.toast(ConnectActivity.this, "packageSendProgressChanged " + currentPackageCount + " / " + pageCount, toastKeepTime);
+            Tool.warnOut(TAG, "data = " + Tool.bytesToHexStr(data));
+        }
+
+        /**
+         * 数据发送失败
+         *
+         * @param currentPackageCount 当前发送失败的包数
+         * @param pageCount           总包数
+         * @param data                本包发送的数据
+         */
+        @Override
+        public void packageSendFailed(int currentPackageCount, int pageCount, @NonNull byte[] data) {
+            super.packageSendFailed(currentPackageCount, pageCount, data);
+            Tool.toast(ConnectActivity.this, "packageSendFailed " + currentPackageCount + " / " + pageCount, toastKeepTime);
+        }
+
+        /**
+         * 本包数据发送失败，正在重新发送
+         *
+         * @param currentPackageCount 当前发送失败的包数
+         * @param pageCount           总包数
+         * @param tryCount            尝试次数
+         * @param data                本包发送的数据
+         */
+        @Override
+        public void packageSendFailedAndRetry(int currentPackageCount, int pageCount, int tryCount, @NonNull byte[] data) {
+            super.packageSendFailedAndRetry(currentPackageCount, pageCount, tryCount, data);
+//            Tool.toast(ConnectActivity.this, "packageSendFailedAndRetry: tryCount = " + tryCount + " " + currentPackageCount + " / " + pageCount, toastKeepTime);
+        }
+
+        /**
+         * 数据发送超时进行的回调
+         *
+         * @param currentPackageIndex 当前发送超时的包数
+         * @param pageCount           总包数
+         * @param data                发送超时的数据
+         */
+        @Override
+        public void onSendTimeOut(int currentPackageIndex, int pageCount, @NonNull byte[] data) {
+            super.onSendTimeOut(currentPackageIndex, pageCount, data);
+            Tool.toast(ConnectActivity.this, "onSendTimeOut: " + currentPackageIndex + " / " + pageCount, toastKeepTime);
+        }
+
+        /**
+         * 数据发送超时,尝试重发数据时进行的回调
+         *
+         * @param tryCount            重发次数
+         * @param currentPackageIndex 当前重发的包数
+         * @param pageCount           总包数
+         * @param data                重发的数据内容
+         */
+        @Override
+        public void onSendTimeOutAndRetry(int tryCount, int currentPackageIndex, int pageCount, @NonNull byte[] data) {
+            super.onSendTimeOutAndRetry(tryCount, currentPackageIndex, pageCount, data);
+            Tool.warnOut(TAG, "onSendTimeOut: tryCount = " + tryCount + " " + currentPackageIndex + " / " + pageCount);
+        }
+    };
+    private DefaultLargeDataWriteWithNotificationSendStateChangedListener defaultLargeDataWriteWithNotificationSendStateChangedListener = new DefaultLargeDataWriteWithNotificationSendStateChangedListener() {
+        /**
+         * 收到远端设备的通知时进行的回调
+         *
+         * @param currentPackageData 当前包数据
+         * @param currentPackageCount 当前包数
+         * @param packageCount 总包数
+         * @param values 远端设备的通知内容
+         * @return true表示可以继续下一包发送，false表示传输出错
+         */
+        @Override
+        public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageCount, int packageCount, @NonNull byte[] values) {
+            super.onReceiveNotification(currentPackageData, currentPackageCount, packageCount, values);
+            return true;
+        }
+
+        /**
+         * 数据发送完成
+         */
+        @Override
+        public void onDataSendFinished() {
+            super.onDataSendFinished();
+            Tool.toastL(ConnectActivity.this, "onDataSendFinished");
+        }
+
+        /**
+         * 数据发送失败
+         *
+         * @param currentPackageCount 当前发送失败的包数
+         * @param pageCount           总包数
+         * @param data                当前发送失败的数据内容
+         */
+        @Override
+        public void onDataSendFailed(int currentPackageCount, int pageCount, byte[] data) {
+            super.onDataSendFailed(currentPackageCount, pageCount, data);
+            Tool.toastL(ConnectActivity.this, "onDataSendFailed");
+        }
+
+        /**
+         * 数据发送失败并尝试重发
+         *
+         * @param currentPackageCount 当前包数
+         * @param pageCount           总包数
+         * @param data                当前包数据内容
+         * @param tryCount            重试次数
+         */
+        @Override
+        public void onDataSendFailedAndRetry(int currentPackageCount, int pageCount, @NonNull byte[] data, int tryCount) {
+            super.onDataSendFailedAndRetry(currentPackageCount, pageCount, data, tryCount);
+        }
+
+        /**
+         * 数据发送进度有更改
+         *
+         * @param currentPackageCount 当前包数
+         * @param pageCount           总包数
+         * @param data                当前包数据内容
+         */
+        @Override
+        public void onDataSendProgressChanged(int currentPackageCount, int pageCount, @NonNull byte[] data) {
+            super.onDataSendProgressChanged(currentPackageCount, pageCount, data);
+            Tool.toast(ConnectActivity.this, currentPackageCount + " / " + pageCount, toastKeepTime);
+        }
+
+        /**
+         * 因为通知返回的数据出错而导致的传输失败
+         */
+        @Override
+        public void onSendFailedWithWrongNotifyData() {
+            super.onSendFailedWithWrongNotifyData();
+            Tool.toast(ConnectActivity.this, "onSendFailedWithWrongNotifyData", toastKeepTime);
+        }
+
+        /**
+         * 数据发送失败（通知返回数据有错误）
+         *
+         * @param tryCount            重试次数
+         * @param currentPackageIndex 当前发送的包数
+         * @param packageCount        总包数
+         * @param data                当前包数据
+         */
+        @Override
+        public void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, @NonNull byte[] data) {
+            super.onSendFailedWithWrongNotifyDataAndRetry(tryCount, currentPackageIndex, packageCount, data);
+        }
+
+        /**
+         * 在一段时间内没有收到通知回复时，判定为超时
+         *
+         * @param currentPackageIndex 当前发送超时的包数
+         * @param packageCount        总包数
+         * @param data                发送超时的包数据
+         */
+        @Override
+        public void onDataSendTimeOut(int currentPackageIndex, int packageCount, @NonNull byte[] data) {
+            super.onDataSendTimeOut(currentPackageIndex, packageCount, data);
+            Tool.toast(ConnectActivity.this, "onDataSendTimeOut", toastKeepTime);
+        }
+
+        /**
+         * 通知回复超时时，进行重发尝试时的回调
+         *
+         * @param data                重发的数据
+         * @param tryCount            重试次数
+         * @param currentPackageIndex 当前尝试重发的包数
+         * @param packageCount        总包数
+         */
+        @Override
+        public void onDataSendTimeOutAndRetry(@NonNull byte[] data, int tryCount, int currentPackageIndex, int packageCount) {
+            super.onDataSendTimeOutAndRetry(data, tryCount, currentPackageIndex, packageCount);
+        }
+    };
+    private OnBleConnectStateChangedListener onBleConnectStateChangedListener = new OnBleConnectStateChangedListener() {
+        @Override
+        public void connected() {
             //记录是否连接成功的标志，同时也记录本方法是否已经被回调,避免部分手机多次回调
             if (isLinked) {
                 return;
@@ -127,13 +328,57 @@ public class ConnectActivity extends BaseAppCompatActivity {
             //连接成功，将指示标志设置为蓝色
             customTextCircleView.setColor(Color.BLUE);
         }
-    };
-    /**
-     * 连接成功后会扫描远端设备的服务，在服务扫描完成之后会触发此回调
-     */
-    private BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener = new BleInterface.OnServicesDiscoveredListener() {
+
         @Override
-        public void onServicesDiscovered() {
+        public void disconnected() {
+            //如果还没有连接上，不做任何操作
+            if (!isLinked) {
+                return;
+            }
+            //重置连接标志
+            isLinked = false;
+            //重置服务扫描状态标志
+            serviceDiscovered = false;
+            //断开连接，将指示标志设置为红色
+            customTextCircleView.setColor(Color.RED);
+            Tool.toastL(ConnectActivity.this, R.string.disconnect);
+        }
+
+        @Override
+        public void gattStatusError(int errorStatus) {
+            Tool.warnOut(TAG, "连接出错，状态码：" + errorStatus);
+            Tool.toastL(ConnectActivity.this, "连接出错，状态码：" + errorStatus);
+            bleConnector.close();
+            onBackPressed();
+        }
+
+        @Override
+        public void connecting() {
+            customTextCircleView.setColor(Color.YELLOW);
+        }
+
+        @Override
+        public void autoDiscoverServicesFailed() {
+            Tool.warnOut(TAG, "远端设备服务列表扫描失败");
+        }
+
+        @Override
+        public void disconnecting() {
+            Tool.warnOut(TAG, "onDisconnecting");
+        }
+
+        @Override
+        public void unknownStatus(int statusCode) {
+
+        }
+
+        @Override
+        public void gattPerformTaskFailed(int errorStatus, String methodName) {
+
+        }
+
+        @Override
+        public void servicesDiscovered() {
             //记录本方法是否已经被回调，避免部分手机多次回调
             if (serviceDiscovered) {
                 return;
@@ -194,102 +439,82 @@ public class ConnectActivity extends BaseAppCompatActivity {
             }
         }
 
-        /**
-         * 远端设备服务列表扫描失败
-         */
         @Override
-        public void onDiscoverServiceFailed() {
-            Tool.warnOut(TAG, "远端设备服务列表扫描失败");
-        }
-    };
-    /**
-     * 与远端设备断开连接后触发此回调
-     */
-    private BleInterface.OnDisconnectedListener onDisconnectedListener = new BleInterface.OnDisconnectedListener() {
-        @Override
-        public void onDisconnected() {
-            //如果还没有连接上，不做任何操作
-            if (!isLinked) {
-                return;
-            }
-            //重置连接标志
-            isLinked = false;
-            //重置服务扫描状态标志
-            serviceDiscovered = false;
-            //断开连接，将指示标志设置为红色
-            customTextCircleView.setColor(Color.RED);
-        }
-    };
-    /**
-     * 读取到远端设备数据后会触发此回调,返回的数据是一个byte数组
-     */
-    private BleInterface.OnCharacteristicReadListener onCharacteristicReadListener = new BleInterface.OnCharacteristicReadListener() {
-        @Override
-        public void onCharacteristicRead(String uuid, byte[] values) {
-            String hexStr = Tool.bytesToHexStr(values);
-            String str = new String(values);
+        public void readCharacteristicData(BluetoothGattCharacteristic characteristic, byte[] data) {
+            String hexStr = Tool.bytesToHexStr(data);
+            String str = new String(data);
             Tool.warnOut(TAG, "读取到的数据 = " + hexStr);
             showReadDataResultDialog(hexStr, str);
         }
-    };
-    /**
-     * 正在连接时触发此回调（不过此回调从来没有被触发过，我也不知道为何）
-     */
-    private BleInterface.OnConnectingListener onConnectingListener = new BleInterface.OnConnectingListener() {
+
         @Override
-        public void onConnecting() {
-            customTextCircleView.setColor(Color.YELLOW);
+        public void writeCharacteristicData(BluetoothGattCharacteristic characteristic, byte[] data) {
+            String hexStr = Tool.bytesToHexStr(data);
+            Tool.warnOut(TAG, "onCharacteristicWrite hexStr = " + hexStr);
         }
-    };
-    /**
-     * 收到远端设备的主动通知时，触发此回调
-     */
-    private BleInterface.OnReceiveNotificationListener onReceiveNotificationListener = new BleInterface.OnReceiveNotificationListener() {
+
         @Override
-        public void onReceiveNotification(String uuid, byte[] values) {
-            String hexStr = Tool.bytesToHexStr(values);
-            String str = new String(values);
+        public void receivedNotification(BluetoothGattCharacteristic characteristic, byte[] data) {
+            String hexStr = Tool.bytesToHexStr(data);
+            String str = new String(data);
             Tool.warnOut("ConnectActivity", "value = " + hexStr);
             showReceiveNotificationDialog(hexStr, str);
         }
-    };
-    /**
-     * 取到远端设备的RSSI值时触发此回调
-     */
-    private BleInterface.OnReadRemoteRssiListener onReadRemoteRssiListener = new BleInterface.OnReadRemoteRssiListener() {
+
         @Override
-        public void onReadRemoteRssi(int rssi) {
+        public void readDescriptor(BluetoothGattDescriptor bluetoothGattDescriptor, byte[] data) {
+
+        }
+
+        @Override
+        public void writeDescriptor(BluetoothGattDescriptor bluetoothGattDescriptor, byte[] data) {
+
+        }
+
+        @Override
+        public void reliableWriteCompleted() {
+
+        }
+
+        @Override
+        public void readRemoteRssi(int rssi) {
             Tool.warnOut("ConnectActivity", "rssi = " + rssi);
         }
-    };
-    /**
-     * 当连接工具调用Close方法之后，在连接工具彻底关闭时会触发此回调
-     * 最好是屏蔽onBackPressed()方法，onBackPressed()方法中只调用bleConnector.closeAll().然后在这个方法中回调super.onBackPressed()结束activity
-     * 一定要在这个回调中做结束activity的操作，不要直接在onDestroy中调用close避免连接工具还没有彻底关闭，activity就结束造成内存泄漏
-     */
-    BleInterface.OnCloseCompleteListener onCloseCompleteListener = new BleInterface.OnCloseCompleteListener() {
+
+        @Override
+        public void mtuChanged(int mtu) {
+            Tool.warnOut(TAG, "onMtuChanged:mtu = " + mtu);
+        }
+
+        @Override
+        public void phyUpdate(int txPhy, int rxPhy) {
+
+        }
+
+        @Override
+        public void readPhy(int txPhy, int rxPhy) {
+
+        }
+
         @Override
         public void onCloseComplete() {
             BleManager.releaseBleConnector();
             finish();
         }
+
+        @Override
+        public void onConnectTimeOut() {
+            Tool.toastL(ConnectActivity.this, R.string.connect_time_out);
+            onBackPressed();
+        }
     };
-    /**
-     * 设备的绑定(也可以说配对)状态改变后触发此回调
-     */
-    BleInterface.OnDeviceBondStateChangedListener onBondStateChangedListener = new BleInterface.OnDeviceBondStateChangedListener() {
-        /**
-         * 正在绑定设备
-         */
+    private OnDeviceBondStateChangedListener onDeviceBondStateChangedListener = new OnDeviceBondStateChangedListener() {
         @Override
         public void onDeviceBinding() {
             Tool.warnOut(TAG, "绑定中");
             Tool.toastL(ConnectActivity.this, "绑定中");
         }
 
-        /**
-         * 绑定完成
-         */
         @Override
         public void onDeviceBonded() {
             Tool.warnOut(TAG, "绑定成功");
@@ -298,253 +523,11 @@ public class ConnectActivity extends BaseAppCompatActivity {
             startConnect();
         }
 
-        /**
-         * 取消绑定或者绑定失败
-         */
         @Override
         public void onDeviceBindNone() {
             Tool.warnOut(TAG, "绑定失败");
             Tool.toastL(ConnectActivity.this, "绑定失败");
             onBackPressed();
-        }
-    };
-    BleInterface.OnMtuChangedListener onMtuChangedListener = new BleInterface.OnMtuChangedListener() {
-        @Override
-        public void onMtuChanged(int mtu) {
-            Tool.warnOut(TAG, "onMtuChanged:mtu = " + mtu);
-        }
-    };
-    private BleInterface.OnDisconnectingListener onDisconnectingListener = new BleInterface.OnDisconnectingListener() {
-        @Override
-        public void onDisconnecting() {
-            Tool.warnOut(TAG, "onDisconnecting");
-        }
-    };
-    private BleInterface.OnStatusErrorListener onStatusErrorListener = new BleInterface.OnStatusErrorListener() {
-        @Override
-        public void onStatusError(int status) {
-            Tool.warnOut(TAG, "连接出错，状态码：" + status);
-            Tool.toastL(ConnectActivity.this, "连接出错，状态码：" + status);
-            bleConnector.close();
-            onBackPressed();
-        }
-    };
-    private int toastKeepTime = 500;
-
-    private DefaultBigDataSendStateChangedListener onBigDataSendStateChangedListener = new DefaultBigDataSendStateChangedListener() {
-        /**
-         * 传输开始
-         */
-        @Override
-        public void sendStarted() {
-            super.sendStarted();
-            Tool.toast(ConnectActivity.this, "sendStarted", toastKeepTime);
-        }
-
-        /**
-         * 传输完成
-         */
-        @Override
-        public void sendFinished() {
-            super.sendFinished();
-            Tool.toast(ConnectActivity.this, "sendFinished", toastKeepTime);
-        }
-
-        /**
-         * 数据发送进度更改
-         *
-         * @param currentPackageCount 当前发送成功的包数
-         * @param pageCount           总包数
-         * @param data                本包发送的数据
-         */
-        @Override
-        public void packageSendProgressChanged(int currentPackageCount, int pageCount, byte[] data) {
-            super.packageSendProgressChanged(currentPackageCount, pageCount, data);
-            Tool.toast(ConnectActivity.this, "packageSendProgressChanged " + currentPackageCount + " / " + pageCount, toastKeepTime);
-            Tool.warnOut(TAG, "data = " + Tool.bytesToHexStr(data));
-        }
-
-        /**
-         * 数据发送失败
-         *
-         * @param currentPackageCount 当前发送失败的包数
-         * @param pageCount           总包数
-         * @param data                本包发送的数据
-         */
-        @Override
-        public void packageSendFailed(int currentPackageCount, int pageCount, byte[] data) {
-            super.packageSendFailed(currentPackageCount, pageCount, data);
-            Tool.toast(ConnectActivity.this, "packageSendFailed " + currentPackageCount + " / " + pageCount, toastKeepTime);
-        }
-
-        /**
-         * 本包数据发送失败，正在重新发送
-         *
-         * @param currentPackageCount 当前发送失败的包数
-         * @param pageCount           总包数
-         * @param tryCount            尝试次数
-         * @param data                本包发送的数据
-         */
-        @Override
-        public void packageSendFailedAndRetry(int currentPackageCount, int pageCount, int tryCount, byte[] data) {
-            super.packageSendFailedAndRetry(currentPackageCount, pageCount, tryCount, data);
-//            Tool.toast(ConnectActivity.this, "packageSendFailedAndRetry: tryCount = " + tryCount + " " + currentPackageCount + " / " + pageCount, toastKeepTime);
-        }
-
-        /**
-         * 数据发送超时进行的回调
-         *
-         * @param currentPackageIndex 当前发送超时的包数
-         * @param pageCount           总包数
-         * @param data                发送超时的数据
-         */
-        @Override
-        public void onSendTimeOut(int currentPackageIndex, int pageCount, byte[] data) {
-            super.onSendTimeOut(currentPackageIndex, pageCount, data);
-            Tool.toast(ConnectActivity.this, "onSendTimeOut: " + currentPackageIndex + " / " + pageCount, toastKeepTime);
-        }
-
-        /**
-         * 数据发送超时,尝试重发数据时进行的回调
-         *
-         * @param tryCount            重发次数
-         * @param currentPackageIndex 当前重发的包数
-         * @param pageCount           总包数
-         * @param data                重发的数据内容
-         */
-        @Override
-        public void onSendTimeOutAndRetry(int tryCount, int currentPackageIndex, int pageCount, byte[] data) {
-            super.onSendTimeOutAndRetry(tryCount, currentPackageIndex, pageCount, data);
-            Tool.warnOut(TAG, "onSendTimeOut: tryCount = " + tryCount + " " + currentPackageIndex + " / " + pageCount);
-        }
-    };
-    private DefaultBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener = new DefaultBigDataWriteWithNotificationSendStateChangedListener() {
-        /**
-         * 收到远端设备的通知时进行的回调
-         *
-         * @param currentPackageData 当前包数据
-         * @param currentPackageCount 当前包数
-         * @param packageCount 总包数
-         * @param values 远端设备的通知内容
-         * @return true表示可以继续下一包发送，false表示传输出错
-         */
-        @Override
-        public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageCount, int packageCount, byte[] values) {
-            super.onReceiveNotification(currentPackageData, currentPackageCount, packageCount, values);
-            return true;
-        }
-
-        /**
-         * 数据发送完成
-         */
-        @Override
-        public void onDataSendFinished() {
-            super.onDataSendFinished();
-            Tool.toastL(ConnectActivity.this, "onDataSendFinished");
-        }
-
-        /**
-         * 数据发送失败
-         *
-         * @param currentPackageCount 当前发送失败的包数
-         * @param pageCount           总包数
-         * @param data                当前发送失败的数据内容
-         */
-        @Override
-        public void onDataSendFailed(int currentPackageCount, int pageCount, byte[] data) {
-            super.onDataSendFailed(currentPackageCount, pageCount, data);
-            Tool.toastL(ConnectActivity.this, "onDataSendFailed");
-        }
-
-        /**
-         * 数据发送失败并尝试重发
-         *
-         * @param currentPackageCount 当前包数
-         * @param pageCount           总包数
-         * @param data                当前包数据内容
-         * @param tryCount            重试次数
-         */
-        @Override
-        public void onDataSendFailedAndRetry(int currentPackageCount, int pageCount, byte[] data, int tryCount) {
-            super.onDataSendFailedAndRetry(currentPackageCount, pageCount, data, tryCount);
-//            Tool.toast(ConnectActivity.this, "onDataSendFailedAndRetry " + currentPackageCount + " / " + pageCount, toastKeepTime);
-        }
-
-        /**
-         * 数据发送进度有更改
-         *
-         * @param currentPackageCount 当前包数
-         * @param pageCount           总包数
-         * @param data                当前包数据内容
-         */
-        @Override
-        public void onDataSendProgressChanged(int currentPackageCount, int pageCount, byte[] data) {
-            super.onDataSendProgressChanged(currentPackageCount, pageCount, data);
-            Tool.toast(ConnectActivity.this, currentPackageCount + " / " + pageCount, toastKeepTime);
-        }
-
-        /**
-         * 因为通知返回的数据出错而导致的传输失败
-         */
-        @Override
-        public void onSendFailedWithWrongNotifyData() {
-            super.onSendFailedWithWrongNotifyData();
-            Tool.toast(ConnectActivity.this, "onSendFailedWithWrongNotifyData", toastKeepTime);
-        }
-
-        /**
-         * 数据发送失败（通知返回数据有错误）
-         *
-         * @param tryCount            重试次数
-         * @param currentPackageIndex 当前发送的包数
-         * @param packageCount        总包数
-         * @param data                当前包数据
-         */
-        @Override
-        public void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, byte[] data) {
-            super.onSendFailedWithWrongNotifyDataAndRetry(tryCount, currentPackageIndex, packageCount, data);
-//            Tool.toast(ConnectActivity.this, "onSendFailedWithWrongNotifyDataAndRetry:tryCount = " + tryCount, toastKeepTime);
-        }
-
-        /**
-         * 在一段时间内没有收到通知回复时，判定为超时
-         *
-         * @param currentPackageIndex 当前发送超时的包数
-         * @param packageCount        总包数
-         * @param data                发送超时的包数据
-         */
-        @Override
-        public void onDataSendTimeOut(int currentPackageIndex, int packageCount, byte[] data) {
-            super.onDataSendTimeOut(currentPackageIndex, packageCount, data);
-            Tool.toast(ConnectActivity.this, "onDataSendTimeOut", toastKeepTime);
-        }
-
-        /**
-         * 通知回复超时时，进行重发尝试时的回调
-         *
-         * @param data                重发的数据
-         * @param tryCount            重试次数
-         * @param currentPackageIndex 当前尝试重发的包数
-         * @param packageCount        总包数
-         */
-        @Override
-        public void onDataSendTimeOutAndRetry(byte[] data, int tryCount, int currentPackageIndex, int packageCount) {
-            super.onDataSendTimeOutAndRetry(data, tryCount, currentPackageIndex, packageCount);
-//            Tool.toast(ConnectActivity.this, "onDataSendTimeOutAndRetry:tryCount = " + tryCount,toastKeepTime);
-        }
-    };
-    private BleInterface.OnConnectTimeOutListener onConnectTimeOutListener = new BleInterface.OnConnectTimeOutListener() {
-        @Override
-        public void onConnectTimeOut() {
-            Tool.toastL(ConnectActivity.this, R.string.connect_time_out);
-            onBackPressed();
-        }
-    };
-    private BleInterface.OnCharacteristicWriteListener onCharacteristicWriteListener = new BleInterface.OnCharacteristicWriteListener() {
-        @Override
-        public void onCharacteristicWrite(String uuid, byte[] values) {
-            String hexStr = Tool.bytesToHexStr(values);
-            Tool.warnOut(TAG, "onCharacteristicWrite hexStr = " + hexStr);
         }
     };
 
@@ -738,20 +721,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
         adapterData = null;
         servicesCharacteristicsListAdapter = null;
         onCharacteristicClickListener = null;
-        onConnectedListener = null;
-        onServicesDiscoveredListener = null;
-        onDisconnectedListener = null;
-        onCharacteristicReadListener = null;
-        onConnectingListener = null;
-        onReceiveNotificationListener = null;
-        onReadRemoteRssiListener = null;
-        onCloseCompleteListener = null;
-        onBondStateChangedListener = null;
-        onMtuChangedListener = null;
-        onDisconnectingListener = null;
-        onStatusErrorListener = null;
-        onBigDataSendStateChangedListener = null;
-        onBigDataWriteWithNotificationSendStateChangedListener = null;
+        defaultOnLargeDataSendStateChangedListener = null;
+        defaultLargeDataWriteWithNotificationSendStateChangedListener = null;
         BleManager.releaseBleConnector();
     }
 
@@ -774,35 +745,16 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * 设置相关的回调
      */
     private void setConnectListener() {
-        bleConnector.setOnConnectingListener(onConnectingListener);
-        //设置连接设备成功的回调
-        bleConnector.setOnConnectedListener(onConnectedListener);
-        //设置连接之后，服务发现完成的回调
-        bleConnector.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
-        //设置正在断开连接的回调
-        bleConnector.setOnDisconnectingListener(onDisconnectingListener);
-        //设置连接被断开的回调
-        bleConnector.setOnDisconnectedListener(onDisconnectedListener);
-        //设置 读取到设备的数据时的回调
-        bleConnector.setOnCharacteristicReadListener(onCharacteristicReadListener);
-        //设置 写入设备的数据执行的回调
-        bleConnector.setOnCharacteristicWriteListener(onCharacteristicWriteListener);
-        //设置 获取设备的RSSI的回调
-        bleConnector.setOnReadRemoteRssiListener(onReadRemoteRssiListener);
-        //设置 连接器关闭时的回调
-        bleConnector.setOnCloseCompleteListener(onCloseCompleteListener);
+        //设置 连接 相关的回调
+        bleConnector.setOnBleConnectStateChangedListener(onBleConnectStateChangedListener);
         //设置 绑定状态被更改时的回调
-        bleConnector.setOnDeviceBondStateChangedListener(onBondStateChangedListener);
-        //设置 Mtu参数被更改时的回调
-        bleConnector.setOnMtuChangedListener(onMtuChangedListener);
-        //设置 连接时，错误状态码接收的处理
-        bleConnector.setOnStatusErrorListener(onStatusErrorListener);
-        //设置 收到设备发来的通知时的回调
-        bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
-        //设置 连接超时的回调
-        bleConnector.setOnConnectTimeOutListener(onConnectTimeOutListener);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            bleConnector.setOnDeviceBondStateChangedListener(onDeviceBondStateChangedListener);
+        }
         //设置发送分包数据时，每一包数据之间的延时
-        bleConnector.setSendBigDataPackageDelayTime(500);
+        bleConnector.setSendLargeDataPackageDelayTime(500);
+        //设置发送分包数据时，每一包数据发送超时的时间
+        bleConnector.setSendLargeDataTimeOut(10000);
     }
 
     /**
@@ -845,17 +797,31 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * 发起连接
      */
     private void startConnect() {
-        //先设置要连接的设备
-        if (bleConnector.checkAndSetDevice(bluetoothDevice)) {
-            //发起连接
-            if (bleConnector.startConnect(true)) {
-                Tool.warnOut("开始连接");
-                Tool.toastL(ConnectActivity.this, "发起连接");
-                customTextCircleView.setColor(Color.YELLOW);
-            } else {
-                Tool.warnOut("发起连接失败");
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    if (bleConnector.isInitialized()) {
+                        break;
+                    }
+                }
+                //先设置要连接的设备
+                if (bleConnector.connect(bluetoothDevice, true)) {
+                    Tool.warnOut("开始连接");
+                    BleManager.getHANDLER().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Tool.toastL(ConnectActivity.this, "发起连接");
+                            customTextCircleView.setColor(Color.YELLOW);
+                        }
+                    });
+                } else {
+                    Tool.warnOut("发起连接失败");
+                }
             }
-        }
+        };
+        BleManager.getThreadFactory().newThread(runnable).start();
+
     }
 
     /**
@@ -908,13 +874,19 @@ public class ConnectActivity extends BaseAppCompatActivity {
                                     Tool.toastL(ConnectActivity.this, R.string.notify_not_support);
                                     return;
                                 }
-                                bleConnector.setOnDescriptorWriteListener(new BleInterface.OnDescriptorWriteListener() {
+                                bleConnector.addOnBleDescriptorWriteListener(new OnBleDescriptorWriteListener() {
+
+                                    /**
+                                     * descriptor data write successful
+                                     *
+                                     * @param bluetoothGattDescriptor BluetoothGattDescriptor
+                                     * @param data                    descriptor
+                                     */
                                     @Override
-                                    public void onDescriptorWrite(String uuid, byte[] values) {
+                                    public void onBleDescriptorWrite(BluetoothGattDescriptor bluetoothGattDescriptor, byte[] data) {
                                         Tool.toastL(ConnectActivity.this, R.string.open_notification_success);
-                                        bleConnector.setOnDescriptorWriteListener(null);
-                                        //设置 收到设备发来的通知时的回调
-                                        bleConnector.setOnReceiveNotificationListener(onReceiveNotificationListener);
+                                        bleConnector.removeOnBleDescriptorWriteListener(this);
+//                                        bleConnector.addOnBleReceiveNotificationListener(onReceiveNotificationListener);
                                     }
                                 });
                                 boolean openNotification = bleConnector.enableNotification(serviceUUID, characteristicUUID, true);
@@ -997,7 +969,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                         }
                         text = text.replace(" ", "");
                         byte[] bytes = Tool.hexStrToBytes(text);
-                        bleConnector.writeBigDataWithNotification(serviceUUID, characteristicUUID, bytes, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
+                        bleConnector.writeLargeDataWithNotification(serviceUUID, characteristicUUID, bytes, defaultLargeDataWriteWithNotificationSendStateChangedListener, autoFormat);
 
                     }
                 })
@@ -1029,7 +1001,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                         }
                         text = text.replace(" ", "");
                         byte[] bytes = Tool.hexStrToBytes(text);
-                        bleConnector.writeBigData(serviceUUID, characteristicUUID, bytes, onBigDataSendStateChangedListener, autoFormat);
+                        bleConnector.writeLargeData(serviceUUID, characteristicUUID, bytes, defaultOnLargeDataSendStateChangedListener, autoFormat);
                     }
                 })
                 .setNegativeButton(R.string.cancel, null)

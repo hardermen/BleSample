@@ -14,17 +14,7 @@
     <string name="device_info_error">Error getting device data</string>
     <string name="multi_connect">Multiple connection</string>
     <string name="connect">Connect</string>
-    <!--<string name="open_socket1">开启插座1</string>-->
-    <!--<string name="close_socket1">关闭插座1</string>-->
-    <!--<string name="open_socket2">开启插座2</string>-->
-    <!--<string name="close_socket2">关闭插座2</string>-->
     <string name="information">Detailed use method, please see the source code</string>
-    <!--<string name="open_socket3">开启插座3</string>-->
-    <!--<string name="close_socket3">关闭插座3</string>-->
-    <!--<string name="open_socket4">开启插座4</string>-->
-    <!--<string name="close_socket4">关闭插座4</string>-->
-    <!--<string name="open_socket5">开启插座5</string>-->
-    <!--<string name="close_socket5">关闭插足5</string>-->
     <string name="ble_broadcast">BLE broadcast</string>
     <string name="android_version_too_low">The Android version is too low. This feature requires Android 5.0 support at a minimum.</string>
     <string name="nothing_to_expand">No suboptions</string>

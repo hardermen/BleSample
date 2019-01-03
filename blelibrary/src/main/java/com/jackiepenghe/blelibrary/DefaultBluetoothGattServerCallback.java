@@ -8,29 +8,33 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.support.annotation.Nullable;
+
+import com.jackiepenghe.blelibrary.interfaces.OnConnectedByOtherDevicesListener;
 
 /**
- * 默认的蓝牙服务端回调
+ * Default callback connected by other devices
  *
  * @author jacke
  */
-class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
+final class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
 
-    /*------------------------静态常量----------------------------*/
+    /*-----------------------------------static constant-----------------------------------*/
 
     /**
      * TAG
      */
     private static final String TAG = DefaultBluetoothGattServerCallback.class.getSimpleName();
 
-    /*------------------------成员变量----------------------------*/
+    /*-----------------------------------field variables-----------------------------------*/
 
     /**
-     * 蓝牙服务端回调
+     * Callback when Bluetooth broadcast is connected by other devices
      */
-    private BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallbackListener;
+    @Nullable
+    private OnConnectedByOtherDevicesListener onConnectedByOtherDevicesListener;
 
-    /*------------------------重写父类函数----------------------------*/
+    /*-----------------------------------override method-----------------------------------*/
 
     /**
      * Callback indicating when a remote device has been connected or disconnected.
@@ -43,19 +47,18 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      */
     @Override
     public void onConnectionStateChange(final BluetoothDevice device, final int status, final int newState) {
-        if (onBluetoothGattServerCallbackListener != null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    onBluetoothGattServerCallbackListener.onConnectionStateChange(device, status, newState);
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedByOtherDevicesListener != null) {
+                    onConnectedByOtherDevicesListener.onConnectionStateChange(device, status, newState);
+                } else {
+                    DebugUtil.warnOut(TAG, "onConnectionStateChange:device name = " +
+                            device.getName() + ",device address = " + device.getAddress() + ",status = " +
+                            status + ",newState = " + newState);
                 }
-            };
-            BleManager.getHandler().post(runnable);
-        } else {
-            Tool.warnOut(TAG, "onConnectionStateChange:device name = " +
-                    device.getName() + ",device address = " + device.getAddress() + ",status = " +
-                    status + ",newState = " + newState);
-        }
+            }
+        });
     }
 
     /**
@@ -67,18 +70,18 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      */
     @Override
     public void onServiceAdded(final int status, final BluetoothGattService service) {
-        if (onBluetoothGattServerCallbackListener != null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    onBluetoothGattServerCallbackListener.onServiceAdded(status, service);
+
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedByOtherDevicesListener != null) {
+                    onConnectedByOtherDevicesListener.onServiceAdded(status, service);
+                } else {
+                    DebugUtil.warnOut(TAG, "onServiceAdded:status = " + status + ",serviceUUID = " +
+                            service.getUuid().toString());
                 }
-            };
-            BleManager.getHandler().post(runnable);
-        } else {
-            Tool.warnOut(TAG, "onServiceAdded:status = " + status + ",serviceUUID = " +
-                    service.getUuid().toString());
-        }
+            }
+        });
     }
 
     /**
@@ -93,21 +96,21 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      * @param characteristic Characteristic to be read
      */
     @Override
-    public void onCharacteristicReadRequest(final BluetoothDevice device, final int requestId, final int offset, final BluetoothGattCharacteristic characteristic) {
-        if (onBluetoothGattServerCallbackListener != null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    onBluetoothGattServerCallbackListener.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+    public void onCharacteristicReadRequest(final BluetoothDevice device, final int requestId,
+                                            final int offset, final BluetoothGattCharacteristic characteristic) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedByOtherDevicesListener != null) {
+                    onConnectedByOtherDevicesListener.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+                } else {
+                    DebugUtil.warnOut(TAG, "onCharacteristicReadRequest:device name = " +
+                            device.getName() + ",device address = " + device.getAddress() +
+                            ",requestId = " + requestId + ",offset = " + offset + ",characteristicUUID = " +
+                            characteristic.getUuid().toString());
                 }
-            };
-            BleManager.getHandler().post(runnable);
-        } else {
-            Tool.warnOut(TAG, "onCharacteristicReadRequest:device name = " +
-                    device.getName() + ",device address = " + device.getAddress() +
-                    ",requestId = " + requestId + ",offset = " + offset + ",characteristicUUID = " +
-                    characteristic.getUuid().toString());
-        }
+            }
+        });
     }
 
     /**
@@ -126,23 +129,25 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      * @param value          The value the client wants to assign to the characteristic
      */
     @Override
-    public void onCharacteristicWriteRequest(final BluetoothDevice device, final int requestId, final BluetoothGattCharacteristic characteristic, final boolean preparedWrite, final boolean responseNeeded, final int offset, final byte[] value) {
-        if (onBluetoothGattServerCallbackListener != null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    onBluetoothGattServerCallbackListener.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
+    public void onCharacteristicWriteRequest(final BluetoothDevice device,
+                                             final int requestId, final BluetoothGattCharacteristic characteristic,
+                                             final boolean preparedWrite, final boolean responseNeeded, final int offset,
+                                             final byte[] value) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedByOtherDevicesListener != null) {
+                    onConnectedByOtherDevicesListener.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
+                } else {
+                    DebugUtil.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
+                            device.getName() + ",device address = " + device.getAddress() +
+                            ",requestId = " + requestId + ",characteristicUUID = " +
+                            characteristic.getUuid().toString() + ",preparedWrite = " + preparedWrite +
+                            ",responseNeeded = " + responseNeeded + ",offset = " + offset + ",value = " +
+                            ConversionUtil.bytesToHexStr(value));
                 }
-            };
-            BleManager.getHandler().post(runnable);
-        } else {
-            Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
-                    device.getName() + ",device address = " + device.getAddress() +
-                    ",requestId = " + requestId + ",characteristicUUID = " +
-                    characteristic.getUuid().toString() + ",preparedWrite = " + preparedWrite +
-                    ",responseNeeded = " + responseNeeded + ",offset = " + offset + ",value = " +
-                    Tool.bytesToHexStr(value));
-        }
+            }
+        });
     }
 
     /**
@@ -157,20 +162,20 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      * @param descriptor Descriptor to be read
      */
     @Override
-    public void onDescriptorReadRequest(final BluetoothDevice device, final int requestId, final int offset, final BluetoothGattDescriptor descriptor) {
-        if (onBluetoothGattServerCallbackListener != null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    onBluetoothGattServerCallbackListener.onDescriptorReadRequest(device, requestId, offset, descriptor);
+    public void onDescriptorReadRequest(final BluetoothDevice device, final int requestId,
+                                        final int offset, final BluetoothGattDescriptor descriptor) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedByOtherDevicesListener != null) {
+                    onConnectedByOtherDevicesListener.onDescriptorReadRequest(device, requestId, offset, descriptor);
+                } else {
+                    DebugUtil.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
+                            device.getName() + ",device address = " + device.getAddress() +
+                            ",requestId = " + requestId + ",offset = " + offset + ",descriptor = " + descriptor.getUuid().toString());
                 }
-            };
-            BleManager.getHandler().post(runnable);
-        } else {
-            Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
-                    device.getName() + ",device address = " + device.getAddress() +
-                    ",requestId = " + requestId + ",offset = " + offset + ",descriptor = " + descriptor.getUuid().toString());
-        }
+            }
+        });
     }
 
     /**
@@ -189,23 +194,24 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      * @param value          The value the client wants to assign to the descriptor
      */
     @Override
-    public void onDescriptorWriteRequest(final BluetoothDevice device, final int requestId, final BluetoothGattDescriptor descriptor, final boolean preparedWrite, final boolean responseNeeded, final int offset, final byte[] value) {
-        if (onBluetoothGattServerCallbackListener != null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    onBluetoothGattServerCallbackListener.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
+    public void onDescriptorWriteRequest(final BluetoothDevice device, final int requestId,
+                                         final BluetoothGattDescriptor descriptor, final boolean preparedWrite,
+                                         final boolean responseNeeded, final int offset, final byte[] value) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedByOtherDevicesListener != null) {
+                    onConnectedByOtherDevicesListener.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
+                } else {
+                    DebugUtil.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
+                            device.getName() + ",device address = " + device.getAddress() +
+                            ",requestId = " + requestId + ",descriptorUUID = " +
+                            descriptor.getUuid().toString() + ",preparedWrite = " + preparedWrite +
+                            ",responseNeeded = " + responseNeeded + ",offset = " + offset + ",value = " +
+                            ConversionUtil.bytesToHexStr(value));
                 }
-            };
-            BleManager.getHandler().post(runnable);
-        } else {
-            Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
-                    device.getName() + ",device address = " + device.getAddress() +
-                    ",requestId = " + requestId + ",descriptorUUID = " +
-                    descriptor.getUuid().toString() + ",preparedWrite = " + preparedWrite +
-                    ",responseNeeded = " + responseNeeded + ",offset = " + offset + ",value = " +
-                    Tool.bytesToHexStr(value));
-        }
+            }
+        });
     }
 
     /**
@@ -219,20 +225,21 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      * @param execute   Whether the pending writes should be executed (true) or
      */
     @Override
-    public void onExecuteWrite(final BluetoothDevice device, final int requestId, final boolean execute) {
-        if (onBluetoothGattServerCallbackListener != null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    onBluetoothGattServerCallbackListener.onExecuteWrite(device, requestId, execute);
+    public void onExecuteWrite(final BluetoothDevice device, final int requestId,
+                               final boolean execute) {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedByOtherDevicesListener != null) {
+                    onConnectedByOtherDevicesListener.onExecuteWrite(device, requestId, execute);
+                } else {
+                    DebugUtil.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
+                            device.getName() + ",device address = " + device.getAddress() +
+                            ",requestId = " + requestId + ",execute = " + execute);
                 }
-            };
-            BleManager.getHandler().post(runnable);
-        } else {
-            Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
-                    device.getName() + ",device address = " + device.getAddress() +
-                    ",requestId = " + requestId + ",execute = " + execute);
-        }
+            }
+        };
+        BleManager.getHANDLER().post(runnable);
     }
 
     /**
@@ -248,18 +255,17 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      */
     @Override
     public void onNotificationSent(final BluetoothDevice device, final int status) {
-        if (onBluetoothGattServerCallbackListener != null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    onBluetoothGattServerCallbackListener.onNotificationSent(device, status);
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedByOtherDevicesListener != null) {
+                    onConnectedByOtherDevicesListener.onNotificationSent(device, status);
+                } else {
+                    DebugUtil.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
+                            device.getName() + ",device address = " + device.getAddress() + ",status = " + status);
                 }
-            };
-            BleManager.getHandler().post(runnable);
-        } else {
-            Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
-                    device.getName() + ",device address = " + device.getAddress() + ",status = " + status);
-        }
+            }
+        });
     }
 
     /**
@@ -273,18 +279,17 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      */
     @Override
     public void onMtuChanged(final BluetoothDevice device, final int mtu) {
-        if (onBluetoothGattServerCallbackListener != null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    onBluetoothGattServerCallbackListener.onMtuChanged(device, mtu);
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedByOtherDevicesListener != null) {
+                    onConnectedByOtherDevicesListener.onMtuChanged(device, mtu);
+                } else {
+                    DebugUtil.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
+                            device.getName() + ",device address = " + device.getAddress() + ",mtu = " + mtu);
                 }
-            };
-            BleManager.getHandler().post(runnable);
-        } else {
-            Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
-                    device.getName() + ",device address = " + device.getAddress() + ",mtu = " + mtu);
-        }
+            }
+        });
     }
 
     /**
@@ -300,20 +305,20 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
      */
     @Override
-    public void onPhyUpdate(final BluetoothDevice device, final int txPhy, final int rxPhy, final int status) {
-        if (onBluetoothGattServerCallbackListener != null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    onBluetoothGattServerCallbackListener.onPhyUpdate(device, txPhy, rxPhy, status);
+    public void onPhyUpdate(final BluetoothDevice device, final int txPhy, final int rxPhy,
+                            final int status) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedByOtherDevicesListener != null) {
+                    onConnectedByOtherDevicesListener.onPhyUpdate(device, txPhy, rxPhy, status);
+                } else {
+                    DebugUtil.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
+                            device.getName() + ",device address = " + device.getAddress() + ",txPhy = " +
+                            txPhy + ",rxPhy = " + rxPhy + ",status = " + status);
                 }
-            };
-            BleManager.getHandler().post(runnable);
-        } else {
-            Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
-                    device.getName() + ",device address = " + device.getAddress() + ",txPhy = " +
-                    txPhy + ",rxPhy = " + rxPhy + ",status = " + status);
-        }
+            }
+        });
     }
 
     /**
@@ -328,20 +333,20 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
      *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
      */
     @Override
-    public void onPhyRead(final BluetoothDevice device, final int txPhy, final int rxPhy, final int status) {
-        if (onBluetoothGattServerCallbackListener != null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    onBluetoothGattServerCallbackListener.onPhyRead(device, txPhy, rxPhy, status);
+    public void onPhyRead(final BluetoothDevice device, final int txPhy, final int rxPhy,
+                          final int status) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onConnectedByOtherDevicesListener != null) {
+                    onConnectedByOtherDevicesListener.onPhyRead(device, txPhy, rxPhy, status);
+                } else {
+                    DebugUtil.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
+                            device.getName() + ",device address = " + device.getAddress() + ",txPhy = " +
+                            txPhy + ",rxPhy = " + rxPhy + ",status = " + status);
                 }
-            };
-            BleManager.getHandler().post(runnable);
-        } else {
-            Tool.warnOut(TAG, "onCharacteristicWriteRequest:device name = " +
-                    device.getName() + ",device address = " + device.getAddress() + ",txPhy = " +
-                    txPhy + ",rxPhy = " + rxPhy + ",status = " + status);
-        }
+            }
+        });
     }
 
     /*------------------------公开函数----------------------------*/
@@ -349,9 +354,10 @@ class DefaultBluetoothGattServerCallback extends BluetoothGattServerCallback {
     /**
      * 设置连接回调
      *
-     * @param onBluetoothGattServerCallbackListener 连接回调
+     * @param onConnectedByOtherDevicesListener 连接回调
      */
-    void setOnBluetoothGattServerCallbackListener(BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallbackListener) {
-        this.onBluetoothGattServerCallbackListener = onBluetoothGattServerCallbackListener;
+    void setOnConnectedByOtherDevicesListener(@Nullable OnConnectedByOtherDevicesListener
+                                                      onConnectedByOtherDevicesListener) {
+        this.onConnectedByOtherDevicesListener = onConnectedByOtherDevicesListener;
     }
 }

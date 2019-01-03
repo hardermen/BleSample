@@ -3,42 +3,45 @@ package com.jackiepenghe.blelibrary;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 
 /**
- * BLE多连接服务的连接工具
+ * Connect multiple BLE device service connection
  *
- * @author alm
+ * @author jackie
  */
 
-public class BleServiceMultiConnection implements ServiceConnection {
+public final class BleServiceMultiConnection implements ServiceConnection {
 
-    /*------------------------静态常量----------------------------*/
+    /*-----------------------------------static constant-----------------------------------*/
 
     /**
      * TAG
      */
     private static final String TAG = BleServiceMultiConnection.class.getSimpleName();
 
-    /*------------------------成员变量----------------------------*/
+    /*-----------------------------------field variables-----------------------------------*/
 
     /**
-     * BLE多连接工具
+     * BleMultiConnector
      */
+    @Nullable
     private BleMultiConnector bleMultiConnector;
 
-    /*------------------------构造函数----------------------------*/
+    /*-----------------------------------Constructor-----------------------------------*/
 
     /**
-     * 构造函数
+     * Constructor
      *
-     * @param bleMultiConnector BLE多连接工具
+     * @param bleMultiConnector BleMultiConnector
      */
-    BleServiceMultiConnection(BleMultiConnector bleMultiConnector) {
+     BleServiceMultiConnection(@NonNull BleMultiConnector bleMultiConnector) {
         this.bleMultiConnector = bleMultiConnector;
     }
 
-    /*------------------------实现接口函数----------------------------*/
+    /*-----------------------------------Override method-----------------------------------*/
 
     /**
      * Called when a connection to the Service has been established, with
@@ -61,10 +64,10 @@ public class BleServiceMultiConnection implements ServiceConnection {
         if (iBinder instanceof BluetoothMultiServiceBinder) {
             bleMultiConnector.setBluetoothMultiService(((BluetoothMultiServiceBinder) iBinder).getBluetoothMultiService());
             if (bleMultiConnector.getBluetoothMultiService().initialize()) {
-                Tool.warnOut(TAG, "蓝牙多连接初始化完成");
+                DebugUtil.warnOut(TAG, "Bluetooth multi-connection service initialization completed");
                 bleMultiConnector.getBluetoothMultiService().setInitializeFinished();
             } else {
-                Tool.warnOut(TAG, "蓝牙多连接初始化失败");
+                DebugUtil.warnOut(TAG, "Bluetooth multi-connection service initialization failed");
             }
         }
     }
@@ -85,6 +88,8 @@ public class BleServiceMultiConnection implements ServiceConnection {
             return;
         }
         bleMultiConnector.setBluetoothMultiService(null);
+        bleMultiConnector = null;
+
     }
 
 

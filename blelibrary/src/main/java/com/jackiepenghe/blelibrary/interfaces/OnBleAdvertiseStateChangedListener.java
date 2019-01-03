@@ -1,16 +1,17 @@
-package com.jackiepenghe.blelibrary;
+package com.jackiepenghe.blelibrary.interfaces;
 
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.AdvertisingSet;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 
 /**
+ * callback triggered when BLE Advertise State changed
+ *
  * @author jackie
  */
-@SuppressWarnings("ALL")
-public abstract class BaseAdvertiseCallback {
+public interface OnBleAdvertiseStateChangedListener {
 
-    /*-------------------------抽象函数-------------------------*/
+    /*-----------------------------------methods-----------------------------------*/
 
     /**
      * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
@@ -19,7 +20,7 @@ public abstract class BaseAdvertiseCallback {
      * @param settingsInEffect The actual settings used for advertising, which may be different from
      *                         what has been requested.
      */
-    public abstract void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect);
+    void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect);
 
     /**
      * Callback when advertising could not be started.
@@ -27,12 +28,12 @@ public abstract class BaseAdvertiseCallback {
      * @param errorCode Error code (see ADVERTISE_FAILED_* constants) for advertising start
      *                  failures.
      */
-    public abstract void onBroadCastStartFailure(int errorCode);
+    void onBroadCastStartFailure(int errorCode);
 
     /**
      * 如果设置了超时时间，在超时结束后，会执行此回调
      */
-    public abstract void onBroadCastStopped();
+    void onBroadCastStopped();
 
     /**
      * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertisingSet}
@@ -44,7 +45,7 @@ public abstract class BaseAdvertiseCallback {
      * @param txPower        tx power that will be used for this set.
      * @param status         Status of the operation.
      */
-    public abstract void onAdvertisingSetStarted(AdvertisingSet advertisingSet, int txPower, int status);
+    void onAdvertisingSetStarted(AdvertisingSet advertisingSet, int txPower, int status);
 
 
     /**
@@ -53,7 +54,7 @@ public abstract class BaseAdvertiseCallback {
      *
      * @param advertisingSet The advertising set.
      */
-    public abstract void onAdvertisingSetStopped(AdvertisingSet advertisingSet);
+    void onAdvertisingSetStopped(AdvertisingSet advertisingSet);
 
 
     /**
@@ -61,10 +62,10 @@ public abstract class BaseAdvertiseCallback {
      * result of the operation. If status is ADVERTISE_SUCCESS, then advertising set is advertising.
      *
      * @param advertisingSet The advertising set.
-     * @param enable enable
+     * @param enable         enable
      * @param status         Status of the operation.
      */
-    public abstract void onAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status);
+    void onAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status);
 
 
     /**
@@ -74,7 +75,7 @@ public abstract class BaseAdvertiseCallback {
      * @param advertisingSet The advertising set.
      * @param status         Status of the operation.
      */
-    public abstract void onScanResponseDataSet(AdvertisingSet advertisingSet, int status);
+    void onScanResponseDataSet(AdvertisingSet advertisingSet, int status);
 
     /**
      * Callback triggered in response to {@link AdvertisingSet#setAdvertisingParameters}
@@ -84,7 +85,7 @@ public abstract class BaseAdvertiseCallback {
      * @param txPower        tx power that will be used for this set.
      * @param status         Status of the operation.
      */
-    public abstract void onAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int txPower, int status);
+    void onAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int txPower, int status);
 
     /**
      * Callback triggered in response to {@link AdvertisingSet#setPeriodicAdvertisingParameters}
@@ -93,7 +94,7 @@ public abstract class BaseAdvertiseCallback {
      * @param advertisingSet The advertising set.
      * @param status         Status of the operation.
      */
-    public abstract void onPeriodicAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int status);
+    void onPeriodicAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int status);
 
 
     /**
@@ -103,17 +104,17 @@ public abstract class BaseAdvertiseCallback {
      * @param advertisingSet The advertising set.
      * @param status         Status of the operation.
      */
-    public abstract void onPeriodicAdvertisingDataSet(AdvertisingSet advertisingSet, int status);
+    void onPeriodicAdvertisingDataSet(AdvertisingSet advertisingSet, int status);
 
     /**
      * Callback triggered in response to {@link AdvertisingSet#setPeriodicAdvertisingEnabled}
      * indicating result of the operation.
      *
      * @param advertisingSet The advertising set.
-     * @param enable enable
+     * @param enable         enable
      * @param status         Status of the operation.
      */
-    public abstract void onPeriodicAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status);
+    void onPeriodicAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status);
 
     /**
      * Callback triggered in response to {@link AdvertisingSet#setAdvertisingData} indicating
@@ -122,5 +123,5 @@ public abstract class BaseAdvertiseCallback {
      * @param advertisingSet The advertising set.
      * @param status         Status of the operation.
      */
-    public abstract void onAdvertisingDataSet(AdvertisingSet advertisingSet, int status);
+    void onAdvertisingDataSet(AdvertisingSet advertisingSet, int status);
 }

@@ -1,6 +1,5 @@
 package com.jackiepenghe.blelibrary;
 
-import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -8,29 +7,37 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
+import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
+
+import com.jackiepenghe.blelibrary.interfaces.OnDeviceBondStateChangedListener;
 
 
 /**
- * BLE绑定设备时，监听绑定状态的广播接收者
+ * Broadcast receiver listening for binding status
  *
  * @author alm
  */
+@RequiresApi(api = Build.VERSION_CODES.KITKAT)
+public final class BoundBleBroadcastReceiver extends BroadcastReceiver {
 
-public class BoundBleBroadcastReceiver extends BroadcastReceiver {
-
-    /*------------------------静态常量----------------------------*/
+    /*-----------------------------------static constant-----------------------------------*/
 
     private static final String TAG = BoundBleBroadcastReceiver.class.getSimpleName();
     /**
-     * The user will be prompted to enter a passkey
+     * The userBean will be prompted to enter a passkey
      */
     public static final int PAIRING_VARIANT_PASSKEY = 1;
 
-    /*------------------------成员变量----------------------------*/
+    /*-----------------------------------field variables-----------------------------------*/
 
-    private BleInterface.OnDeviceBondStateChangedListener mOnDeviceBondStateChangedListener;
+    /**
+     * BLE Bluetooth device binding state changed listener
+     */
+    @Nullable
+    private OnDeviceBondStateChangedListener mOnDeviceBondStateChangedListener;
 
-    /*------------------------实现父类函数----------------------------*/
+    /*-----------------------------------Override method-----------------------------------*/
 
     /**
      * This method is called when the BroadcastReceiver is receiving an Intent
@@ -67,7 +74,6 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
      * @param intent  The Intent being received.
      */
     @SuppressWarnings({"JavadocReference", "JavaDoc"})
-    @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
@@ -76,39 +82,39 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
         }
         switch (action) {
             case BluetoothDevice.ACTION_PAIRING_REQUEST:
-                Tool.warnOut(TAG, "ACTION_PAIRING_REQUEST");
+                DebugUtil.warnOut(TAG, "ACTION_PAIRING_REQUEST");
                 int mType = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT, BluetoothDevice.ERROR);
-                Tool.warnOut(TAG, "mType = " + mType);
+                DebugUtil.warnOut(TAG, "mType = " + mType);
                 switch (mType) {
                     case BluetoothDevice.PAIRING_VARIANT_PASSKEY_CONFIRMATION:
-                        Tool.warnOut(TAG, "让用户确认PIN是否正确");
+                        DebugUtil.warnOut(TAG, "Let the userBean confirm that the PIN is correct");
                         break;
                     case PAIRING_VARIANT_PASSKEY:
-                        Tool.warnOut(TAG, "提示用户输入PIN或者自动输入PIN");
+                        DebugUtil.warnOut(TAG, "Prompt the userBean to enter a PIN or automatically enter a PIN");
                         break;
                     default:
                         break;
                 }
                 break;
             case BluetoothDevice.ACTION_BOND_STATE_CHANGED:
-                Tool.warnOut("BoundBleBroadcastReceiver", "ACTION_BOND_STATE_CHANGED");
+                DebugUtil.warnOut("BoundBleBroadcastReceiver", "ACTION_BOND_STATE_CHANGED");
                 int bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
-                Tool.warnOut("BoundBleBroadcastReceiver", "bondState = " + bondState);
+                DebugUtil.warnOut("BoundBleBroadcastReceiver", "bondState = " + bondState);
                 switch (bondState) {
                     case BluetoothDevice.BOND_BONDING:
-                        Tool.warnOut("BoundBleBroadcastReceiver", "BOND_BONDING");
+                        DebugUtil.warnOut("BoundBleBroadcastReceiver", "BOND_BONDING");
                         if (mOnDeviceBondStateChangedListener != null) {
                             mOnDeviceBondStateChangedListener.onDeviceBinding();
                         }
                         break;
                     case BluetoothDevice.BOND_BONDED:
-                        Tool.warnOut("BoundBleBroadcastReceiver", "BOND_BONDED");
+                        DebugUtil.warnOut("BoundBleBroadcastReceiver", "BOND_BONDED");
                         if (mOnDeviceBondStateChangedListener != null) {
                             mOnDeviceBondStateChangedListener.onDeviceBonded();
                         }
                         break;
                     case BluetoothDevice.BOND_NONE:
-                        Tool.warnOut("BoundBleBroadcastReceiver", "BOND_NONE");
+                        DebugUtil.warnOut("BoundBleBroadcastReceiver", "BOND_NONE");
                         if (mOnDeviceBondStateChangedListener != null) {
                             mOnDeviceBondStateChangedListener.onDeviceBindNone();
                         }
@@ -122,14 +128,14 @@ public class BoundBleBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    /*------------------------库内函数------------------------*/
+    /*-----------------------------------Package private method-----------------------------------*/
 
     /**
-     * 设置绑定状态改变时的回调
+     * set BLE Bluetooth device binding state changed listener
      *
-     * @param onDeviceBondStateChangedListener 绑定状态改变时的回调
+     * @param onDeviceBondStateChangedListener BLE Bluetooth device binding state changed listener
      */
-    void setOnDeviceBondStateChangedListener(BleInterface.OnDeviceBondStateChangedListener onDeviceBondStateChangedListener) {
+    public void setOnDeviceBondStateChangedListener(@Nullable OnDeviceBondStateChangedListener onDeviceBondStateChangedListener) {
         mOnDeviceBondStateChangedListener = onDeviceBondStateChangedListener;
     }
 }

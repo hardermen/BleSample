@@ -5,7 +5,8 @@ import android.text.Spannable;
 import android.text.TextWatcher;
 import android.widget.EditText;
 
-import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.baselibrary.tools.Tool;
+
 
 /**
  * @author jacke
@@ -68,12 +69,13 @@ public class EditTextWatcherForMacAddress implements TextWatcher {
      * @param before int
      * @param count int
      */
+    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
         try {
 
             String temp = charSequence.toString();
-            /**
+            /*
              * 蓝牙发送一包最多20个字节
              */
             if (temp.length() > (MAX_NUM * 3 - 1)) {
@@ -166,7 +168,7 @@ public class EditTextWatcherForMacAddress implements TextWatcher {
      * to mark your place and then look up from here where the span
      * ended up.
      *
-     * @param editable
+     * @param editable Editable
      */
     @Override
     public void afterTextChanged(Editable editable) {

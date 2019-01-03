@@ -2,40 +2,47 @@ package com.jackiepenghe.blelibrary;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 
 import java.util.List;
 import java.util.UUID;
 
-import static com.jackiepenghe.blelibrary.BleManager.resetBleMultiConnector;
 
 /**
- * 多连接时的Ble连接工具
+ * Ble connection tool when connecting multiple devices
  *
- * @author alm
+ * @author jackie
  */
 
-public class BleMultiConnector {
+public final class BleMultiConnector {
 
-    /*------------------------成员变量----------------------------*/
+    /*-----------------------------------field variables-----------------------------------*/
+
     /**
-     * 多连接服务连接工具
+     * connect timeout
+     */
+    private long connectTimeOut = 10000;
+    /**
+     * Connect multiple BLE device service connection
      */
     private BleServiceMultiConnection bleServiceMultiConnection;
     /**
-     * 多连接服务
+     * BluetoothMultiService
      */
     private BluetoothMultiService bluetoothMultiService;
 
-    /*------------------------构造函数----------------------------*/
+    /*-----------------------------------Constructor-----------------------------------*/
 
     /**
-     * 构造器 protected 禁止外部直接构造
-     *
+     * Constructor
      */
     BleMultiConnector() {
         bleServiceMultiConnection = new BleServiceMultiConnection(this);
@@ -43,90 +50,136 @@ public class BleMultiConnector {
         BleManager.getContext().getApplicationContext().bindService(intent, bleServiceMultiConnection, Context.BIND_AUTO_CREATE);
     }
 
-    /*------------------------库内函数----------------------------*/
+    /*-----------------------------------Package private getter & setter-----------------------------------*/
 
     /**
-     * 根据设备地址断开连接
+     * get BluetoothMultiService
      *
-     * @param address 设备地址断
-     * @return true表示请求发起成功
+     * @return BluetoothMultiService
      */
-    boolean disconnect(String address) {
+    BluetoothMultiService getBluetoothMultiService() {
+        return bluetoothMultiService;
+    }
+
+    /**
+     * set BluetoothMultiService
+     *
+     * @param bluetoothMultiService BluetoothMultiService
+     */
+    void setBluetoothMultiService(BluetoothMultiService bluetoothMultiService) {
+        this.bluetoothMultiService = bluetoothMultiService;
+    }
+
+    /*-----------------------------------public getter & setter-----------------------------------*/
+
+    /**
+     * get connect time out
+     *
+     * @return connect time out
+     */
+    @SuppressWarnings("unused")
+    public long getConnectTimeOut() {
+        return connectTimeOut;
+    }
+
+    /**
+     * set connect timeout
+     *
+     * @param connectTimeOut connect timeout(unit:ms)
+     */
+    @SuppressWarnings("WeakerAccess")
+    public void setConnectTimeOut(@IntRange(from = 0) long connectTimeOut) {
+        this.connectTimeOut = connectTimeOut;
+        if (bluetoothMultiService != null) {
+            bluetoothMultiService.setConnectTimeOut(connectTimeOut);
+        }
+    }
+
+    /*-----------------------------------Package private method-----------------------------------*/
+
+    /**
+     * Disconnect the GATT connection based on the device address.Result of request will be trigger callback {@link BaseBleConnectCallback#onDisConnected(BluetoothGatt)}
+     *
+     * @param address device address
+     * @return true means request successful.
+     */
+    boolean disconnect(@NonNull String address) {
         return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.disconnect(address);
     }
 
     /**
-     * 根据设备地址关闭GATT
+     * Turn off GATT based on device address
      *
-     * @param address 设备地址
-     * @return true表示成功
+     * @param address device address
+     * @return true means request successful
      */
-    boolean close(String address) {
+    boolean close(@NonNull String address) {
         return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.close(address);
     }
 
     /**
-     * 根据设备地址重新连接断开的设备（G与该地址建立过GATT连接并且该GATT未被关闭才能重连）
+     * reconnect remote device by address.(GATT must be not closed)
      *
-     * @param address 设备地址
-     * @return true表示请求发起成功
+     * @param address device address
+     * @return true means request successful
      */
-    boolean reConnect(String address) {
+    boolean reConnect(@NonNull String address) {
         return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.reConnect(address);
     }
 
     /**
-     * 刷新蓝牙缓存
+     * refresh GATT cache
      *
-     * @return true表示成功
+     * @return true means successful
      */
-    boolean refreshGattCache(String address) {
+    boolean refreshGattCache(@NonNull String address) {
         return bluetoothMultiService != null && bluetoothMultiService.refreshGattCache(address);
     }
 
     /**
-     * 写入数据
+     * write data to remote device
      *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @param values             数据
-     * @return true表示成功
+     * @param address            device address
+     * @param serviceUUID        service UUID
+     * @param characteristicUUID characteristic UUID
+     * @param data               data
+     * @return true means request success
      */
-    boolean writeData(String address, String serviceUUID, String characteristicUUID, byte[] values) {
-        return bluetoothMultiService != null && bluetoothMultiService.writeData(address, serviceUUID, characteristicUUID, values);
+    boolean writeData(@NonNull String address, @NonNull String serviceUUID, @NonNull String characteristicUUID, @NonNull byte[] data) {
+        return bluetoothMultiService != null && bluetoothMultiService.writeData(address, serviceUUID, characteristicUUID, data);
     }
 
     /**
-     * 读取数据
+     * read data from remote device
      *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @return true表示成功
+     * @param serviceUUID        service UUID
+     * @param characteristicUUID characteristic UUID
+     * @return true means request success
      */
-    boolean readData(String address, String serviceUUID, String characteristicUUID) {
+    boolean readData(@NonNull String address, @NonNull String serviceUUID, @NonNull String characteristicUUID) {
         return bluetoothMultiService != null && bluetoothMultiService.readData(address, serviceUUID, characteristicUUID);
     }
 
     /**
-     * 打开或关闭通知
+     * enable or disable notification
      *
-     * @param address            设备地址
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @param enable             true表示打开通知
-     * @return true表示成功
+     * @param address            device address
+     * @param serviceUUID        service UUID
+     * @param characteristicUUID characteristic UUID
+     * @param enable             true means enable,false means disable
+     * @return true means request success
      */
-    boolean enableNotification(String address, String serviceUUID, String characteristicUUID, boolean enable) {
+    boolean enableNotification(@NonNull String address, @NonNull String serviceUUID, @NonNull String characteristicUUID, boolean enable) {
         return bluetoothMultiService != null && bluetoothMultiService.enableNotification(address, serviceUUID, characteristicUUID, enable);
     }
 
     /**
-     * 根据设备地址获取该设备的所有服务
+     * get GATT services by Specified address
      *
-     * @param address 设备地址
-     * @return 设备的所有服务
+     * @param address device address
+     * @return GATT services
      */
-    List<BluetoothGattService> getServices(String address) {
+    List<BluetoothGattService> getServices(@NonNull String address) {
         if (bluetoothMultiService == null) {
             return null;
         }
@@ -137,7 +190,14 @@ public class BleMultiConnector {
         return bluetoothMultiService.getServices(address);
     }
 
-    BluetoothGattService getService(String address, UUID uuid) {
+    /**
+     * get GATT service by Specified address and UUID
+     *
+     * @param address address
+     * @param uuid    UUID
+     * @return GATT service
+     */
+    BluetoothGattService getService(@NonNull String address, @NonNull UUID uuid) {
         if (bluetoothMultiService == null) {
             return null;
         }
@@ -148,27 +208,120 @@ public class BleMultiConnector {
     }
 
     /**
-     * 获取多连接服务
+     * Initiates a reliable write transaction for a given remote device.
      *
-     * @return 多连接服务
+     * <p>Once a reliable write transaction has been initiated, all calls
+     * to {@link BluetoothGatt#writeCharacteristic} are sent to the remote device for
+     * verification and queued up for atomic execution. The application will
+     * receive an {@link BluetoothGattCallback#onCharacteristicWrite} callback
+     * in response to every {@link BluetoothGatt#writeCharacteristic} call and is responsible
+     * for verifying if the value has been transmitted accurately.
+     *
+     * <p>After all characteristics have been queued up and verified,
+     * {@link #executeReliableWrite} will execute all writes. If a characteristic
+     * was not written correctly, calling {@link #abortReliableWrite} will
+     * cancel the current transaction without commiting any values on the
+     * remote device.
+     *
+     * <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
+     *
+     * @param address device address
+     * @return true, if the reliable write transaction has been initiated
      */
-    BluetoothMultiService getBluetoothMultiService() {
-        return bluetoothMultiService;
+    boolean beginReliableWrite(@NonNull String address) {
+        if (bluetoothMultiService == null) {
+            return false;
+        }
+        if (!bluetoothMultiService.isInitializeFinished()) {
+            return false;
+        }
+        return bluetoothMultiService.beginReliableWrite(address);
     }
 
     /**
-     * 设置蓝牙多连接服务（将蓝牙多连接服务传递进来以进行操作）
+     * Cancels a reliable write transaction for a given device.
      *
-     * @param bluetoothMultiService 蓝牙多连接服务
+     * <p>Calling this function will discard all queued characteristic write
+     * operations for a given remote device.
+     *
+     * @param address device address
+     *                <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
      */
-    void setBluetoothMultiService(BluetoothMultiService bluetoothMultiService) {
-        this.bluetoothMultiService = bluetoothMultiService;
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    boolean abortReliableWrite(@NonNull String address) {
+        if (bluetoothMultiService == null) {
+            return false;
+        }
+        if (!bluetoothMultiService.isInitializeFinished()) {
+            return false;
+        }
+        return bluetoothMultiService.abortReliableWrite(address);
     }
 
-    /*------------------------公开函数----------------------------*/
+    /**
+     * Discovers services offered by a remote device as well as their
+     * characteristics and descriptors.
+     *
+     * <p>This is an asynchronous operation. Once service discovery is completed,
+     * the {@link BluetoothGattCallback#onServicesDiscovered} callback is
+     * triggered. If the discovery was successful, the remote services can be
+     * retrieved using the {@link #getServices} function.
+     *
+     * <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
+     *
+     * @param address device address
+     * @return true, if the remote service discovery has been started
+     */
+    boolean discoverServices(@NonNull String address) {
+        if (bluetoothMultiService == null) {
+            return false;
+        }
+        if (!bluetoothMultiService.isInitializeFinished()) {
+            return false;
+        }
+        return bluetoothMultiService.discoverServices(address);
+    }
 
     /**
-     * 断开所有连接
+     * Executes a reliable write transaction for a given remote device.
+     *
+     * <p>This function will commit all queued up characteristic write
+     * operations for a given remote device.
+     *
+     * <p>A {@link BluetoothGattCallback#onReliableWriteCompleted} callback is
+     * invoked to indicate whether the transaction has been executed correctly.
+     *
+     * <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
+     *
+     * @param address device address
+     * @return true, if the request to execute the transaction has been sent
+     */
+    boolean executeReliableWrite(@NonNull String address) {
+        if (bluetoothMultiService == null) {
+            return false;
+        }
+        if (!bluetoothMultiService.isInitializeFinished()) {
+            return false;
+        }
+        return bluetoothMultiService.executeReliableWrite(address);
+    }
+
+    /**
+     * get BluetoothAdapter
+     *
+     * @return BluetoothAdapter
+     */
+    BluetoothAdapter getBluetoothAdapter() {
+        if (bluetoothMultiService == null) {
+            return null;
+        }
+        return bluetoothMultiService.getBluetoothAdapter();
+    }
+
+    /*-----------------------------------public method-----------------------------------*/
+
+    /**
+     * disconnect all device
      */
     @SuppressWarnings("unused")
     public boolean disconnectAll() {
@@ -183,9 +336,9 @@ public class BleMultiConnector {
     }
 
     /**
-     * 关闭所有GATT连接
+     * close all GATT
      *
-     * @return true表示成功
+     * @return true means request success
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean closeAll() {
@@ -208,15 +361,15 @@ public class BleMultiConnector {
         }
         bleServiceMultiConnection = null;
         bluetoothMultiService = null;
-        resetBleMultiConnector();
+        BleManager.resetBleMultiConnector();
         return true;
     }
 
     /**
-     * 发起一个连接
+     * connect a device
      *
-     * @param bluetoothDevice 设备
-     * @return true表示请求发起成功
+     * @param bluetoothDevice remote device
+     * @return true means request success
      */
     public boolean connect(@NonNull BluetoothDevice bluetoothDevice) {
         return connect(bluetoothDevice, false);
@@ -224,101 +377,107 @@ public class BleMultiConnector {
 
 
     /**
-     * 发起一个连接
+     * connect a device
      *
-     * @param address 设备地址
-     * @return true表示请求发起成功
+     * @param address device address
+     * @return true means request success
      */
     @Deprecated
-    public boolean connect(String address) {
-        return address != null && BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), false);
+    public boolean connect(@NonNull String address) {
+        return BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), false);
     }
 
     /**
-     * 发起一个连接
+     * connect a device
      *
-     * @param bluetoothDevice 设备
-     * @param autoConnect     自动重连标识
-     * @return true表示请求发起成功
+     * @param bluetoothDevice remote device
+     * @param autoConnect     automatic reconnection
+     * @return true means request success
      */
     public boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoConnect) {
-        return connect(bluetoothDevice, new DefaultConnectCallBack(), autoConnect);
+        return connect(bluetoothDevice, new DefaultBleConnectCallBack(), autoConnect);
     }
 
     /**
-     * 发起一个连接
+     * connect a device
      *
-     * @param address     设备地址
-     * @param autoConnect 自动重连标识
-     * @return true表示请求发起成功
+     * @param address     device address
+     * @param autoConnect true means request success
+     * @return true means request success
      */
     @Deprecated
-    public boolean connect(String address, boolean autoConnect) {
-        return address != null && BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), new DefaultConnectCallBack(), autoConnect);
+    public boolean connect(@NonNull String address, boolean autoConnect) {
+        return BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), new DefaultBleConnectCallBack(), autoConnect);
     }
 
     /**
-     * 发起一个连接
+     * connect a device
      *
-     * @param bluetoothDevice     设备
-     * @param baseConnectCallback 连接回调
-     * @return true表示请求发起成功
+     * @param bluetoothDevice        remote device
+     * @param baseBleConnectCallback callback for connection
+     * @return true means request success
      */
-    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, @NonNull BaseConnectCallback baseConnectCallback) {
-        return connect(bluetoothDevice, baseConnectCallback, false);
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, @NonNull BaseBleConnectCallback baseBleConnectCallback) {
+        return connect(bluetoothDevice, baseBleConnectCallback, false);
     }
 
     /**
-     * 发起一个连接
+     * connect a device
      *
-     * @param address             设备地址
-     * @param baseConnectCallback 连接回调
-     * @return true表示请求发起成功
-     */
-    @Deprecated
-    public boolean connect(String address, @NonNull BaseConnectCallback baseConnectCallback) {
-        return address != null && BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), baseConnectCallback, false);
-    }
-
-    /**
-     * 发起一个连接
-     *
-     * @param bluetoothDevice     设备
-     * @param baseConnectCallback 连接回调
-     * @param autoConnect         自动重连标识
-     * @return true表示请求发起成功
-     */
-    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, @NonNull BaseConnectCallback baseConnectCallback, boolean autoConnect) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectDevice(bluetoothDevice, baseConnectCallback, autoConnect);
-        } else {
-            return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectAddress(bluetoothDevice.getAddress(), baseConnectCallback, autoConnect);
-        }
-    }
-
-    /**
-     * 发起一个连接
-     *
-     * @param address             设备地址
-     * @param baseConnectCallback 连接回调
-     * @param autoConnect         自动重连标识
-     * @return true表示请求发起成功
+     * @param address                device address
+     * @param baseBleConnectCallback callback for connection
+     * @return true means request success
      */
     @Deprecated
-    public boolean connect(String address, @NonNull BaseConnectCallback baseConnectCallback, boolean autoConnect) {
-        if (address == null || !BluetoothAdapter.checkBluetoothAddress(address)) {
+    public boolean connect(@NonNull String address, @NonNull BaseBleConnectCallback baseBleConnectCallback) {
+        return BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), baseBleConnectCallback, false);
+    }
+
+    /**
+     * connect a device
+     *
+     * @param address                device address
+     * @param baseBleConnectCallback callback for connection
+     * @param autoConnect            true means request success
+     * @return true means request success
+     */
+    @Deprecated
+    public boolean connect(@NonNull String address, @NonNull BaseBleConnectCallback baseBleConnectCallback, boolean autoConnect) {
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
         }
         BluetoothDevice bluetoothDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectDevice(bluetoothDevice, baseConnectCallback, autoConnect);
-        } else {
-            return bluetoothMultiService != null && bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connectAddress(bluetoothDevice.getAddress(), baseConnectCallback, autoConnect);
-        }
+        return connect(bluetoothDevice, baseBleConnectCallback, autoConnect);
     }
 
     /**
-     * 刷新蓝牙缓存
+     * connect a device
+     *
+     * @param bluetoothDevice        remote device
+     * @param baseBleConnectCallback callback for connection
+     * @param autoConnect            true means request success
+     * @return true means request success
+     */
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, @NonNull BaseBleConnectCallback baseBleConnectCallback, boolean autoConnect) {
+        boolean result;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            if (bluetoothMultiService == null) {
+                return connect(bluetoothDevice,baseBleConnectCallback,autoConnect);
+            }
+            setConnectTimeOut(connectTimeOut);
+            result = bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connect(bluetoothDevice, baseBleConnectCallback, autoConnect);
+        } else {
+            if (bluetoothMultiService == null) {
+                return false;
+            }
+            setConnectTimeOut(connectTimeOut);
+            result = bluetoothMultiService.isInitializeFinished() && bluetoothMultiService.connect(bluetoothDevice.getAddress(), baseBleConnectCallback, autoConnect);
+        }
+        return result;
+    }
+
+    /**
+     * refresh all GATT cache
      */
     public void refreshAllGattCache() {
         if (bluetoothMultiService == null) {
@@ -328,9 +487,9 @@ public class BleMultiConnector {
     }
 
     /**
-     * 根据设备地址获取一个Ble多连接中的设备的控制器
+     * get device controller by specified address
      *
-     * @param address 设备地址
+     * @param address device address
      * @return BleDeviceController
      */
     @SuppressWarnings("unused")

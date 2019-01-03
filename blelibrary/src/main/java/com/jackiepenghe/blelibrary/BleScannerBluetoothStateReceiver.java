@@ -6,38 +6,37 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 
 /**
- * 蓝牙扫描器监听蓝牙状态改变的广播接收者
+ * Broadcast receiver detecting Bluetooth switch status
  *
  * @author jackie
  */
-class BleScannerBluetoothStateReceiver extends BroadcastReceiver {
+final class BleScannerBluetoothStateReceiver extends BroadcastReceiver {
 
-    /*------------------------成员变量----------------------------*/
+    /*-----------------------------------field variables-----------------------------------*/
 
     /**
-     * 蓝牙扫描器弱引用
+     * BLE scanner
      */
+    @Nullable
     private BleScanner bleScanner;
 
-    /**
-     * 蓝牙状态更改时进行的回调
-     */
-    private BleInterface.OnBluetoothSwitchChangedListener onBluetoothStateChangedListener;
-
-    /*------------------------构造函数----------------------------*/
+    /*-----------------------------------Constructor-----------------------------------*/
 
     /**
-     * 构造函数
+     * Constructor
      *
-     * @param bleScanner BLE扫描器
+     * @param bleScanner BleScanner
      */
-    public BleScannerBluetoothStateReceiver(BleScanner bleScanner) {
+    BleScannerBluetoothStateReceiver(@NonNull BleScanner bleScanner) {
         this.bleScanner = bleScanner;
     }
 
-    /*------------------------实现父类函数----------------------------*/
+    /*-----------------------------------Override method-----------------------------------*/
 
     /**
      * This method is called when the BroadcastReceiver is receiving an Intent
@@ -85,25 +84,17 @@ class BleScannerBluetoothStateReceiver extends BroadcastReceiver {
                 int bluetoothState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
                 switch (bluetoothState) {
                     case BluetoothAdapter.STATE_OFF:
-                        Tool.toastL(context, R.string.bluetooth_off);
                         if (bleScanner != null) {
                             bleScanner.stopScan();
                         }
-                        if (onBluetoothStateChangedListener != null) {
-                            onBluetoothStateChangedListener.onBluetoothSwitchChanged(false);
-                        }
                         break;
                     case BluetoothAdapter.STATE_ON:
-                        Tool.toastL(context, R.string.bluetooth_on);
                         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
                         if (bluetoothManager == null) {
                             return;
                         }
                         if (bleScanner != null) {
                             bleScanner.setBluetoothAdapter(bluetoothManager.getAdapter());
-                        }
-                        if (onBluetoothStateChangedListener != null) {
-                            onBluetoothStateChangedListener.onBluetoothSwitchChanged(true);
                         }
                         break;
                     default:
@@ -115,19 +106,12 @@ class BleScannerBluetoothStateReceiver extends BroadcastReceiver {
         }
     }
 
-    /*------------------------自定义库内函数----------------------------*/
+    /*-----------------------------------package private method-----------------------------------*/
 
     /**
-     * 释放内存
+     * Free memory
      */
     void releaseData() {
         bleScanner = null;
-    }
-
-    /**
-     * 设置蓝牙状态更改时进行的回调
-     */
-    void setOnBluetoothSwitchChangedListener(BleInterface.OnBluetoothSwitchChangedListener onBluetoothStateChangedListener) {
-        this.onBluetoothStateChangedListener = onBluetoothStateChangedListener;
     }
 }

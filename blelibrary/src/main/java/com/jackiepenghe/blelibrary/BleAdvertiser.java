@@ -1,12 +1,9 @@
 package com.jackiepenghe.blelibrary;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.AdvertiseCallback;
-import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.Context;
@@ -14,99 +11,145 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.ParcelUuid;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 
-import java.util.UUID;
-import java.util.concurrent.ThreadFactory;
+import com.jackiepenghe.blelibrary.enums.BleAdvertiseMode;
+import com.jackiepenghe.blelibrary.enums.BleAdvertiseTxPowerLevel;
+import com.jackiepenghe.blelibrary.interfaces.OnBleAdvertiseStateChangedListener;
+import com.jackiepenghe.blelibrary.interfaces.OnConnectedByOtherDevicesListener;
+
+import java.util.ArrayList;
+
+import static android.bluetooth.le.AdvertiseData.*;
 
 /**
- * BLE广播实例
+ * BLE broadcast util class
  *
  * @author jacke
  */
-@SuppressWarnings("unused")
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class BleAdvertiser {
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+public final class BleAdvertiser {
+
+    /*-----------------------------------static constant-----------------------------------*/
 
     private static final String TAG = BleAdvertiser.class.getSimpleName();
 
-    /*---------------------成员变量---------------------*/
+    /*-----------------------------------field variables-----------------------------------*/
     /**
-     * 蓝牙适配器
+     * BLE Advertise Callback of system api implement
+     */
+    private DefaultBleAdvertiseCallback defaultBleAdvertiseCallback = new DefaultBleAdvertiseCallback();
+
+    /**
+     * BLE Advertise Mode
+     */
+    private BleAdvertiseMode bleAdvertiseMode = BleAdvertiseMode.LOW_LATENCY;
+
+    /**
+     * Use to record the advertisement type should be connectable or non-connectable.
+     */
+    private boolean connectable = false;
+
+    /**
+     * BLE Advertise Tx Power Level
+     */
+    private BleAdvertiseTxPowerLevel txPowerLevel =  BleAdvertiseTxPowerLevel.HIGH;
+
+    /**
+     * BLE Advertise time out
+     */
+    private int timeOut = 0;
+
+    /**
+     * Use to record the transmission power level should be included in the advertise packet. Tx power
+     * level field takes 3 bytes in advertise packet.
+     */
+    private boolean scanResponseIncludeTxPowerLevel = false;
+
+    /**
+     * Use to record the device name should be included in advertise packet.
+     */
+    private boolean scanResponseIncludeDeviceName = false;
+
+    /**
+     * BLE advertisement scan response pack content data list.
+     */
+    private ArrayList<AdvertiseData> scanResponseAdvertiseRecords = new ArrayList<>();
+
+    /**
+     * BLE advertisement pack service uuid list
+     */
+    private ArrayList<AdvertiseServiceUuid> scanResponseAdvertiseServiceUuids = new ArrayList<>();
+
+    /**
+     * Use to record the transmission power level should be included in the advertise packet. Tx power
+     * level field takes 3 bytes in advertise packet.
+     */
+    private boolean advertiseDataIncludeTxPowerLevel = false;
+
+    /**
+     * Use to record the device name should be included in advertise packet.
+     */
+    private boolean advertiseDataIncludeDeviceName = false;
+
+    /**
+     * BLE advertisement scan response pack content data list.
+     */
+    private ArrayList< AdvertiseData> advertiseDataAdvertiseRecords = new ArrayList<>();
+
+    /**
+     * BLE advertisement pack service uuid list
+     */
+    private ArrayList<AdvertiseServiceUuid> advertiseDataAdvertiseServiceUuids = new ArrayList<>();
+
+    /**
+     * Advertise Settings
+     */
+    private AdvertiseSettings advertiseSettings;
+    /**
+     * Scan Response
+     */
+    private android.bluetooth.le.AdvertiseData scanResponse;
+    /**
+     * Advertise Data
+     */
+    private android.bluetooth.le.AdvertiseData advertiseData;
+
+    /**
+     * Used to record whether it is currently broadcasting
+     */
+    private boolean advertising;
+
+    /**
+     * Context
+     */
+    private Context context;
+
+    /**
+     * Bluetooth adapter
      */
     private BluetoothAdapter mBluetoothAdapter;
+
     /**
-     * 蓝牙广播实例
+     * BluetoothLe advertiser instance
      */
     private BluetoothLeAdvertiser mBluetoothAdvertiser;
+
     /**
-     * 是否初始化并且初始化成功
+     * Initialization state
      */
     private boolean initSuccess;
 
     /**
-     * 线程池工厂
-     */
-    private ThreadFactory threadFactory = new ThreadFactory() {
-        @Override
-        public Thread newThread(@NonNull Runnable r) {
-            return new Thread(r);
-        }
-    };
-
-    /**
-     * 默认的广播设置
-     */
-    private AdvertiseSettings defaultAdvertiseSettings = new AdvertiseSettings.Builder()
-            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-            .setTimeout(0)
-            .setConnectable(false)
-            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-            .build();
-
-    /**
-     * 厂商自定义的数据内容
-     */
-    private byte[] manufacturerSpecificData = new byte[]{20};
-    /**
-     * 服务数据
-     */
-    private byte[] serviceData = new byte[]{10};
-    /**
-     * 服务UUID
-     */
-    private ParcelUuid serviceUUID = new ParcelUuid(UUID.fromString("0000FFFA-0000-1000-8000-00805f9b34fb"));
-
-    /**
-     * 默认的广播数据
-     */
-    private AdvertiseData defaultAdvertiseData = new AdvertiseData.Builder()
-            .addServiceUuid(serviceUUID)
-            .addServiceData(serviceUUID, serviceData)
-            .addManufacturerData(20, manufacturerSpecificData)
-            .setIncludeDeviceName(true)
-            .setIncludeTxPowerLevel(true)
-            .build();
-
-
-    /**
-     * 默认的扫描回应数据
-     */
-    private AdvertiseData defaultScanResponse = new AdvertiseData.Builder()
-            .addManufacturerData(20, manufacturerSpecificData)
-            .addServiceData(serviceUUID, serviceData)
-            .addServiceUuid(serviceUUID)
-            .setIncludeTxPowerLevel(true)
-            .setIncludeDeviceName(true)
-            .build();
-
-    /**
-     * 蓝牙管理器
+     * Bluetooth Manager
      */
     private BluetoothManager bluetoothManager;
 
     /**
-     * 蓝牙服务连接的回调
+     * Callback connected by other devices
      */
     private DefaultBluetoothGattServerCallback defaultBluetoothGattServerCallback;
 
@@ -116,97 +159,30 @@ public class BleAdvertiser {
     private BluetoothGattServer bluetoothGattServer;
 
     /**
-     * 广播的回调
+     * callback triggered when BLE Advertise State changed
      */
-    private BaseAdvertiseCallback baseAdvertiseCallback;
+    private OnBleAdvertiseStateChangedListener baseAdvertiseCallback;
+    /**
+     * Use the timer to stop advertising
+     */
+    private AdvertiserTimer advertiserTimer;
+
+    /*-----------------------------------Constructor-----------------------------------*/
 
     /**
-     * 记录当前是否正在广播
+     * Constructor
+     *
+     * @param context Context
      */
-    private boolean isAdvertising;
-
-    /**
-     * 广播的回调
-     */
-    private AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
-
-        /**
-         * TAG
-         */
-        private final String TAG = DefaultAdvertiseCallback.class.getSimpleName();
-
-        /**
-         * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
-         * that the advertising has been started successfully.
-         *
-         * @param settingsInEffect The actual settings used for advertising, which may be different from
-         *                         what has been requested.
-         */
-        @Override
-        public void onStartSuccess(final AdvertiseSettings settingsInEffect) {
-            Tool.warnOut(TAG, "onStartSuccess");
-            if (settingsInEffect != null) {
-                Tool.warnOut(TAG, "onStartSuccess TxPowerLv=" + settingsInEffect.getTxPowerLevel() + " mode=" + settingsInEffect.getMode()
-                        + " timeout=" + settingsInEffect.getTimeout());
-            } else {
-                Tool.warnOut(TAG, "onStartSuccess, settingInEffect is null");
-            }
-            Tool.warnOut(TAG, "onStartSuccess settingsInEffect" + settingsInEffect);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (baseAdvertiseCallback != null) {
-                        baseAdvertiseCallback.onBroadCastStartSuccess(settingsInEffect);
-                    }
-                }
-            });
-        }
-
-        /**
-         * Callback when advertising could not be started.
-         *
-         * @param errorCode Error code (see ADVERTISE_FAILED_* constants) for advertising start
-         *                  failures.
-         */
-        @Override
-        public void onStartFailure(final int errorCode) {
-            Tool.warnOut(TAG, "onStartFailure");
-            if (errorCode == ADVERTISE_FAILED_DATA_TOO_LARGE) {
-                Tool.errorOut(TAG, "Failed to start advertising as the advertise data to be broadcasted is larger than 31 bytes.");
-            } else if (errorCode == ADVERTISE_FAILED_TOO_MANY_ADVERTISERS) {
-                Tool.errorOut(TAG, "Failed to start advertising because no advertising instance is available.");
-            } else if (errorCode == ADVERTISE_FAILED_ALREADY_STARTED) {
-                Tool.errorOut(TAG, "Failed to start advertising as the advertising is already started");
-            } else if (errorCode == ADVERTISE_FAILED_INTERNAL_ERROR) {
-                Tool.errorOut(TAG, "Operation failed due to an internal error");
-            } else if (errorCode == ADVERTISE_FAILED_FEATURE_UNSUPPORTED) {
-                Tool.errorOut(TAG, "This feature is not supported on this platform");
-            }
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (baseAdvertiseCallback != null) {
-                        baseAdvertiseCallback.onBroadCastStartFailure(errorCode);
-                    }
-                }
-            });
-        }
-    };
-
-    /*---------------------构造函数---------------------*/
-
-    /**
-     * 构造函数
-     */
-    BleAdvertiser() {
+    BleAdvertiser(@NonNull Context context) {
+        this.context = context;
 
         // Use this check to determine whether BLE is supported on the device.
-        if (!(BleManager.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
-            Tool.toastL(BleManager.getContext(), R.string.ble_not_supported);
+        if (!(this.context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
             return;
         }
 
-        bluetoothManager = (BluetoothManager) BleManager.getContext().getSystemService(Context.BLUETOOTH_SERVICE);
+        bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager == null) {
             return;
         }
@@ -215,178 +191,140 @@ public class BleAdvertiser {
         if (mBluetoothAdapter == null) {
             return;
         }
-
-        if (!mBluetoothAdapter.isMultipleAdvertisementSupported()) {
-            Tool.toastL(BleManager.getContext(), R.string.multiple_advertisement_not_supported);
-            return;
-        }
-
+//        if (!mBluetoothAdapter.isMultipleAdvertisementSupported()) {
+//            return;
+//        }
+        mBluetoothAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
         if (!mBluetoothAdapter.isEnabled()) {
-
-            boolean enable = mBluetoothAdapter.enable();
-            if (!enable) {
-                Tool.toastL(BleManager.getContext(), R.string.bluetooth_not_enable);
+            //If it is created by the activity, enable bluetooth by request code.
+            if (this.context instanceof Activity) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                this.context.startActivity(enableBtIntent);
+            }
+            //If not created by the activity,enable bluetooth by bluetooth adapter directly
+            else {
+                mBluetoothAdapter.enable();
             }
         }
     }
 
-    /*---------------------自定义外部访问函数---------------------*/
+    /*-----------------------------------public methods-----------------------------------*/
 
     /**
-     * 初始化
+     * Get Bluetooth GATT Server instance
      *
-     * @return true表示初始化成功
+     * @return BluetoothGattServer
+     */
+    @Nullable
+    public BluetoothGattServer getBluetoothGattServer() {
+        return bluetoothGattServer;
+    }
+    /*-----------------------------------public methods-----------------------------------*/
+
+    /**
+     * set ble advertise mode
+     *
+     * @param bleAdvertiseMode ble advertise mode
+     */
+    public void setBleAdvertiseMode(@NonNull BleAdvertiseMode bleAdvertiseMode) {
+        this.bleAdvertiseMode = bleAdvertiseMode;
+        initAdvertiseSettings();
+    }
+
+    /**
+     * set the advertisement type should be connectable or non-connectable
+     *
+     * @param connectable connectable
+     */
+    public void setConnectable(boolean connectable) {
+        this.connectable = connectable;
+        initAdvertiseSettings();
+    }
+
+    /**
+     * set BLE Advertise Tx Power Level
+     *
+     * @param txPowerLevel BLE Advertise Tx Power Level
+     */
+    public void setTxPowerLevel(@NonNull BleAdvertiseTxPowerLevel txPowerLevel) {
+        this.txPowerLevel = txPowerLevel;
+        initAdvertiseSettings();
+    }
+
+    /**
+     * set advertise time out
+     *
+     * @param timeOut time out
+     */
+    public void setTimeOut(@IntRange(from = 0,to = 180000) int timeOut) {
+        this.timeOut = timeOut;
+        initAdvertiseSettings();
+    }
+
+    /**
+     * set whether tx power level need included in the scan response data
+     *
+     * @param scanResponseIncludeTxPowerLevel true means tx power level include in the scan response data
+     */
+    public void setScanResponseIncludeTxPowerLevel(boolean scanResponseIncludeTxPowerLevel) {
+        this.scanResponseIncludeTxPowerLevel = scanResponseIncludeTxPowerLevel;
+        initScanResponse();
+    }
+
+    /**
+     * set whether device name need included in the scan response data
+     *
+     * @param scanResponseIncludeDeviceName true means device name include in the scan response data
+     */
+    public void setScanResponseIncludeDeviceName(boolean scanResponseIncludeDeviceName) {
+        this.scanResponseIncludeDeviceName = scanResponseIncludeDeviceName;
+        initScanResponse();
+    }
+
+    /**
+     * set whether tx power level need included in the advertise data
+     *
+     * @param advertiseDataIncludeTxPowerLevel true means tx power level include in the advertise data
+     */
+    public void setAdvertiseDataIncludeTxPowerLevel(boolean advertiseDataIncludeTxPowerLevel) {
+        this.advertiseDataIncludeTxPowerLevel = advertiseDataIncludeTxPowerLevel;
+        initAdvertiseData();
+    }
+
+    /**
+     * set whether device name need included in the advertise data
+     *
+     * @param advertiseDataIncludeDeviceName true means device name include in the advertise data
+     */
+    public void setAdvertiseDataIncludeDeviceName(boolean advertiseDataIncludeDeviceName) {
+        this.advertiseDataIncludeDeviceName = advertiseDataIncludeDeviceName;
+        initAdvertiseData();
+    }
+
+    /**
+     * initialization Advertiser
+     *
+     * @return true means initialization successful
      */
     public boolean init() {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
+        advertiserTimer = new AdvertiserTimer(this);
+        return initAdvertiser();
     }
 
     /**
-     * 初始化
+     * Set callbacks of BLE Advertise
      *
-     * @param defaultAdvertiseData 广播内容
-     * @return true表示初始化成功
+     * @param onBleAdvertiseStateChangedListener callbacks of BLE Advertise
      */
-    public boolean init(AdvertiseData defaultAdvertiseData) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
-    }
-
-    /**
-     * 初始化
-     *
-     * @param defaultAdvertiseCallback 广播回调
-     * @return true表示初始化成功
-     */
-    public boolean init(BaseAdvertiseCallback defaultAdvertiseCallback) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
-    }
-
-    /**
-     * 初始化
-     *
-     * @param defaultAdvertiseSettings 广播设置
-     * @return true表示初始化成功
-     */
-    public boolean init(AdvertiseSettings defaultAdvertiseSettings) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
-    }
-
-    /**
-     * 初始化
-     *
-     * @param defaultAdvertiseSettings 广播设置
-     * @param defaultAdvertiseData     广播内容
-     * @return true表示初始化成功
-     */
-    public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseData defaultAdvertiseData) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
-    }
-
-    /**
-     * 初始化
-     *
-     * @param defaultAdvertiseSettings 广播设置
-     * @param defaultAdvertiseCallback 广播回调
-     * @return true表示初始化成功
-     */
-    public boolean init(AdvertiseSettings defaultAdvertiseSettings, BaseAdvertiseCallback defaultAdvertiseCallback) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
-    }
-
-    /**
-     * 初始化
-     *
-     * @param defaultAdvertiseData 广播内容
-     * @param defaultScanResponse  广播相应内容
-     * @return true表示初始化成功
-     */
-    public boolean init(AdvertiseData defaultAdvertiseData, AdvertiseData defaultScanResponse) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
-    }
-
-    /**
-     * 初始化
-     *
-     * @param defaultAdvertiseData     广播内容
-     * @param defaultAdvertiseCallback 广播回调
-     * @return true表示初始化成功
-     */
-    public boolean init(AdvertiseData defaultAdvertiseData, BaseAdvertiseCallback defaultAdvertiseCallback) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
-    }
-
-    /**
-     * 初始化
-     *
-     * @param defaultAdvertiseSettings 广播设置
-     * @param defaultAdvertiseData     广播内容
-     * @param defaultScanResponse      广播相应内容
-     * @return true表示初始化成功
-     */
-    public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseData defaultAdvertiseData, AdvertiseData defaultScanResponse) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, new DefaultAdvertiseCallback());
-    }
-
-    /**
-     * 初始化
-     *
-     * @param defaultAdvertiseSettings 广播设置
-     * @param defaultAdvertiseData     广播内容
-     * @param defaultAdvertiseCallback 广播回调
-     * @return true表示初始化成功
-     */
-    public boolean init(AdvertiseSettings defaultAdvertiseSettings, AdvertiseData defaultAdvertiseData, BaseAdvertiseCallback defaultAdvertiseCallback) {
-        return init(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, defaultAdvertiseCallback);
-    }
-
-    /**
-     * 初始化
-     *
-     * @param advertiseSettings 广播设置
-     * @param advertiseData     广播数据
-     * @param scanResponse      扫描回应数据
-     * @return true表示初始化成功
-     */
-    @SuppressWarnings("WeakerAccess")
-    public boolean init(@NonNull AdvertiseSettings advertiseSettings, @NonNull AdvertiseData advertiseData, @NonNull AdvertiseData scanResponse, BaseAdvertiseCallback defaultAdvertiseCallback) {
-        if (mBluetoothAdapter == null) {
-            initSuccess = false;
-            return false;
+    public void setOnBleAdvertiseStateChangedListener(@Nullable OnBleAdvertiseStateChangedListener onBleAdvertiseStateChangedListener) {
+        this.baseAdvertiseCallback = onBleAdvertiseStateChangedListener;
+        if (defaultBleAdvertiseCallback != null) {
+            defaultBleAdvertiseCallback.setOnBleAdvertiseStateChangedListener(onBleAdvertiseStateChangedListener);
         }
-
-        // 获取蓝牙ble广播
-        mBluetoothAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
-        if (mBluetoothAdvertiser == null) {
-            initSuccess = false;
-            return false;
-        }
-
-        if (BleManager.getContext() == null) {
-            initSuccess = false;
-            return false;
-        }
-
-        defaultAdvertiseSettings = advertiseSettings;
-        defaultAdvertiseData = advertiseData;
-        defaultScanResponse = scanResponse;
-        boolean connectable = defaultAdvertiseSettings.isConnectable();
-        if (connectable) {
-            if (defaultBluetoothGattServerCallback == null) {
-                defaultBluetoothGattServerCallback = new DefaultBluetoothGattServerCallback();
-            }
-            bluetoothGattServer = bluetoothManager.openGattServer(BleManager.getContext(), defaultBluetoothGattServerCallback);
-        }
-        this.baseAdvertiseCallback = defaultAdvertiseCallback;
-        initSuccess = true;
-        return true;
-    }
-
-    public boolean isAdvertising() {
-        return isAdvertising;
     }
 
     /**
-     * 开始广播
+     * startAdvertising
      */
     public boolean startAdvertising() {
         if (mBluetoothAdapter == null) {
@@ -399,42 +337,41 @@ public class BleAdvertiser {
         if (!initSuccess) {
             return false;
         }
-        if (isAdvertising) {
+        if (advertising) {
             return false;
         }
-        mBluetoothAdvertiser.startAdvertising(defaultAdvertiseSettings, defaultAdvertiseData, defaultScanResponse, advertiseCallback);
-        final int timeout = defaultAdvertiseSettings.getTimeout();
+        mBluetoothAdvertiser.startAdvertising(advertiseSettings, advertiseData, scanResponse, defaultBleAdvertiseCallback);
+        int timeout = advertiseSettings.getTimeout();
         if (timeout > 0) {
-            startThreadToCheckAdvertiserStatus(timeout);
+            advertiserTimer.startTimer(timeout);
         }
-        isAdvertising = true;
+        advertising = true;
         return true;
     }
 
     /**
-     * 停止广播
-     *
-     * @return true表示成功
+     * Stop Advertising
      */
-    @SuppressWarnings("UnusedReturnValue")
-    public boolean stopAdvertising() {
+    public void stopAdvertising() {
         if (mBluetoothAdapter == null) {
-            return false;
+            return;
         }
 
         if (mBluetoothAdvertiser == null) {
-            return false;
+            return;
         }
-        if (!isAdvertising) {
-            return false;
+        if (!advertising) {
+            return;
         }
         try {
-            mBluetoothAdvertiser.stopAdvertising(advertiseCallback);
+            advertiserTimer.stopTimer();
+            mBluetoothAdvertiser.stopAdvertising(defaultBleAdvertiseCallback);
         } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            return;
         }
-        BleManager.getHandler().post(new Runnable() {
+        advertiserTimer = null;
+        mBluetoothAdvertiser = null;
+        BleManager.getHANDLER().post(new Runnable() {
             @Override
             public void run() {
                 if (baseAdvertiseCallback != null) {
@@ -443,69 +380,250 @@ public class BleAdvertiser {
             }
         });
 
-        isAdvertising = false;
-        return true;
+        advertising = false;
     }
 
 
     /**
-     * 关闭广播实例
+     * Close advertise
      */
     public void close() {
         if (mBluetoothAdvertiser != null) {
             stopAdvertising();
         }
         initSuccess = false;
+        context = null;
         mBluetoothAdvertiser = null;
         mBluetoothAdapter = null;
-        defaultAdvertiseSettings = null;
-        defaultAdvertiseData = null;
-        defaultScanResponse = null;
-        advertiseCallback = null;
+        advertiseSettings = null;
+        advertiseData = null;
+        scanResponse = null;
+        defaultBleAdvertiseCallback = null;
         BleManager.resetBleAdvertiser();
     }
 
     /**
-     * 获取BluetoothGattServer实例
+     * Set callback of connected by other devices
      *
-     * @return BluetoothGattServer
+     * @param onConnectedByOtherDevicesListener Callback of connected by other devices
      */
-    public BluetoothGattServer getBluetoothGattServer() {
-        return bluetoothGattServer;
-    }
-
-    /**
-     * 设置作为服务端的相关回调
-     *
-     * @param onBluetoothGattServerCallbackListener 作为服务端的相关回调
-     */
-    public void setOnBluetoothGattServerCallbackListener(BleInterface.OnBluetoothGattServerCallbackListener onBluetoothGattServerCallbackListener) {
+    public void setOnBluetoothGattServerCallbackListener(@Nullable OnConnectedByOtherDevicesListener onConnectedByOtherDevicesListener) {
         if (defaultBluetoothGattServerCallback != null) {
-            defaultBluetoothGattServerCallback.setOnBluetoothGattServerCallbackListener(onBluetoothGattServerCallbackListener);
+            defaultBluetoothGattServerCallback.setOnConnectedByOtherDevicesListener(onConnectedByOtherDevicesListener);
         }
     }
 
-    /*---------------------自定义私有函数---------------------*/
+    /**
+     * add a advertise record to scan response pack
+     *
+     * @param AdvertiseData AdvertiseRecord
+     */
+    public void addScanResponseAdvertiseRecord(@NonNull AdvertiseData AdvertiseData) {
+        this.scanResponseAdvertiseRecords.add(AdvertiseData);
+        initScanResponse();
+    }
 
     /**
-     * 发起一个线程，检测广播状态，当广播停止是进行回调
+     * remove a advertise record from scan response pack
      *
-     * @param timeout 超时时间
+     * @param advertiseData AdvertiseRecord
      */
-    private void startThreadToCheckAdvertiserStatus(final int timeout) {
-        final long startTime = System.currentTimeMillis();
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    if (System.currentTimeMillis() - startTime > timeout) {
-                        break;
-                    }
-                }
-                stopAdvertising();
+    public void removeScanResponseAdvertiseRecord(@NonNull  AdvertiseData advertiseData) {
+        this.scanResponseAdvertiseRecords.remove(advertiseData);
+        initScanResponse();
+    }
+
+    /**
+     * add a service uuid data to scan response pack
+     *
+     * @param advertiseServiceUuid AdvertiseServiceUuid
+     */
+    public void addScanResponseAdvertiseServiceUuid(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
+        this.scanResponseAdvertiseServiceUuids.add(advertiseServiceUuid);
+        initScanResponse();
+    }
+
+    /**
+     * remove a service uuid data from scan response pack
+     *
+     * @param advertiseServiceUuid AdvertiseServiceUuid
+     */
+    public void removeScanResponseAdvertiseServiceUuid(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
+        this.scanResponseAdvertiseServiceUuids.remove(advertiseServiceUuid);
+        initScanResponse();
+    }
+
+    /**
+     * add a advertise record to advertise pack
+     *
+     * @param advertiseData AdvertiseRecord
+     */
+    public void addAdvertiseDataAdvertiseRecord(@NonNull  AdvertiseData advertiseData) {
+        this.advertiseDataAdvertiseRecords.add(advertiseData);
+        initAdvertiseData();
+    }
+
+    /**
+     * remove a advertise record from advertise pack
+     *
+     * @param advertiseData AdvertiseRecord
+     */
+    public void removeAdvertiseDataAdvertiseRecord(@NonNull  AdvertiseData advertiseData) {
+        this.advertiseDataAdvertiseRecords.remove(advertiseData);
+        initAdvertiseData();
+    }
+
+    /**
+     * add a service uuid data to advertise pack
+     *
+     * @param advertiseServiceUuid AdvertiseServiceUuid
+     */
+    public void addAdvertiseDataAdvertiseServiceUuids(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
+        this.advertiseDataAdvertiseServiceUuids.add(advertiseServiceUuid);
+        initAdvertiseData();
+    }
+
+    /**
+     * remove a service uuid data from advertise pack
+     *
+     * @param advertiseServiceUuid AdvertiseServiceUuid
+     */
+    public void removeAdvertiseDataAdvertiseServiceUuids(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
+        this.advertiseDataAdvertiseServiceUuids.remove(advertiseServiceUuid);
+        initAdvertiseData();
+    }
+
+    /*-----------------------------------private methods-----------------------------------*/
+
+    /**
+     * initialization Advertiser
+     *
+     * @return true means initialization successful
+     */
+    private boolean initAdvertiser() {
+        if (mBluetoothAdapter == null) {
+            initSuccess = false;
+            return false;
+        }
+
+        // Bluetooth LE advertise class from system api
+        mBluetoothAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
+        if (mBluetoothAdvertiser == null) {
+            initSuccess = false;
+            return false;
+        }
+
+        Context context = this.context;
+        if (context == null) {
+            initSuccess = false;
+            return false;
+        }
+
+        initAdvertiseSettings();
+        initScanResponse();
+        initAdvertiseData();
+
+        boolean connectable = this.advertiseSettings.isConnectable();
+        if (connectable) {
+            if (defaultBluetoothGattServerCallback == null) {
+                defaultBluetoothGattServerCallback = new DefaultBluetoothGattServerCallback();
             }
-        };
-        Thread thread = threadFactory.newThread(runnable);
-        thread.start();
+            bluetoothGattServer = bluetoothManager.openGattServer(context, defaultBluetoothGattServerCallback);
+        }
+        initSuccess = true;
+        return true;
+    }
+
+    /**
+     * initialization Advertise Data
+     */
+    private void initAdvertiseData() {
+        Builder builder = new Builder();
+        builder.setIncludeTxPowerLevel(advertiseDataIncludeTxPowerLevel)
+                .setIncludeDeviceName(advertiseDataIncludeDeviceName);
+
+        for (int i = 0; i < advertiseDataAdvertiseRecords.size(); i++) {
+            AdvertiseData advertiseData = advertiseDataAdvertiseRecords.get(i);
+            addManufacturerData(builder, advertiseData);
+        }
+
+        for (int i = 0; i < advertiseDataAdvertiseServiceUuids.size(); i++) {
+            AdvertiseServiceUuid advertiseServiceUuid = scanResponseAdvertiseServiceUuids.get(i);
+            addServiceData(builder, advertiseServiceUuid);
+        }
+
+        advertiseData = builder.build();
+    }
+
+    /**
+     * initialization Advertise Settings
+     */
+    private void initAdvertiseSettings() {
+        advertiseSettings = new AdvertiseSettings.Builder()
+                .setAdvertiseMode(bleAdvertiseMode.getValue())
+                .setConnectable(connectable)
+                .setTxPowerLevel(txPowerLevel.getValue())
+                .setTimeout(timeOut)
+                .build();
+    }
+
+    /**
+     * initialization Scan Response Data
+     */
+    private void initScanResponse() {
+        Builder builder = new Builder();
+        builder.setIncludeTxPowerLevel(scanResponseIncludeTxPowerLevel)
+                .setIncludeDeviceName(scanResponseIncludeDeviceName);
+
+        for (int i = 0; i < scanResponseAdvertiseRecords.size(); i++) {
+            AdvertiseData advertiseData = scanResponseAdvertiseRecords.get(i);
+            addManufacturerData(builder, advertiseData);
+        }
+
+        for (int i = 0; i < scanResponseAdvertiseServiceUuids.size(); i++) {
+            AdvertiseServiceUuid advertiseServiceUuid = scanResponseAdvertiseServiceUuids.get(i);
+            addServiceData(builder, advertiseServiceUuid);
+        }
+
+        scanResponse = builder.build();
+    }
+
+    /**
+     * add Manufacturer Data to advertise data or scan response data
+     *  @param builder         AdvertiseData.Builder
+     * @param advertiseRecord AdvertiseRecord
+     */
+    private void addManufacturerData(Builder builder, AdvertiseData advertiseRecord) {
+        int manufacturerId = advertiseRecord.getManufacturerId();
+        byte[] data = advertiseRecord.getData();
+        if (data == null){
+            return;
+        }
+       if (manufacturerId == 0){
+            return;
+       }
+        builder.addManufacturerData(manufacturerId, data);
+    }
+
+    /**
+     * add ServiceData Data to advertise data or scan response data
+     *
+     * @param builder              AdvertiseData.Builder
+     * @param advertiseServiceUuid AdvertiseServiceUuid
+     */
+    private void addServiceData(Builder builder, AdvertiseServiceUuid advertiseServiceUuid) {
+        ParcelUuid parcelUuid = advertiseServiceUuid.getParcelUuid();
+        byte[] data = advertiseServiceUuid.getData();
+
+        if (data == null) {
+            builder.addServiceUuid(parcelUuid);
+            return;
+        }
+        builder.addServiceUuid(parcelUuid);
+        builder.addServiceData(parcelUuid, data);
+    }
+
+    public boolean isAdvertising() {
+        return advertising;
     }
 }

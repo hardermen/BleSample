@@ -9,9 +9,9 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AlertDialog;
 
-import com.jackiepenghe.baselibrary.BaseWelcomeActivity;
-import com.jackiepenghe.baselibrary.CrashHandler;
-import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.baselibrary.activity.BaseWelcomeActivity;
+import com.jackiepenghe.baselibrary.tools.CrashHandler;
+import com.jackiepenghe.baselibrary.tools.Tool;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.Permission;
 import com.yanzhenjie.permission.PermissionListener;

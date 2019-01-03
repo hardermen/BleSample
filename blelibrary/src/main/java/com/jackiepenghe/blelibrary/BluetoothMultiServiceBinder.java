@@ -1,44 +1,59 @@
 package com.jackiepenghe.blelibrary;
 
 import android.os.Binder;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 
 
 /**
- * BLE多连接服务的Binder
+ * Binder for BLE Multi-Connection Service
  *
  * @author alm
  */
 
-class BluetoothMultiServiceBinder extends Binder {
+ final class BluetoothMultiServiceBinder extends Binder {
 
-    /*------------------------静态常量----------------------------*/
-
-    private static final String TAG = BluetoothMultiServiceBinder.class.getSimpleName();
-
-    /*------------------------成员变量----------------------------*/
-
-    private BluetoothMultiService bluetoothMultiService;
-
-    /*------------------------构造函数----------------------------*/
+    /*-----------------------------------static constant-----------------------------------*/
 
     /**
-     * 构造函数
-     *
-     * @param bluetoothMultiService BLE多连接服务
+     * TAG
      */
-    BluetoothMultiServiceBinder(BluetoothMultiService bluetoothMultiService) {
+    private static final String TAG = BluetoothMultiServiceBinder.class.getSimpleName();
+
+    /*-----------------------------------field variables-----------------------------------*/
+
+    /**
+     * BLE multi-connection service
+     */
+    @Nullable
+    private BluetoothMultiService bluetoothMultiService;
+
+    /*-----------------------------------Constructor-----------------------------------*/
+
+    /**
+     * Constructor
+     *
+     * @param bluetoothMultiService BLE multi-connection service
+     */
+    BluetoothMultiServiceBinder(@NonNull BluetoothMultiService bluetoothMultiService) {
         this.bluetoothMultiService = bluetoothMultiService;
     }
 
-    /*------------------------公开函数----------------------------*/
+    /*-----------------------------------public method-----------------------------------*/
 
     /**
-     * 获取多连接服务
+     * get Bluetooth Multi Service
      *
      * @return BluetoothMultiService
      */
     BluetoothMultiService getBluetoothMultiService() {
-        Tool.warnOut(TAG, "蓝牙多连接服务绑定成功");
+        DebugUtil.warnOut(TAG, "BLE Multi-Connection Service bind success");
         return bluetoothMultiService;
     }
+
+    void releaseData() {
+        bluetoothMultiService = null;
+    }
+
 }

@@ -1,6 +1,5 @@
 package com.jackiepenghe.blelibrary;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -20,384 +19,445 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
+import com.jackiepenghe.blelibrary.enums.BleMatchMode;
+import com.jackiepenghe.blelibrary.enums.BleScanMode;
+import com.jackiepenghe.blelibrary.interfaces.OnBleScanStateChangedListener;
+import com.jackiepenghe.blelibrary.systems.BleScanRecord;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * BLE扫描器
+ * BLE Scanner
  *
- * @author alm
+ * @author jackie
  */
+public final class BleScanner {
 
-@SuppressWarnings("ALL")
-public class BleScanner {
-
-    /*------------------------静态常量----------------------------*/
+    /*-----------------------------------static constant-----------------------------------*/
 
     /**
      * TAG
      */
     private static final String TAG = BleScanner.class.getSimpleName();
 
-    private static final String SPACE = " ";
+    /*-----------------------------------field variables-----------------------------------*/
 
     /**
-     * 剩余可用长度
+     * Duration of the scan
      */
-    private static final int REMAINING_LENGTH = 2;
-
-    private static final int MIN_LENGTH_TWO = 2;
-    private static final byte MIN_LENGTH_SIXTEEN = 16;
-
-    /*------------------------成员变量----------------------------*/
+    private long scanPeriod = 20000;
 
     /**
-     * 扫描的结果
+     * Scan result list
      */
-    private ArrayList<BleDevice> mScanResults;
+    private ArrayList<BleDevice> scanResults = new ArrayList<>();
 
     /**
-     * 检测蓝牙状态的广播接收者
+     * BLE scan node
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private BleScanMode bleScanMode = BleScanMode.LOW_LATENCY;
+
+    /**
+     * BLE match mode
+     */
+    @RequiresApi(Build.VERSION_CODES.M)
+    private BleMatchMode bleMatchMode = BleMatchMode.AGGRESSIVE;
+
+    /**
+     * Used to store the device name to be filtered.
+     * The beginning of the device name exists in the list.
+     * If the list is empty, it will not take effect.
+     */
+    private ArrayList<String> filterNames = new ArrayList<>();
+
+    /**
+     * Used to store the device name to be filtered.
+     * The full name of the device exists in the list.
+     * If the list is empty, it will not take effect.
+     */
+    private ArrayList<String> filterFullNames = new ArrayList<>();
+
+    /**
+     * Used to store the device address to be filtered.
+     * The beginning of the device address exists in the list.
+     * Address need include colon.For example : "A" or "AA" or "AA:" or "AA:B"
+     * If the list is empty, it will not take effect
+     */
+    private ArrayList<String> filterAddresses = new ArrayList<>();
+
+    /**
+     * Used to store the device address to be filtered.
+     * The full address of the device exists in the list.
+     * Address need include colon.For example : "AA:BB:CC:DD:EE:FF"
+     * If the list is empty, it will not take effect
+     */
+    private ArrayList<String> filterFullAddresses = new ArrayList<>();
+
+    /**
+     * Used to record whether the next scan is automatically performed
+     */
+    private boolean autoStartNextScan = false;
+
+    /**
+     * BLE scan result changed listener
+     */
+    @Nullable
+    private OnBleScanStateChangedListener onBleScanStateChangedListener;
+    /**
+     * Broadcast receiver detecting Bluetooth switch status
      */
     private BleScannerBluetoothStateReceiver bleScannerBluetoothStateReceiver;
 
     /**
-     * BLE扫描器是否被打开的标志
+     * Used to record whether the scanner has been initialized
      */
-    private boolean mOpened;
+    private boolean initialized;
 
     /**
-     * 安卓5.0以上的API才拥有的接口
+     * Context
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private BleInterface.On21ScanCallback on21ScanCallback = new BleInterface.On21ScanCallback() {
-        @Override
-        public void onBatchScanResults(List<ScanResult> results) {
-            Tool.warnOut(TAG, "onBatchScanResults");
-            if (results == null) {
-                return;
-            }
-            for (int i = 0; i < results.size(); i++) {
-                ScanResult scanResult = results.get(i);
-                Tool.warnOut(TAG, "scanResult[" + i + "] = " + scanResult.toString());
-            }
-        }
-
-        @Override
-        public void onScanFailed(int errorCode) {
-            Tool.warnOut(TAG, "onScanFailed:errorCode = " + errorCode);
-        }
-    };
+    private Context context;
 
     /**
-     * 蓝牙设配器
+     * Bluetooth adapter
      */
-    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothAdapter bluetoothAdapter;
 
     /**
-     * 是否正在扫描的标志
+     * Used to record whether it is scanning
      */
     private boolean scanning;
 
     /**
-     * 扫描一次的时间
+     * System scan callback (API 20 and below)
      */
-    private long scanPeriod;
+    private BluetoothAdapter.LeScanCallback scanCallback18;
 
     /**
-     * 系统的扫描回调(API 20 及以下)
+     * System scan callback (API 20 and above)
      */
-    private BluetoothAdapter.LeScanCallback mLeScanCallback;
+    private ScanCallback scanCallback21;
 
     /**
-     * 系统的扫描回调（API 21 及以上）
-     */
-    private ScanCallback mScanCallback;
-
-    /**
-     * 是否在扫描完成后立即进行下一次扫描的标志
-     */
-    private boolean scanContinue;
-
-    /**
-     * 发现一个设备进行的回调
-     */
-    private BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener;
-
-    /**
-     * 发现一个新设备进行的回调
-     */
-    private BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener;
-
-    /**
-     * 扫描的定时器
+     * a timer for scanner to stop scan
      */
     private ScanTimer scanTimer;
-
     /**
-     * 扫描过滤器
-     */
-    private ArrayList<ScanFilter> scanFilters;
-
-    /**
-     * 扫描设置
-     */
-    private ScanSettings scanSettings;
-    /**
-     * 蓝牙扫描器
+     * System BLE scanner
      */
     private BluetoothLeScanner bluetoothLeScanner;
 
-    /*------------------------构造函数----------------------------*/
+    /*-----------------------------------Constructor-----------------------------------*/
 
     /**
-     * 构造器
+     * Constructor
+     *
+     * @param context Context
      */
-    BleScanner() {
+    BleScanner(@NonNull Context context) {
+        this.context = context;
         scanTimer = new ScanTimer(BleScanner.this);
-        if (!(BleManager.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
-            Tool.toastL(BleManager.getContext(), R.string.ble_not_supported);
+        if (!(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))) {
             return;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            //初始化扫描回调(API21及以上的设备)
+            //Initialize scan callback (API21 and above)
             initBleScanCallBack21();
         } else {
-            //初始化BLE扫描回调(API21以下且不包含API21)
+            //Initialize BLE scan callback (API21 below and does not include API21)
             initBleScanCallBack18();
         }
 
         bleScannerBluetoothStateReceiver = new BleScannerBluetoothStateReceiver(BleScanner.this);
 
-        BluetoothManager bluetoothManager = (BluetoothManager) BleManager.getContext().getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager == null) {
             return;
         }
-        mBluetoothAdapter = bluetoothManager.getAdapter();
+        bluetoothAdapter = bluetoothManager.getAdapter();
 
-        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
-            if (mBluetoothAdapter != null) {
-                boolean enable = mBluetoothAdapter.enable();
-                if (!enable) {
-                    Tool.toastL(BleManager.getContext(), R.string.bluetooth_not_enable);
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+            //If it is created by activity,directly request to enable Bluetooth
+            if (context instanceof Activity) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                context.startActivity(enableBtIntent);
+            } else {
+                if (bluetoothAdapter != null) {
+                    bluetoothAdapter.enable();
                 }
             }
         }
     }
 
-    /*------------------------库内函数----------------------------*/
-
+    /*-----------------------------------package private getter-----------------------------------*/
 
     /**
-     * 获取是否需要继续扫描的标志
+     * get whether the next scan is automatically performed
      *
-     * @return 是否需要继续扫描的标志
+     * @return whether the next scan is automatically performed
      */
-    boolean isScanContinue() {
-        return scanContinue;
+    boolean isAutoStartNextScan() {
+        return autoStartNextScan;
     }
 
     /**
-     * 设置蓝牙适配器
+     * set bluetooth adapter
      *
-     * @param bluetoothAdapter 蓝牙适配器
+     * @param bluetoothAdapter bluetooth adapter
      */
     void setBluetoothAdapter(BluetoothAdapter bluetoothAdapter) {
-        mBluetoothAdapter = bluetoothAdapter;
+        this.bluetoothAdapter = bluetoothAdapter;
     }
 
     /**
-     * 设置扫描标志为false
+     * set scanning flag to false
      */
     void setScanningFalse() {
         this.scanning = false;
     }
 
-    /*------------------------公开函数----------------------------*/
+    /*-----------------------------------public setter and getter-----------------------------------*/
 
     /**
-     * 打开扫描器
+     * set ble scan mode
+     *
+     * @param bleScanMode ble scan mode
      */
-    @SuppressWarnings({"unused", "UnusedReturnValue"})
-    public boolean init() {
-        return init(new ArrayList<BleDevice>(), new DefaultOnScanFindOneNewDeviceListener(), 20000, false, new DefaultOnScanCompleteListener());
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    public void setBleScanMode(@NonNull BleScanMode bleScanMode) {
+        this.bleScanMode = bleScanMode;
     }
 
     /**
-     * 打开扫描器
+     * set ble match mode
      *
-     * @param scanResults                    扫描设备结果存放列表
-     * @param onScanFindOneNewDeviceListener 发现一个新设备的回调
-     * @param scanPeriod                     扫描持续时间
-     * @param scanContinueFlag               是否在扫描完成后立即进行下一次扫描的标志
-     * @param onScanCompleteListener         扫描完成的回调
-     * @return true表示打开成功
+     * @param bleMatchMode ble match mode
      */
-    @SuppressWarnings("UnusedReturnValue")
-    public boolean init(@NonNull ArrayList<BleDevice> scanResults, @NonNull BleInterface.OnScanFindOneNewDeviceListener
-            onScanFindOneNewDeviceListener, @SuppressWarnings("SameParameterValue") long scanPeriod,
-                        @SuppressWarnings("SameParameterValue") boolean scanContinueFlag,
-                        @NonNull BleInterface.OnScanCompleteListener onScanCompleteListener) {
-        if (scanPeriod <= 0 || BleManager.getContext() == null) {
-            return false;
-        }
+    @RequiresApi(Build.VERSION_CODES.M)
+    public void setBleMatchMode(@NonNull BleMatchMode bleMatchMode) {
+        this.bleMatchMode = bleMatchMode;
+    }
 
-        //广播接收者过滤器
-        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-        if (BleManager.getContext() == null) {
+    /**
+     * Get the current scan status
+     *
+     * @return True means scanner is scanning
+     */
+    public boolean isScanning() {
+        return scanning;
+    }
+
+    /**
+     * set scan period
+     *
+     * @param scanPeriod scan period(unit:ms)
+     */
+    @SuppressWarnings("unused")
+    public void setScanPeriod(long scanPeriod) {
+        this.scanPeriod = scanPeriod;
+    }
+
+    /**
+     * set whether the next scan is automatically performed.
+     * If you want keep scanning without auto stop,set true in parameter.
+     *
+     * @param autoStartNextScan true means auto start next scan.
+     */
+    public void setAutoStartNextScan(boolean autoStartNextScan) {
+        this.autoStartNextScan = autoStartNextScan;
+    }
+
+    /**
+     * get Context
+     *
+     * @return Context
+     */
+    public Context getContext() {
+        return context;
+    }
+
+    /**
+     * get scan result
+     *
+     * @return scan result
+     */
+    @NonNull
+    public ArrayList<BleDevice> getScanResults() {
+        return scanResults;
+    }
+
+    /*-----------------------------------public method-----------------------------------*/
+
+    /**
+     * Add a filter name.
+     * if device name starts with the same filter name,
+     * that device will be trigger callback and add in scanResult
+     *
+     * @param startsName a string used to filter the device name
+     */
+    public void addFilterStartsName(@NonNull String startsName) {
+        filterNames.add(startsName);
+    }
+
+    /**
+     * remove a filter name.
+     * if device name starts with the same filter name,
+     * that device will be trigger callback and add in scanResult
+     *
+     * @param startsName a string used to filter the device name
+     */
+    public void removeFilterStartsName(@NonNull String startsName) {
+        filterNames.remove(startsName);
+    }
+
+    /**
+     * Add a filter name.
+     * If the device name is the same as the filter name,
+     * that device will be trigger callback and add in scanResult
+     *
+     * @param fullName a string used to filter the device name
+     */
+    public void addFilterFullName(@NonNull String fullName) {
+        filterFullNames.add(fullName);
+    }
+
+    /**
+     * remove a filter name.
+     * if device name starts with the same filter name,
+     * that device will be trigger callback and add in scanResult
+     *
+     * @param fullName a string used to filter the device name
+     */
+    public void removeFilterFullName(@NonNull String fullName) {
+        filterFullNames.remove(fullName);
+    }
+
+    /**
+     * Add a filter address.
+     * if device name starts with the same filter address,
+     * that device will be trigger callback and add in scanResult
+     *
+     * @param startsAddress a string used to filter the device address.Address need include colon.For example : "A" or "AA" or "AA:" or "AA:B"
+     */
+    public void addFilterStartsAddress(@NonNull String startsAddress) {
+        filterAddresses.add(startsAddress.toUpperCase());
+    }
+
+    /**
+     * remove a filter address.
+     * if device name starts with the same filter address,
+     * that device will be trigger callback and add in scanResult
+     *
+     * @param startsAddress a string used to filter the device address.Address need include colon.For example : "A" or "AA" or "AA:" or "AA:B"
+     */
+    public void removeFilterStartsAddress(@NonNull String startsAddress) {
+        filterAddresses.remove(startsAddress.toUpperCase());
+    }
+
+    /**
+     * Add a filter address.
+     * If the device name is the same as the filter address,
+     * that device will be trigger callback and add in scanResult
+     *
+     * @param fullAddress a string used to filter the device address.Address need include colon.For example : "AA:BB:CC:DD:EE:FF"
+     */
+    public void addFilterFullAddress(@NonNull String fullAddress) {
+        filterFullAddresses.add(fullAddress.toUpperCase());
+    }
+
+    /**
+     * remove a filter address.
+     * if device name starts with the same filter address,
+     * that device will be trigger callback and add in scanResult
+     *
+     * @param fullAddress a string used to filter the device address.Address need include colon.For example : "AA:BB:CC:DD:EE:FF"
+     */
+    public void removeFilterFullAddress(@NonNull String fullAddress) {
+        filterFullAddresses.remove(fullAddress.toUpperCase());
+    }
+
+    /**
+     * set ble scan state changed listener
+     *
+     * @param onBleScanStateChangedListener ble scan state changed listener
+     */
+    public void setOnBleScanStateChangedListener(@Nullable OnBleScanStateChangedListener onBleScanStateChangedListener) {
+        this.onBleScanStateChangedListener = onBleScanStateChangedListener;
+        if (scanTimer != null) {
+            scanTimer.setOnBleScanStateChangedListener(onBleScanStateChangedListener);
+        }
+    }
+
+    /**
+     * initialization
+     */
+    public boolean init() {
+        if (context == null) {
             return false;
         }
-        mScanResults = scanResults;
-        BleManager.getContext().registerReceiver(bleScannerBluetoothStateReceiver, filter);
-        mScanResults.clear();
-        mOpened = true;
-        this.onScanFindOneNewDeviceListener = onScanFindOneNewDeviceListener;
-        this.scanPeriod = scanPeriod;
-        scanContinue = scanContinueFlag;
-        scanTimer.setOnScanCompleteListener(onScanCompleteListener);
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        context.registerReceiver(bleScannerBluetoothStateReceiver, filter);
+        scanResults.clear();
+        initialized = true;
         return true;
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    /**
+     * Flush pending batch scan results stored in Bluetooth controller. This will return Bluetooth
+     * LE scan results batched on bluetooth controller. Returns immediately, batch scan results data
+     * will be delivered through the {@code callback}.
+     * <p>
+     * used to start scan.
+     */
+    @SuppressWarnings("WeakerAccess")
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     public void flushPendingScanResults() {
         if (bluetoothLeScanner != null) {
-            bluetoothLeScanner.flushPendingScanResults(mScanCallback);
+            bluetoothLeScanner.flushPendingScanResults(scanCallback21);
         }
     }
 
     /**
-     * 开始扫描
+     * start scan
      *
-     * @return true表示成功开启扫描
+     * @return true means the scanner successfully started scanning
      */
-    @SuppressWarnings("UnusedReturnValue")
     public boolean startScan() {
         return startScan(false);
     }
 
     /**
-     * 开始扫描
+     * start scan
      *
-     * @param clearScanResult 是否要清空之前的扫描记录
-     * @return true表示成功开启扫描
+     * @param clearScanResult whether to clear previous scan records
+     * @return true means the scanner successfully started scanning
      */
-    @SuppressWarnings("UnusedReturnValue")
     public boolean startScan(boolean clearScanResult) {
-        if (BleManager.getContext() == null) {
-            return false;
-        }
-        if (mBluetoothAdapter == null) {
-            Tool.toastL(BleManager.getContext(), R.string.no_bluetooth_mode);
-            return false;
-        }
-
-        if (!mOpened) {
-            return false;
-        }
-
-        if (!mBluetoothAdapter.isEnabled()) {
-            Tool.toastL(BleManager.getContext(), R.string.bluetooth_not_enable);
-            return false;
-        }
-
-        if (scanning) {
-            return false;
-        }
-
-        if (clearScanResult) {
-            clearScanResults();
-        }
-
-        scanTimer.startTimer(scanPeriod);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (scanFilters == null) {
-                scanFilters = new ArrayList<>();
-                ScanFilter scanFilter = new ScanFilter.Builder()
-                        .build();
-
-                scanFilters.add(scanFilter);
-            }
-            if (scanSettings == null) {
-                scanSettings = new ScanSettings.Builder()
-                        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                        .build();
-            }
-            bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
-            try {
-                bluetoothLeScanner.startScan(scanFilters, scanSettings, mScanCallback);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                //noinspection AliDeprecation
-                mBluetoothAdapter.startLeScan(this.mLeScanCallback);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        scanning = true;
-        return true;
+        return startScan(clearScanResult, 0);
     }
 
     /**
-     * 停止扫描
+     * stop scan
      *
-     * @return true表示成功停止扫描
+     * @return true means the scanner successfully stop scanning
      */
-    @SuppressWarnings("UnusedReturnValue")
     public boolean stopScan() {
-        if (BleManager.getContext() == null) {
-            return false;
-        }
-        if (!mOpened) {
-            return false;
-        }
-
-        if (!scanning) {
-            return false;
-        }
-
-        if (mBluetoothAdapter == null) {
-            Tool.toastL(BleManager.getContext(), R.string.no_bluetooth_mode);
-            return false;
-        }
-
-        scanTimer.stopTimer();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (bluetoothLeScanner == null) {
-                return false;
-            }
-            try {
-                bluetoothLeScanner.stopScan(mScanCallback);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                //noinspection AliDeprecation
-                this.mBluetoothAdapter.stopLeScan(this.mLeScanCallback);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        scanning = false;
-        return true;
+        return stopScan(0);
     }
 
     /**
-     * 关闭当前GATT连接
+     * closeGatt gatt connection
      *
-     * @return true表示成功
+     * @return true mean gatt connection closeGatt successful
      */
     public boolean close() {
-        if (BleManager.getContext() == null) {
+        Context context = this.context;
+        if (context == null) {
             return false;
         }
-        if (!mOpened) {
+        if (!initialized) {
             return false;
         }
 
@@ -406,209 +466,42 @@ public class BleScanner {
         }
 
         if (bleScannerBluetoothStateReceiver != null) {
-            bleScannerBluetoothStateReceiver.setOnBluetoothSwitchChangedListener(null);
             bleScannerBluetoothStateReceiver.releaseData();
-            BleManager.getContext().unregisterReceiver(bleScannerBluetoothStateReceiver);
+            context.unregisterReceiver(bleScannerBluetoothStateReceiver);
         }
 
         scanPeriod = 0;
-        mOpened = false;
+        initialized = false;
         scanning = false;
-        scanContinue = false;
-        mScanResults = null;
+        autoStartNextScan = false;
+        scanResults = null;
         bleScannerBluetoothStateReceiver = null;
-        mBluetoothAdapter = null;
-        mLeScanCallback = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            on21ScanCallback = null;
-        }
-        mScanCallback = null;
-        onScanFindOneDeviceListener = null;
-        onScanFindOneNewDeviceListener = null;
+        this.context = null;
+        bluetoothAdapter = null;
+        scanCallback18 = null;
+        scanCallback21 = null;
         scanTimer = null;
         return true;
     }
 
-
     /**
-     * 获取扫描过滤器列表
-     *
-     * @return 扫描过滤器列表
-     */
-    @SuppressWarnings("unused")
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public ArrayList<ScanFilter> getScanFilters() {
-        return scanFilters;
-    }
-
-    /**
-     * 设置扫描过滤器列表
-     *
-     * @param scanFilters 扫描过滤器列表
-     */
-    @SuppressWarnings("unused")
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public void setScanFilters(ArrayList<ScanFilter> scanFilters) {
-        this.scanFilters = scanFilters;
-    }
-
-    /**
-     * 获取扫描参数
-     *
-     * @return 扫描参数
-     */
-    @SuppressWarnings("unused")
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public ScanSettings getScanSettings() {
-        return scanSettings;
-    }
-
-    /**
-     * 设置扫描参数
-     *
-     * @param scanSettings 扫描参数
-     */
-    @SuppressWarnings("unused")
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public void setScanSettings(ScanSettings scanSettings) {
-        this.scanSettings = scanSettings;
-    }
-
-    /**
-     * 清空扫描结果
+     * clear scan results
      */
     public void clearScanResults() {
-        mScanResults.clear();
+        scanResults.clear();
     }
+
+    /*-----------------------------------private method-----------------------------------*/
 
     /**
-     * 设置当发现一个设备时的回调
-     *
-     * @param onScanFindOneDeviceListener 当发现一个设备时的回调
-     */
-    public void setOnScanFindOneDeviceListener(BleInterface.OnScanFindOneDeviceListener
-                                                       onScanFindOneDeviceListener) {
-        this.onScanFindOneDeviceListener = onScanFindOneDeviceListener;
-    }
-
-    /**
-     * 设置安卓5.0以上的API才拥有的接口
-     *
-     * @param on21ScanCallback 安卓5.0以上的API才拥有的接口
-     */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    public void setOn21ScanCallback(BleInterface.On21ScanCallback on21ScanCallback) {
-        this.on21ScanCallback = on21ScanCallback;
-    }
-
-    /**
-     * 获取当前扫描状态
-     *
-     * @return true表示正在扫描
-     */
-    public boolean isScanning() {
-        return scanning;
-    }
-
-    /**
-     * 设置扫描周期
-     *
-     * @param scanPeriod 扫描周期
-     */
-    @SuppressWarnings("unused")
-    public void setScanPeriod(long scanPeriod) {
-        this.scanPeriod = scanPeriod;
-    }
-
-    /**
-     * 设置当扫描结束后是否立即进行下一次扫描
-     *
-     * @param scanContinue 当扫描结束后是否立即进行下一次扫描的标志
-     */
-    @SuppressWarnings("unused")
-    public void setScanContinue(boolean scanContinue) {
-        this.scanContinue = scanContinue;
-    }
-
-    /**
-     * 设置发现一个新设备时的回调
-     *
-     * @param onScanFindOneNewDeviceListener 发现一个新设备时的回调
-     */
-    @SuppressWarnings("unused")
-    public void setOnScanFindOneNewDeviceListener(BleInterface.OnScanFindOneNewDeviceListener
-                                                          onScanFindOneNewDeviceListener) {
-        this.onScanFindOneNewDeviceListener = onScanFindOneNewDeviceListener;
-    }
-
-    /**
-     * 设置扫描完成的回调
-     *
-     * @param onScanCompleteListener 扫描完成的回调
-     */
-    @SuppressWarnings("unused")
-    public void setOnScanCompleteListener(@Nullable BleInterface.OnScanCompleteListener
-                                                  onScanCompleteListener) {
-        scanTimer.setOnScanCompleteListener(onScanCompleteListener);
-    }
-
-    /**
-     * 设置蓝牙状态更改时进行的回调
-     */
-    public void setOnBluetoothSwitchChangedListener(BleInterface.OnBluetoothSwitchChangedListener onBluetoothStateChangedListener) {
-        bleScannerBluetoothStateReceiver.setOnBluetoothSwitchChangedListener(onBluetoothStateChangedListener);
-    }
-
-    public ArrayList<BleDevice> getScanResults() {
-        return mScanResults;
-    }
-
-    /*------------------------私有函数----------------------------*/
-
-    /**
-     * 调用相关回调
-     *
-     * @param bleDevice    BleDevice
-     * @param mScanResults
-     */
-    private void callOnScanFindOneNewDeviceListener(final int inedx, final BleDevice bleDevice, final ArrayList<BleDevice> mScanResults) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onScanFindOneNewDeviceListener != null) {
-                    onScanFindOneNewDeviceListener.onScanFindOneNewDevice(inedx, bleDevice, mScanResults);
-                }
-            }
-        });
-    }
-
-    /**
-     * 调用相关回调
-     *
-     * @param bleDevice BleDevice
-     */
-    private void callOnScanFindOneDeviceListener(final BleDevice bleDevice) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onScanFindOneDeviceListener != null) {
-                    onScanFindOneDeviceListener.onScanFindOneDevice(bleDevice);
-                }
-            }
-        });
-    }
-
-    /*------------------------私有函数----------------------------*/
-
-    /**
-     * 初始化BLE扫描回调(API21以下且不包含API21)
+     * initialization system scan callback for api 18
      */
     private void initBleScanCallBack18() {
-        mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
+        scanCallback18 = new BluetoothAdapter.LeScanCallback() {
             @Override
             public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-                if (BleManager.getContext() == null) {
+                final Context context = BleScanner.this.context;
+                if (context == null) {
                     return;
                 }
                 if (scanRecord == null) {
@@ -616,33 +509,141 @@ public class BleScanner {
                 }
                 String name = device.getName();
 
-                BleScanRecord bleScanRecordParseFromBytes = BleScanRecord.parseFromBytes(scanRecord);
+                BleScanRecord bleScanRecord = BleScanRecord.parseFromBytes(scanRecord);
                 if (null == name || "".equals(name)) {
-                    name = bleScanRecordParseFromBytes.getDeviceName();
+                    name = bleScanRecord.getDeviceName();
                 }
 
-                final BleDevice bleDevice = new BleDevice(device, rssi, scanRecord, name);
-                bleDevice.setBleScanRecord(bleScanRecordParseFromBytes);
+                if (!filterNames(name)) {
+                    return;
+                }
+
+                if (!filterFullName(name)) {
+                    return;
+                }
+
+                if (!filterAddress(device.getAddress())) {
+                    return;
+                }
+
+                if (!filterFullAddress(device.getAddress())) {
+                    return;
+                }
+
+                final BleDevice bleDevice = new BleDevice( device, rssi, bleScanRecord);
                 callOnScanFindOneDeviceListener(bleDevice);
-                if (mScanResults == null) {
-                    mScanResults = new ArrayList<>();
+                if (!scanResults.contains(bleDevice)) {
+                    scanResults.add(bleDevice);
+                    callOnScanFindOneNewDeviceListener(scanResults.size() - 1, bleDevice, scanResults);
                 }
-                if (!mScanResults.contains(bleDevice)) {
-                    mScanResults.add(bleDevice);
-                    callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice, mScanResults);
-                }
+
             }
         };
     }
 
     /**
-     * 初始化扫描回调(API21及以上的设备)
+     * Filter device address
+     *
+     * @param address device address
+     * @return true means pass
      */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private boolean filterFullAddress(String address) {
+        if (filterFullAddresses.size() != 0) {
+            boolean pass = false;
+
+            for (int i = 0; i < filterFullAddresses.size(); i++) {
+                String filterName = filterFullAddresses.get(i);
+                if (address.equals(filterName)) {
+                    pass = true;
+                    break;
+                }
+            }
+            return pass;
+        }
+        return true;
+    }
+
+    /**
+     * Filter the start character of the device address
+     *
+     * @param address device address
+     * @return true means pass
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private boolean filterAddress(String address) {
+        if (filterAddresses.size() != 0) {
+            boolean pass = false;
+            for (int i = 0; i < filterAddresses.size(); i++) {
+                String filterName = filterAddresses.get(i);
+                if (address.startsWith(filterName)) {
+                    pass = true;
+                    break;
+                }
+            }
+            return pass;
+        }
+        return true;
+    }
+
+    /**
+     * Filter device name
+     *
+     * @param name device name
+     * @return true means pass
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private boolean filterFullName(String name) {
+        if (filterFullNames.size() != 0) {
+            boolean pass = false;
+            if (name == null) {
+                return false;
+            }
+            for (int i = 0; i < filterFullNames.size(); i++) {
+                String filterName = filterNames.get(i);
+                if (name.equals(filterName)) {
+                    pass = true;
+                    break;
+                }
+            }
+            return pass;
+        }
+        return true;
+    }
+
+    /**
+     * Filter the start character of the device name
+     *
+     * @param name device name
+     * @return true means pass
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private boolean filterNames(String name) {
+        if (filterNames.size() != 0) {
+            boolean pass = false;
+            if (name == null) {
+                return false;
+            }
+            for (int i = 0; i < filterNames.size(); i++) {
+                String filterName = filterNames.get(i);
+                if (name.startsWith(filterName)) {
+                    pass = true;
+                    break;
+                }
+            }
+            return pass;
+        }
+        return true;
+    }
+
+    /**
+     * initialization system scan callback for api 21
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private void initBleScanCallBack21() {
-        mScanCallback = new ScanCallback() {
+        scanCallback21 = new ScanCallback() {
             /**
-             * BaseConnectCallback when a BLE advertisement has been found.
+             * BaseBleConnectCallback when a BLE advertisement has been found.
              *
              * @param callbackType Determines how this callback was triggered. Could be one of
              *                     {@link ScanSettings#CALLBACK_TYPE_ALL_MATCHES},
@@ -656,34 +657,34 @@ public class BleScanner {
             }
 
             /**
-             * BaseConnectCallback when batch results are delivered.
+             * BaseBleConnectCallback when batch results are delivered.
              *
              * @param results List of scan results that are previously scanned.
              */
             @Override
             public void onBatchScanResults(final List<ScanResult> results) {
-                BleManager.getHandler().post(new Runnable() {
+                BleManager.getHANDLER().post(new Runnable() {
                     @Override
                     public void run() {
-                        if (on21ScanCallback != null) {
-                            on21ScanCallback.onBatchScanResults(results);
+                        if (onBleScanStateChangedListener != null) {
+                            onBleScanStateChangedListener.onBatchScanResults(results);
                         }
                     }
                 });
             }
 
             /**
-             * BaseConnectCallback when scan could not be started.
+             * BaseBleConnectCallback when scan could not be started.
              *
              * @param errorCode Error code (one of SCAN_FAILED_*) for scan failure.
              */
             @Override
             public void onScanFailed(final int errorCode) {
-                BleManager.getHandler().post(new Runnable() {
+                BleManager.getHANDLER().post(new Runnable() {
                     @Override
                     public void run() {
-                        if (on21ScanCallback != null) {
-                            on21ScanCallback.onScanFailed(errorCode);
+                        if (onBleScanStateChangedListener != null) {
+                            onBleScanStateChangedListener.onScanFailed(errorCode);
                         }
                     }
                 });
@@ -692,13 +693,13 @@ public class BleScanner {
     }
 
     /**
-     * API21以上扫描处理的方法
+     * Processing the scan results of API21
      *
-     * @param result 扫描结果
+     * @param result ScanResult of API21
      */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private void onApi21ScanResultProcessor(ScanResult result) {
-        if (BleManager.getContext() == null) {
+        if (context == null) {
             return;
         }
         ScanRecord scanRecord = result.getScanRecord();
@@ -708,35 +709,235 @@ public class BleScanner {
         }
 
         BluetoothDevice device = result.getDevice();
-        int rssi = result.getRssi();
-        byte[] scanRecordBytes = scanRecord.getBytes();
+
         String deviceName;
         deviceName = result.getDevice().getName();
         if (null == deviceName || "".equals(deviceName)) {
             deviceName = scanRecord.getDeviceName();
         }
-        BleScanRecord bleScanRecordParseFromBytes = BleScanRecord.parseFromBytes(scanRecordBytes);
+        String address = device.getAddress();
+        BleScanRecord bleScanRecord = BleScanRecord.parseFromBytes(scanRecord.getBytes());
+
         if (null == deviceName || "".equals(deviceName)) {
-            deviceName = bleScanRecordParseFromBytes.getDeviceName();
+            deviceName = bleScanRecord.getDeviceName();
         }
-        final BleDevice bleDevice = new BleDevice(device, rssi, scanRecordBytes, deviceName);
-        bleDevice.setBleScanRecord(bleScanRecordParseFromBytes);
+
+        if (!filterNames(deviceName)) {
+            return;
+        }
+        if (!filterFullName(deviceName)) {
+            return;
+        }
+
+        if (!filterAddress(address)) {
+            return;
+        }
+        if (!filterFullAddress(address)) {
+            return;
+        }
+
+        int rssi = result.getRssi();
+
+        final BleDevice bleDevice = new BleDevice( device, rssi, bleScanRecord);
 
         callOnScanFindOneDeviceListener(bleDevice);
 
-        if (mScanResults == null) {
+        if (scanResults == null) {
             return;
         }
-        if (!mScanResults.contains(bleDevice)) {
-            mScanResults.add(bleDevice);
-            callOnScanFindOneNewDeviceListener(mScanResults.size() - 1, bleDevice, mScanResults);
+        if (!scanResults.contains(bleDevice)) {
+            scanResults.add(bleDevice);
+            callOnScanFindOneNewDeviceListener(scanResults.size() - 1, bleDevice, scanResults);
         } else {
-            int index = mScanResults.indexOf(bleDevice);
-            BleDevice bleDevice1 = mScanResults.get(index);
+            int index = scanResults.indexOf(bleDevice);
+            BleDevice bleDevice1 = scanResults.get(index);
             if (bleDevice1.getDeviceName() == null && bleDevice.getDeviceName() != null) {
-                mScanResults.set(index, bleDevice);
-                callOnScanFindOneNewDeviceListener(index, null, mScanResults);
+                scanResults.set(index, bleDevice);
+                callOnScanFindOneNewDeviceListener(index, null, scanResults);
             }
         }
+    }
+
+    /**
+     * refresh filter of api 21
+     *
+     * @return ScanFilter list
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private ArrayList<ScanFilter> refreshScanFilter() {
+        ArrayList<ScanFilter> scanFilters = new ArrayList<>();
+        for (int i = 0; i < filterFullNames.size(); i++) {
+            String filterName = filterNames.get(i);
+            ScanFilter scanFilter = new ScanFilter.Builder()
+                    .setDeviceName(filterName)
+                    .build();
+            scanFilters.add(scanFilter);
+        }
+
+        for (int i = 0; i < filterFullAddresses.size(); i++) {
+            String filterFullAddress = filterFullAddresses.get(i);
+            ScanFilter scanFilter = new ScanFilter.Builder()
+                    .setDeviceAddress(filterFullAddress)
+                    .build();
+            scanFilters.add(scanFilter);
+        }
+        return scanFilters;
+    }
+
+    /**
+     * refresh scan settings if apu 21
+     *
+     * @return ScanSettings
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private ScanSettings refreshScanSettings() {
+        ScanSettings.Builder builder = new ScanSettings.Builder();
+        builder.setScanMode(bleScanMode.getScanMode());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            builder.setMatchMode(bleMatchMode.getMatchMode());
+        }
+        return builder.build();
+    }
+
+    /**
+     * start scan
+     *
+     * @param clearScanResult whether to clear previous scan records
+     * @param tryCount        try count
+     * @return true means start successful
+     */
+    private boolean startScan(boolean clearScanResult, int tryCount) {
+        tryCount++;
+        if (context == null) {
+            return false;
+        }
+        if (bluetoothAdapter == null) {
+            return false;
+        }
+
+        if (!initialized) {
+            return false;
+        }
+
+        if (!bluetoothAdapter.isEnabled()) {
+            return false;
+        }
+
+        if (scanning) {
+            return false;
+        }
+
+        if (clearScanResult) {
+            clearScanResults();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                flushPendingScanResults();
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+            bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+            try {
+                bluetoothLeScanner.startScan(refreshScanFilter(), refreshScanSettings(), scanCallback21);
+                scanTimer.startTimer(scanPeriod);
+                scanning = true;
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                if (tryCount >= 3) {
+                    return false;
+                }
+                return startScan(clearScanResult, tryCount);
+            }
+        } else {
+            try {
+                bluetoothAdapter.startLeScan(this.scanCallback18);
+                scanTimer.startTimer(scanPeriod);
+                scanning = true;
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                if (tryCount >= 3) {
+                    return false;
+                }
+                return startScan(clearScanResult, tryCount);
+            }
+        }
+    }
+
+    /**
+     * stop scan
+     *
+     * @param tryCount try count
+     * @return true means successful
+     */
+    private boolean stopScan(int tryCount) {
+        tryCount++;
+        Context context = this.context;
+        if (context == null) {
+            return false;
+        }
+        if (!initialized) {
+            return false;
+        }
+
+        if (!scanning) {
+            return false;
+        }
+
+        if (bluetoothAdapter == null) {
+            return false;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (bluetoothLeScanner == null) {
+                return false;
+            }
+            try {
+                bluetoothLeScanner.stopScan(scanCallback21);
+                scanTimer.stopTimer();
+                scanning = false;
+                return true;
+            } catch (Exception e) {
+                if (tryCount >= 3) {
+                    return false;
+                }
+                return stopScan(tryCount);
+            }
+        } else {
+            try {
+                this.bluetoothAdapter.stopLeScan(this.scanCallback18);
+                scanTimer.stopTimer();
+                scanning = false;
+                return true;
+            } catch (Exception e) {
+                if (tryCount >= 3) {
+                    return false;
+                }
+                return stopScan(tryCount);
+            }
+        }
+    }
+
+    private void callOnScanFindOneNewDeviceListener(final int inedx, final BleDevice bleDevice, final ArrayList<BleDevice> mScanResults) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleScanStateChangedListener != null) {
+                    onBleScanStateChangedListener.onScanFindOneNewDevice(inedx, bleDevice, mScanResults);
+                }
+            }
+        });
+    }
+
+    private void callOnScanFindOneDeviceListener(final BleDevice bleDevice) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onBleScanStateChangedListener != null) {
+                    onBleScanStateChangedListener.onScanFindOneDevice(bleDevice);
+                }
+            }
+        });
     }
 }

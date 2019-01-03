@@ -1,10 +1,12 @@
 package cn.almsound.www.myblesample.callback;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.graphics.Color;
+import android.support.annotation.Nullable;
 
-import com.jackiepenghe.baselibrary.Tool;
-import com.jackiepenghe.blelibrary.BaseConnectCallback;
+import com.jackiepenghe.baselibrary.tools.Tool;
+import com.jackiepenghe.blelibrary.BaseBleConnectCallback;
 
 import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 
@@ -14,35 +16,13 @@ import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
  * @date 2017/11/15
  */
 
-public class Device4Callback extends BaseConnectCallback {
+public class Device4Callback extends BaseBleConnectCallback {
+    private static final String TAG = Device4Callback.class.getSimpleName();
 
-    private static final String TAG = "Device4Callback";
     private CustomTextCircleView customTextCircleView;
+
     public Device4Callback(CustomTextCircleView customTextCircleView) {
         this.customTextCircleView = customTextCircleView;
-    }
-
-    /**
-     * 蓝牙连接后无法正常进行服务发现时回调
-     *
-     * @param gatt BluetoothGatt
-     */
-    @Override
-    public void onDiscoverServicesFailed(BluetoothGatt gatt) {
-        Tool.warnOut(TAG, "onDiscoverServicesFailed");
-        customTextCircleView.setColor(Color.RED);
-        Tool.toastL(customTextCircleView.getContext(), gatt.getDevice().getAddress() + ":onDiscoverServicesFailed");
-    }
-
-    /**
-     * 蓝牙GATT被关闭时回调
-     *
-     * @param address 设备地址
-     */
-    @Override
-    public void onGattClosed(String address) {
-        Tool.warnOut(TAG, "onGattClosed");
-        Tool.toastL(customTextCircleView.getContext(), address + ":onGattClosed");
     }
 
     /**
@@ -58,11 +38,56 @@ public class Device4Callback extends BaseConnectCallback {
         Tool.toastL(customTextCircleView.getContext(), gatt.getDevice().getAddress() + ":onBluetoothGattOptionsNotSuccess");
     }
 
+    /**
+     * GATT state unknown
+     *
+     * @param gatt  GATT
+     * @param state state code
+     */
+    @Override
+    public void onUnknownState(BluetoothGatt gatt, int state) {
+
+    }
+
+    /**
+     * connect time out
+     *
+     * @param gatt BluetoothGatt
+     */
+    @Override
+    public void onConnectTimeOut(BluetoothGatt gatt) {
+        Tool.warnOut(TAG, "onBluetoothGattOptionsNotSuccess");
+        Tool.toastL(customTextCircleView.getContext(), gatt.getDevice().getAddress() + ":onConnectTimeOut");
+    }
+
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt) {
         Tool.warnOut(TAG, gatt.getDevice().getAddress() + " onServicesDiscovered");
         customTextCircleView.setColor(Color.GREEN);
         Tool.toastL(customTextCircleView.getContext(), gatt.getDevice().getAddress() + ":onServicesDiscovered");
+    }
+
+    /**
+     * callback triggered if auto discovered GATT service failed
+     *
+     * @param gatt BluetoothGatt
+     */
+    @Override
+    public void onServicesAutoDiscoverFailed(BluetoothGatt gatt) {
+        Tool.warnOut(TAG, "onDiscoverServicesFailed");
+        customTextCircleView.setColor(Color.RED);
+        Tool.toastL(customTextCircleView.getContext(), gatt.getDevice().getAddress() + ":onDiscoverServicesFailed");
+    }
+
+    /**
+     * callback triggered if GATT has been closed
+     *
+     * @param address remote device
+     */
+    @Override
+    public void onGattClosed(@Nullable BluetoothDevice address) {
+        Tool.warnOut(TAG, "onGattClosed");
+        Tool.toastL(customTextCircleView.getContext(), address + ":onGattClosed");
     }
 
     @Override

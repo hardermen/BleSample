@@ -1,4 +1,4 @@
-package com.jackiepenghe.blelibrary;
+package com.jackiepenghe.blelibrary.systems;
 
 import android.bluetooth.BluetoothAdapter;
 import android.os.Build;
@@ -15,11 +15,12 @@ import java.util.Set;
  *
  * @author jackie
  */
-@SuppressWarnings("unused")
-class BluetoothLeUtils {
+final class BluetoothLeUtils {
+
+    /*-----------------------------------package privat static method-----------------------------------*/
 
     /**
-     * Returns a string composed from a {@link android.util.SparseArray}.
+     * Returns a string composed from a {@link SparseArray}.
      */
     static String toString(SparseArray<byte[]> array) {
         if (array == null) {
@@ -38,7 +39,7 @@ class BluetoothLeUtils {
     }
 
     /**
-     * Returns a string composed from a {@link java.util.Map}.
+     * Returns a string composed from a {@link Map}.
      */
     static <T> String toString(Map<T, byte[]> map) {
         if (map == null) {
@@ -64,7 +65,7 @@ class BluetoothLeUtils {
     }
 
     /**
-     * Check whether two {@link android.util.SparseArray} equal.
+     * Check whether two {@link SparseArray} equal.
      */
     static boolean equals(SparseArray<byte[]> array, SparseArray<byte[]> otherArray) {
         if (array == otherArray) {
@@ -124,7 +125,7 @@ class BluetoothLeUtils {
      * Ensure Bluetooth is turned on.
      *
      * @throws IllegalStateException If {@code adapter} is null or Bluetooth state is not
-     *                               {@link android.bluetooth.BluetoothAdapter#STATE_ON}.
+     *                               {@link BluetoothAdapter#STATE_ON}.
      */
     static void checkAdapterStateOn(BluetoothAdapter adapter) {
         if (adapter == null || adapter.getState() != BluetoothAdapter.STATE_ON) {

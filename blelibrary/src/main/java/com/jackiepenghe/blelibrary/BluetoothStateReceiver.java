@@ -7,19 +7,24 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+
+import com.jackiepenghe.blelibrary.interfaces.OnBluetoothStateChangedListener;
+
+import java.util.ArrayList;
 
 /**
- * 监听蓝牙开启状态的广播接收者
+ * Broadcast receiver listening to Bluetooth enabled status
  *
  * @author jackie
  */
-public class BluetoothStateReceiver extends BroadcastReceiver {
+public final class BluetoothStateReceiver extends BroadcastReceiver {
 
-    /*--------------------------成员变量--------------------------*/
+    /*-----------------------------------static constant-----------------------------------*/
 
-    private OnBluetoothStateChangedListener onBluetoothStateChangedListener;
+    private ArrayList<OnBluetoothStateChangedListener> onBluetoothStateChangedListeners = new ArrayList<>();
 
-    /*--------------------------实现父类方法--------------------------*/
+    /*-----------------------------------Implementation method-----------------------------------*/
 
     /**
      * This method is called when the BroadcastReceiver is receiving an Intent
@@ -68,24 +73,16 @@ public class BluetoothStateReceiver extends BroadcastReceiver {
                 int bluetoothState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
                 switch (bluetoothState) {
                     case BluetoothAdapter.STATE_OFF:
-                        if (onBluetoothStateChangedListener != null) {
-                            onBluetoothStateChangedListener.onBluetoothClosed();
-                        }
+                        performBluetoothStateOffListener();
                         break;
                     case BluetoothAdapter.STATE_ON:
-                        if (onBluetoothStateChangedListener != null) {
-                            onBluetoothStateChangedListener.onBluetoothOpened();
-                        }
+                        performBluetoothStateOnListener();
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
-                        if (onBluetoothStateChangedListener != null) {
-                            onBluetoothStateChangedListener.onBluetoothClosing();
-                        }
+                        performBluetoothStateTurningOffListener();
                         break;
                     case BluetoothAdapter.STATE_TURNING_ON:
-                        if (onBluetoothStateChangedListener != null) {
-                            onBluetoothStateChangedListener.onBluetoothOpening();
-                        }
+                        performBluetoothStateTurningOnListener();
                         break;
                     default:
                         break;
@@ -96,41 +93,88 @@ public class BluetoothStateReceiver extends BroadcastReceiver {
         }
     }
 
+    private void performBluetoothStateTurningOnListener() {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < onBluetoothStateChangedListeners.size(); i++) {
+                    OnBluetoothStateChangedListener onBluetoothStateChangedListener = onBluetoothStateChangedListeners.get(i);
+                    if (onBluetoothStateChangedListener != null) {
+                        onBluetoothStateChangedListener.onBluetoothEnabling();
+                    }
+                }
+
+            }
+        });
+    }
+
+    private void performBluetoothStateTurningOffListener() {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < onBluetoothStateChangedListeners.size(); i++) {
+                    OnBluetoothStateChangedListener onBluetoothStateChangedListener = onBluetoothStateChangedListeners.get(i);
+                    if (onBluetoothStateChangedListener != null) {
+                        onBluetoothStateChangedListener.onBluetoothDisabling();
+                    }
+                }
+
+            }
+        });
+    }
+
+    private void performBluetoothStateOnListener() {
+
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < onBluetoothStateChangedListeners.size(); i++) {
+                    OnBluetoothStateChangedListener onBluetoothStateChangedListener = onBluetoothStateChangedListeners.get(i);
+                    if (onBluetoothStateChangedListener != null) {
+                        onBluetoothStateChangedListener.onBluetoothEnable();
+                    }
+                }
+
+            }
+        });
+    }
+
+    private void performBluetoothStateOffListener() {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < onBluetoothStateChangedListeners.size(); i++) {
+                    OnBluetoothStateChangedListener onBluetoothStateChangedListener = onBluetoothStateChangedListeners.get(i);
+                    if (onBluetoothStateChangedListener != null) {
+                        onBluetoothStateChangedListener.onBluetoothDisable();
+                    }
+                }
+
+            }
+        });
+    }
+
     /*--------------------------getter & setter--------------------------*/
 
     /**
-     * 设置当蓝牙状态改变时进行的回调
+     * add  Bluetooth status changed listener
      *
-     * @param onBluetoothStateChangedListener 当蓝牙状态改变时进行的回调
+     * @param onBluetoothStateChangedListener  Bluetooth status changed listener
      */
-    public void setOnBluetoothStateChangedListener(OnBluetoothStateChangedListener onBluetoothStateChangedListener) {
-        this.onBluetoothStateChangedListener = onBluetoothStateChangedListener;
+    public void addOnBluetoothStateChangedListener(@NonNull OnBluetoothStateChangedListener onBluetoothStateChangedListener) {
+        onBluetoothStateChangedListeners.add(onBluetoothStateChangedListener);
     }
 
-    /*--------------------------接口定义--------------------------*/
-
     /**
-     * 当蓝牙状态改变时进行的回调
+     * remove  Bluetooth status changed listener
+     *
+     * @param onBluetoothStateChangedListener  Bluetooth status changed listener
      */
-    public interface OnBluetoothStateChangedListener {
-        /**
-         * 蓝牙已开启
-         */
-        void onBluetoothOpened();
+    public void removeOnBluetoothStateChangedListener(@NonNull OnBluetoothStateChangedListener onBluetoothStateChangedListener) {
+        onBluetoothStateChangedListeners.remove(onBluetoothStateChangedListener);
+    }
 
-        /**
-         * 蓝牙已关闭
-         */
-        void onBluetoothClosed();
-
-        /**
-         * 蓝牙正在关闭
-         */
-        void onBluetoothClosing();
-
-        /**
-         * 蓝牙正在打开
-         */
-        void onBluetoothOpening();
+    public void removeAllOnBluetoothStateChangedListener() {
+        onBluetoothStateChangedListeners.clear();
     }
 }

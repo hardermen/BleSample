@@ -1,4 +1,4 @@
-package com.jackiepenghe.blelibrary;
+package com.jackiepenghe.blelibrary.systems;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -6,11 +6,27 @@ import android.util.SparseArray;
 
 import java.io.Serializable;
 
-@SuppressWarnings("WeakerAccess")
-public class BleSparseArray<T> extends SparseArray<T> implements Serializable, Parcelable {
+/**
+ * extends SparseArray.Only implementation Serializable and Parcelable interface.
+ *
+ * @author jackie
+ */
+public final class BleSparseArray<T> extends SparseArray<T> implements Serializable, Parcelable {
+
+    /*-----------------------------------static constant-----------------------------------*/
 
     private static final long serialVersionUID = -7680637790048655801L;
 
+
+    /*------------------------implementation method----------------------------*/
+
+    /**
+     * Creates a new SparseArray containing no mappings.
+     */
+    @SuppressWarnings("unused")
+    BleSparseArray() {
+        super();
+    }
 
     @Override
     public int describeContents() {
@@ -21,9 +37,7 @@ public class BleSparseArray<T> extends SparseArray<T> implements Serializable, P
     public void writeToParcel(Parcel dest, int flags) {
     }
 
-    public BleSparseArray() {
-    }
-
+    @SuppressWarnings("WeakerAccess")
     protected BleSparseArray(Parcel in) {
     }
 

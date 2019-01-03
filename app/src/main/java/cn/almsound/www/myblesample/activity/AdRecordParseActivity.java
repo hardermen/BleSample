@@ -9,10 +9,10 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
-import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
-import com.jackiepenghe.baselibrary.DefaultItemDecoration;
-import com.jackiepenghe.baselibrary.Tool;
-import com.jackiepenghe.blelibrary.AdRecord;
+import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.tools.Tool;
+import com.jackiepenghe.baselibrary.view.utils.DefaultItemDecoration;
+import com.jackiepenghe.blelibrary.AdvertiseRecord;
 import com.jackiepenghe.blelibrary.BleDevice;
 
 import java.io.Serializable;
@@ -46,7 +46,7 @@ public class AdRecordParseActivity extends BaseAppCompatActivity {
     /**
      * 适配器数据源
      */
-    private ArrayList<AdRecord> adRecords = new ArrayList<>();
+    private ArrayList<AdvertiseRecord> adRecords = new ArrayList<>();
     /**
      * 适配器
      */
@@ -175,9 +175,6 @@ public class AdRecordParseActivity extends BaseAppCompatActivity {
             return;
         }
         byte[] scanRecordBytes = bleDevice.getScanRecordBytes();
-        if (scanRecordBytes == null){
-            return;
-        }
         if (scanRecordBytes.length > 31){
             initScanRecordAndResponseCord(scanRecordBytes);
         }else {
@@ -212,7 +209,7 @@ public class AdRecordParseActivity extends BaseAppCompatActivity {
         if (bleDevice == null){
             return;
         }
-        ArrayList<AdRecord> adRecords = bleDevice.getAdRecords();
+        ArrayList<AdvertiseRecord> adRecords = bleDevice.getAdvertiseRecords();
         this.adRecords.clear();
         if (adRecords != null ) {
             this.adRecords.addAll(adRecords);

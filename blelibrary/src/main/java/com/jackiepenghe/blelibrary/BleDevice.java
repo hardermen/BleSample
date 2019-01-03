@@ -1,197 +1,159 @@
 package com.jackiepenghe.blelibrary;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanRecord;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.SparseArray;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.jackiepenghe.blelibrary.systems.BleHashMap;
+import com.jackiepenghe.blelibrary.systems.BleScanRecord;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
- * 自定义BLE设备been类
+ * BLE device been
  *
- * @author alm
+ * @author jackie
  */
+public final class BleDevice implements Serializable, Parcelable {
 
-@SuppressWarnings("WeakerAccess")
-public class BleDevice implements Serializable, Parcelable {
-
+    /*-----------------------------------static constant-----------------------------------*/
 
     private static final long serialVersionUID = -2219219185665113265L;
-    /**
-     * 设备名
-     */
-    private String mDeviceName;
+
+    /*-----------------------------------field variables-----------------------------------*/
 
     /**
-     * 蓝牙设备对象
+     * Bluetooth Device
      */
-    private BluetoothDevice mBluetoothDevice;
+    @NonNull
+    private BluetoothDevice bluetoothDevice;
 
     /**
-     * rssi值
+     * rssi
      */
-    private int mRssi;
-
-    /**
-     * 广播包内容(字节数组)
-     */
-    private byte[] scanRecordBytes;
-
-    /**
-     * 解析广播包后保存的数据
-     */
-    private ArrayList<AdRecord> adRecords;
+    private int rssi;
     /**
      * BleScanRecord
      */
+    @NonNull
     private BleScanRecord bleScanRecord;
 
-    /**
-     * 构造器
-     *
-     * @param bluetoothDevice 蓝牙设备
-     * @param rssi            rssi值
-     * @param deviceName      设备名
-     */
-    public BleDevice(BluetoothDevice bluetoothDevice, int rssi, String deviceName) {
-        this(bluetoothDevice, rssi, null, deviceName);
-    }
+    /*-----------------------------------Constructor-----------------------------------*/
 
     /**
-     * 构造器
+     * Constructor
      *
-     * @param bluetoothDevice 蓝牙设备
-     * @param rssi            rssi值
-     * @param scanRecordBytes 广播包内容（字节数组）
-     * @param deviceName      如果获取到的设备名为空，默认的设备名
+     * @param bluetoothDevice BluetoothDevice
+     * @param rssi            rssi
+     * @param bleScanRecord   BleScanRecord
      */
-    @SuppressWarnings("WeakerAccess")
-    public BleDevice(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecordBytes, String deviceName) {
-        mBluetoothDevice = bluetoothDevice;
-        mRssi = rssi;
-        this.scanRecordBytes = scanRecordBytes;
-        adRecords = AdRecord.parseScanRecord(scanRecordBytes);
-        if (bluetoothDevice.getName() == null || "".equals(bluetoothDevice.getName())) {
-            setDeviceName(deviceName);
-        }
+    BleDevice(@NonNull BluetoothDevice bluetoothDevice, int rssi, @NonNull BleScanRecord bleScanRecord) {
+        this.bluetoothDevice = bluetoothDevice;
+        this.rssi = rssi;
+        this.bleScanRecord = bleScanRecord;
     }
 
+    /*-----------------------------------getter-----------------------------------*/
+
     /**
-     * 获取蓝牙设备对象
+     * get BluetoothDevice
      *
      * @return BluetoothDevice
      */
+    @NonNull
     public BluetoothDevice getBluetoothDevice() {
-        return mBluetoothDevice;
+        return bluetoothDevice;
     }
 
     /**
-     * 获取设备信号强度
+     * get rssi
      *
-     * @return RSSI值
+     * @return rssi
      */
     public int getRssi() {
-        return mRssi;
+        return rssi;
     }
 
-    /**
-     * 获取广播包内容
-     *
-     * @return 广播包内容
-     */
-    public byte[] getScanRecordBytes() {
-        return scanRecordBytes;
-    }
+    /*-----------------------------------public method-----------------------------------*/
 
     /**
-     * 获取设备名称
+     * get device name
      *
-     * @return 设备名称
+     * @return device name
      */
     public String getDeviceName() {
-        String deviceName = mBluetoothDevice.getName();
+        String deviceName = bluetoothDevice.getName();
         if (deviceName != null) {
             return deviceName;
-        } else {
-            return mDeviceName;
         }
+        return bleScanRecord.getDeviceName();
     }
 
     /**
-     * 设置设备名
+     * get device address
      *
-     * @param deviceName 设备名
+     * @return device address
      */
-    private void setDeviceName(String deviceName) {
-        mDeviceName = deviceName;
-    }
-
-    /**
-     * 获取设备地址
-     *
-     * @return 设备地址
-     */
+    @NonNull
     public String getDeviceAddress() {
-        return mBluetoothDevice.getAddress();
+        return bluetoothDevice.getAddress();
     }
 
     /**
-     * 获取广播包的解析结果集合
+     * get AdvertiseRecord collection
      *
-     * @return 广播包的解析结果集合
+     * @return AdvertiseRecord collection
      */
-    public ArrayList<AdRecord> getAdRecords() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            if (bleScanRecord != null) {
-                ArrayList<AdRecord> adRecords = new ArrayList<>();
-                SparseArray<byte[]> manufacturerSpecificDatas = bleScanRecord.getManufacturerSpecificData();
-                for (int i = 0; i < manufacturerSpecificDatas.size(); i++) {
-                    int type = manufacturerSpecificDatas.keyAt(i);
-                    byte[] data = manufacturerSpecificDatas.valueAt(i);
-                    int length = data.length + 1;
-                    AdRecord adRecord = new AdRecord(length, (byte) type, data);
-                    adRecords.add(adRecord);
-                }
-                if (adRecords.size() != 0) {
-                    return adRecords;
-                }
-            }
+    @Nullable
+    public ArrayList<AdvertiseRecord> getAdvertiseRecords() {
+        ArrayList<AdvertiseRecord> advertiseRecords = new ArrayList<>();
+        BleHashMap<Byte, byte[]> manufacturerSpecificDatas = bleScanRecord.getManufacturerSpecificData();
+        if (manufacturerSpecificDatas == null) {
+            return null;
         }
-        return adRecords;
+
+        Set<Map.Entry<Byte, byte[]>> entries = manufacturerSpecificDatas.entrySet();
+        for (Map.Entry<Byte, byte[]> next : entries) {
+            int type = next.getKey();
+            byte[] data = next.getValue();
+            int length = data.length + 1;
+            AdvertiseRecord advertiseRecord = new AdvertiseRecord(length, (byte) type, data);
+            advertiseRecords.add(advertiseRecord);
+        }
+        return advertiseRecords;
     }
 
     /**
-     * 获取指定类型的广播包字段
+     * Obtain scan record data by the specified AD type
      *
-     * @param type 指定类型
-     * @return 广播包字段
+     * @param type AD type
+     * @return scan record data
      */
-    public byte[] getManufacturerSpecificData(int type) {
-        if (bleScanRecord != null) {
-            byte[] manufacturerSpecificData = bleScanRecord.getManufacturerSpecificData(type);
-            if (manufacturerSpecificData != null) {
-                return manufacturerSpecificData;
-            }
-        }
-
-        if (adRecords != null) {
-            for (int i = 0; i < adRecords.size(); i++) {
-                AdRecord adRecord = adRecords.get(i);
-                if (adRecord.getType() == type) {
-                    return adRecord.getData();
-                }
-            }
-        }
-
-        return new byte[0];
+    @Nullable
+    public byte[] getManufacturerSpecificData(byte type) {
+        return bleScanRecord.getManufacturerSpecificData(type);
     }
 
-    /*------------------------重写父类函数----------------------------*/
+    /**
+     * get scan record byte array
+     *
+     * @return scan record byte array
+     */
+    @NonNull
+    public byte[] getScanRecordBytes() {
+        return bleScanRecord.getBytes();
+    }
+
+    /*-----------------------------------override method-----------------------------------*/
 
     /**
      * Indicates whether some other object is "equal to" this one.
@@ -239,7 +201,6 @@ public class BleDevice implements Serializable, Parcelable {
      * @see #hashCode()
      * @see HashMap
      * <p>
-     * 重写equals方法
      */
     @Override
     public boolean equals(Object obj) {
@@ -251,12 +212,14 @@ public class BleDevice implements Serializable, Parcelable {
         return bleDevice.getBluetoothDevice().equals(getBluetoothDevice());
     }
 
-    public BleScanRecord getBleScanRecord() {
-        return bleScanRecord;
-    }
-
-    public void setBleScanRecord(BleScanRecord bleScanRecord) {
-        this.bleScanRecord = bleScanRecord;
+    @Override
+    public String toString() {
+        return "BleDevice{" +
+                "bluetoothDevice=" + bluetoothDevice +
+                ", rssi=" + rssi +
+                ", scanRecordBytes=" + Arrays.toString(getScanRecordBytes()) +
+                ", bleScanRecord=" + bleScanRecord +
+                '}';
     }
 
 
@@ -267,22 +230,25 @@ public class BleDevice implements Serializable, Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.mDeviceName);
-        dest.writeParcelable(this.mBluetoothDevice, flags);
-        dest.writeInt(this.mRssi);
-        dest.writeByteArray(this.scanRecordBytes);
-        dest.writeList(this.adRecords);
-        dest.writeSerializable(this.bleScanRecord);
+        dest.writeParcelable(this.bluetoothDevice, flags);
+        dest.writeInt(this.rssi);
+        dest.writeParcelable(this.bleScanRecord, flags);
     }
 
     protected BleDevice(Parcel in) {
-        this.mDeviceName = in.readString();
-        this.mBluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
-        this.mRssi = in.readInt();
-        this.scanRecordBytes = in.createByteArray();
-        this.adRecords = new ArrayList<>();
-        in.readList(this.adRecords, AdRecord.class.getClassLoader());
-        this.bleScanRecord = (BleScanRecord) in.readSerializable();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            this.bluetoothDevice = (BluetoothDevice) Objects.requireNonNull(in.readParcelable(BluetoothDevice.class.getClassLoader()));
+        } else {
+            //noinspection ConstantConditions
+            this.bluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
+        }
+        this.rssi = in.readInt();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            this.bleScanRecord = (BleScanRecord) Objects.requireNonNull(in.readParcelable(BleScanRecord.class.getClassLoader()));
+        } else {
+            //noinspection ConstantConditions
+            this.bleScanRecord = in.readParcelable(BleScanRecord.class.getClassLoader());
+        }
     }
 
     public static final Parcelable.Creator<BleDevice> CREATOR = new Parcelable.Creator<BleDevice>() {

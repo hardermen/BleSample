@@ -1,6 +1,7 @@
 package cn.almsound.www.myblesample.activity.blemulticonnect;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanResult;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
@@ -14,15 +15,16 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
-import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
-import com.jackiepenghe.baselibrary.DefaultItemDecoration;
-import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.tools.Tool;
+import com.jackiepenghe.baselibrary.view.utils.DefaultItemDecoration;
 import com.jackiepenghe.blelibrary.BleDevice;
-import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleScanner;
+import com.jackiepenghe.blelibrary.interfaces.OnBleScanStateChangedListener;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import cn.almsound.www.myblesample.R;
 import cn.almsound.www.myblesample.adapter.MultiConnectDeviceRecyclerViewListAdapter;
@@ -67,11 +69,6 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
     private int buttonClickCount;
 
     /**
-     * 存放扫面器的扫描结果
-     */
-    private ArrayList<BleDevice> scanResults = new ArrayList<>();
-
-    /**
      * 设备列表适配器数据源
      */
     private ArrayList<BleDeviceWithBoolean> adapterList = new ArrayList<>();
@@ -95,42 +92,6 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
     };
 
     /**
-     * 扫描到一个新的设备的监听
-     */
-    private BleInterface.OnScanFindOneNewDeviceListener onScanFindOneNewDeviceListener = new BleInterface.OnScanFindOneNewDeviceListener() {
-        /**
-         * 发现一个新的蓝牙设备时回调此函数
-         *
-         * @param index      当前的设备在设备列表中的位置
-         * @param bleDevice  自定义Ble设备Been类,如果数据内容为空，则说明扫描结果设备列表有数据更新
-         * @param bleDevices 当前扫描到的所有设备列表
-         */
-        @Override
-        public void onScanFindOneNewDevice(int index, @Nullable BleDevice bleDevice, @NonNull ArrayList<BleDevice> bleDevices) {
-            if (bleDevice != null) {
-                BleDeviceWithBoolean bleDeviceWithBoolean = new BleDeviceWithBoolean(bleDevice, false);
-                adapterList.add(bleDeviceWithBoolean);
-                adapter.notifyItemInserted(adapterList.size());
-            } else {
-                BleDeviceWithBoolean bleDeviceWithBoolean = adapterList.get(index);
-                bleDeviceWithBoolean.setBleDevice(bleDevices.get(index));
-                adapter.notifyItemChanged(index);
-            }
-        }
-    };
-
-    /**
-     * 扫描完成时进行的回调
-     */
-    private BleInterface.OnScanCompleteListener onScanCompleteListener = new BleInterface.OnScanCompleteListener() {
-        @Override
-        public void onScanComplete() {
-            button.setText(R.string.start_scan);
-            buttonClickCount++;
-        }
-    };
-
-    /**
      * 点击事件的监听
      */
     private View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -143,6 +104,41 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
                 default:
                     break;
             }
+        }
+    };
+    private OnBleScanStateChangedListener onBleScanStateChangedListener = new OnBleScanStateChangedListener() {
+        @Override
+        public void onScanFindOneDevice(BleDevice bleDevice) {
+
+        }
+
+        @Override
+        public void onScanFindOneNewDevice(int index, @Nullable BleDevice bleDevice, @NonNull ArrayList<BleDevice> bleDevices) {
+            if (bleDevice != null) {
+                BleDeviceWithBoolean bleDeviceWithBoolean = new BleDeviceWithBoolean(bleDevice, false);
+                adapterList.add(bleDeviceWithBoolean);
+                adapter.notifyItemInserted(adapterList.size());
+            } else {
+                BleDeviceWithBoolean bleDeviceWithBoolean = adapterList.get(index);
+                bleDeviceWithBoolean.setBleDevice(bleDevices.get(index));
+                adapter.notifyItemChanged(index);
+            }
+        }
+
+        @Override
+        public void onScanComplete() {
+            button.setText(R.string.start_scan);
+            buttonClickCount++;
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+
         }
     };
 
@@ -258,7 +254,6 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
         super.onDestroy();
         //关闭扫描器
         bleScanner.close();
-        scanResults = null;
         adapterList = null;
         button = null;
         adapter = null;
@@ -289,7 +284,10 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
         if (bleScanner == null) {
             return;
         }
-        bleScanner.init(scanResults, onScanFindOneNewDeviceListener, 20000, false, onScanCompleteListener);
+        bleScanner.init();
+        bleScanner.setOnBleScanStateChangedListener(onBleScanStateChangedListener);
+        bleScanner.setScanPeriod(20000);
+        bleScanner.setAutoStartNextScan(false);
     }
 
     /**

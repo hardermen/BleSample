@@ -1,40 +1,51 @@
 package com.jackiepenghe.blelibrary;
 
 import android.os.Binder;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 /**
- * BluetoothLeService绑定成功后返回的IBinder对象,通过这个对象的方法来获取当前的BluetoothLeService服务
- * Created by alm on 17-6-5.
+ * Binder for BLE connection service
+ *
+ * @author jackie
  */
+final class BluetoothLeServiceBinder extends Binder {
 
-class BluetoothLeServiceBinder extends Binder {
-
-    /*------------------------成员变量----------------------------*/
+    /*-----------------------------------field variables-----------------------------------*/
 
     /**
-     * BLE连接服务
+     * BLE connection service
      */
+    @Nullable
     private BluetoothLeService bluetoothLeService;
 
-    /*------------------------构造函数----------------------------*/
+    /*-----------------------------------Constructor-----------------------------------*/
 
     /**
-     * 构造器
+     * Constructor
      *
-     * @param bluetoothLeService BLE连接服务
+     * @param bluetoothLeService BLE connection service
      */
-    BluetoothLeServiceBinder(BluetoothLeService bluetoothLeService) {
+    BluetoothLeServiceBinder(@NonNull BluetoothLeService bluetoothLeService) {
         this.bluetoothLeService = bluetoothLeService;
     }
 
-    /*------------------------库内函数----------------------------*/
+    /*-----------------------------------Package private method-----------------------------------*/
 
     /**
-     * 获取BLE连接服务
+     * get BLE connection service
      *
-     * @return BLE连接服务
+     * @return BLE connection service
      */
+    @Nullable
     BluetoothLeService getBluetoothLeService() {
         return bluetoothLeService;
+    }
+
+    /**
+     * release data
+     */
+    void releaseData(){
+        bluetoothLeService = null;
     }
 }

@@ -1,5 +1,8 @@
 package cn.almsound.www.myblesample.activity.bleadvertisement;
 
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattServer;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.os.Build;
@@ -7,13 +10,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
-import com.jackiepenghe.baselibrary.Tool;
-import com.jackiepenghe.blelibrary.DefaultAdvertiseCallback;
+import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.blelibrary.BleAdvertiser;
 import com.jackiepenghe.blelibrary.BleManager;
+import com.jackiepenghe.blelibrary.enums.BleAdvertiseMode;
+
+import java.util.UUID;
 
 import cn.almsound.www.myblesample.R;
+import cn.almsound.www.myblesample.callback.DefaultOnBleAdvertiseStateChangedListener;
+import cn.almsound.www.myblesample.callback.DefaultOnConnectedByOtherDevicesListener;
 
 /**
  * @author jacke
@@ -33,9 +40,7 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
      */
     private TextView broadcastStatusTv;
 
-    private DefaultAdvertiseCallback advertiseCallback = new DefaultAdvertiseCallback() {
-
-
+    private DefaultOnBleAdvertiseStateChangedListener defaultOnBleAdvertiseStateChangedListener = new DefaultOnBleAdvertiseStateChangedListener() {
         /**
          * Callback triggered in response to {@link BluetoothLeAdvertiser#startAdvertising} indicating
          * that the advertising has been started successfully.
@@ -45,6 +50,7 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
          */
         @Override
         public void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect) {
+            super.onBroadCastStartSuccess(settingsInEffect);
             broadcastStatusTv.setText(R.string.open_broadcast_success);
         }
 
@@ -56,15 +62,22 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
          */
         @Override
         public void onBroadCastStartFailure(int errorCode) {
+            super.onBroadCastStartFailure(errorCode);
             broadcastStatusTv.setText(R.string.open_broadcast_failed);
             Tool.warnOut(TAG, "errorCode = " + errorCode);
         }
 
+        /**
+         * 如果设置了超时时间，在超时结束后，会执行此回调
+         */
         @Override
         public void onBroadCastStopped() {
+            super.onBroadCastStopped();
             broadcastStatusTv.setText(R.string.broadcast_stopped);
         }
     };
+
+    private DefaultOnConnectedByOtherDevicesListener defaultOnBluetoothGattServerCallbackListener = new DefaultOnConnectedByOtherDevicesListener();
 
     /**
      * 标题栏的返回按钮被按下的时候回调此函数
@@ -81,27 +94,34 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
     protected void doBeforeSetLayout() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             bleAdvertiser = BleManager.getBleAdvertiserInstance();
-            if (bleAdvertiser != null) {
-                //默认的初始化
-//            bleAdvertiser.init()
-                AdvertiseSettings advertiseSettings = new AdvertiseSettings.Builder()
-                        .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-                        .setConnectable(false)
-                        .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-                        .setTimeout(6000)
-                        .build();
-                //带回调的初始化
-                if (!bleAdvertiser.init(advertiseSettings, advertiseCallback)) {
-                    Tool.warnOut(TAG, "初始化失败");
-                } else {
-                    Tool.warnOut(TAG, "初始化成功");
+            if (bleAdvertiser == null) {
+                return;
+            }
+            bleAdvertiser.setAdvertiseDataIncludeDeviceName(false);
+            bleAdvertiser.setAdvertiseDataIncludeTxPowerLevel(false);
+            bleAdvertiser.setBleAdvertiseMode(BleAdvertiseMode.LOW_LATENCY);
+            bleAdvertiser.setConnectable(false);
+            bleAdvertiser.setOnBleAdvertiseStateChangedListener(defaultOnBleAdvertiseStateChangedListener);
+            bleAdvertiser.setTimeOut(0);
+            //初始化
+            if (!bleAdvertiser.init()) {
+                Tool.warnOut(TAG, "初始化失败");
+            } else {
+                Tool.warnOut(TAG, "初始化成功");
+                bleAdvertiser.setOnBluetoothGattServerCallbackListener(defaultOnBluetoothGattServerCallbackListener);
+                BluetoothGattServer bluetoothGattServer = bleAdvertiser.getBluetoothGattServer();
+                if (bluetoothGattServer != null) {
+                    BluetoothGattService bluetoothGattService1 = new BluetoothGattService(UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb"), BluetoothGattService.SERVICE_TYPE_PRIMARY);
+                    BluetoothGattCharacteristic bluetoothGattCharacteristic = new BluetoothGattCharacteristic(UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb"), BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_NOTIFY, BluetoothGattCharacteristic.PERMISSION_READ | BluetoothGattCharacteristic.PERMISSION_WRITE);
+                    bluetoothGattService1.addCharacteristic(bluetoothGattCharacteristic);
+                    bluetoothGattServer.addService(bluetoothGattService1);
                 }
             }
         } else {
             Tool.toastL(BleAdvertiseActivity.this, "系统版本过低，不支持蓝牙广播");
         }
-        Tool.warnOut(TAG, "bleAdvertiser = " + bleAdvertiser);
     }
+
 
     /**
      * 设置布局
@@ -159,8 +179,10 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
     @Override
     protected void doAfterAll() {
         if (bleAdvertiser != null) {
-            boolean b;
-            b = bleAdvertiser.startAdvertising();
+            boolean b = false;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                b = bleAdvertiser.startAdvertising();
+            }
             if (b) {
                 Tool.warnOut(TAG, "广播请求发起成功（是否真的成功，在init的advertiseCallback回调中查看）");
             } else {

@@ -2,9 +2,10 @@ package cn.almsound.www.myblesample;
 
 import android.app.Application;
 
-import com.jackiepenghe.baselibrary.FileUtil;
-import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.baselibrary.files.FileUtil;
+import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.blelibrary.BleManager;
+import com.jackiepenghe.blelibrary.DebugUtil;
 
 
 /**
@@ -34,6 +35,6 @@ public class MyApplication extends Application {
         //初始化文件工具类
         FileUtil.init(this.getApplicationContext());
         BleManager.init(MyApplication.this);
-        BleManager.setDebugFlag(true);
+        DebugUtil.setDebugFlag(true);
     }
 }

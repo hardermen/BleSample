@@ -4,6 +4,7 @@ import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
@@ -12,8 +13,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
+
+import com.jackiepenghe.blelibrary.interfaces.OnBleCharacteristicWriteListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBleConnectStateChangedListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBleDescriptorWriteListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBleReceiveNotificationListener;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -21,48 +28,52 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * BLE连接的服务
+ * BLE Connection service
  *
- * @author alm
+ * @author jackie
  */
 
-public class BluetoothLeService extends Service {
+public final class BluetoothLeService extends Service {
 
-    /*------------------------静态常量----------------------------*/
+    /*-----------------------------------static constant-----------------------------------*/
 
     /**
      * TAG
      */
     private static final String TAG = BluetoothLeService.class.getSimpleName();
 
-    /*------------------------成员变量----------------------------*/
+    /*-----------------------------------field variables-----------------------------------*/
 
     /**
-     * Binder对象
+     * Binder instance
      */
     private BluetoothLeServiceBinder bluetoothLeServiceBinder;
 
     /**
-     * 蓝牙连接的回调
+     * Required callback for Bluetooth GATT connection
      */
-    private BleBluetoothGattCallback bleBluetoothGattCallback;
+    private BleBluetoothGattCallback bleBluetoothGattCallback = new BleBluetoothGattCallback();
+
 
     /**
-     * 蓝牙管理器
+     * Bluetooth Manager
      */
+    @Nullable
     private BluetoothManager bluetoothManager;
 
     /**
-     * 蓝牙适配器
+     * Bluetooth Adapter
      */
+    @Nullable
     private BluetoothAdapter bluetoothAdapter;
 
     /**
-     * 蓝牙GATT服务
+     * Bluetooth Gatt
      */
+    @Nullable
     private BluetoothGatt bluetoothGatt;
 
-    /*------------------------重写父类函数----------------------------*/
+    /*-----------------------------------Override Method-----------------------------------*/
 
     /**
      * Called by the system when the service is first created.  Do not call this method directly.
@@ -70,7 +81,6 @@ public class BluetoothLeService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        bleBluetoothGattCallback = new BleBluetoothGattCallback(BluetoothLeService.this);
         bluetoothLeServiceBinder = new BluetoothLeServiceBinder(BluetoothLeService.this);
     }
 
@@ -83,6 +93,7 @@ public class BluetoothLeService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        bluetoothLeServiceBinder.releaseData();
         bluetoothLeServiceBinder = null;
         bleBluetoothGattCallback = null;
         bluetoothManager = null;
@@ -90,7 +101,7 @@ public class BluetoothLeService extends Service {
         bluetoothGatt = null;
     }
 
-    /*------------------------实现父类函数----------------------------*/
+    /*-----------------------------------Implementation Method-----------------------------------*/
 
     /**
      * Return the communication channel to the service.  May return null if
@@ -115,82 +126,93 @@ public class BluetoothLeService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Tool.warnOut(TAG, "蓝牙连接服务绑定成功");
+        DebugUtil.warnOut(TAG, "BLE connect service get successful");
         return bluetoothLeServiceBinder;
     }
 
-    /*------------------------库内函数----------------------------*/
+    /*-----------------------------------getter-----------------------------------*/
 
     /**
-     * 初始化蓝牙相关的对象
+     * get Bluetooth Adapter
      *
-     * @return true表示成功
+     * @return Bluetooth Adapter
+     */
+    @Nullable
+    BluetoothAdapter getBluetoothAdapter() {
+        return bluetoothAdapter;
+    }
+
+
+    /*-----------------------------------package private Method-----------------------------------*/
+
+    /**
+     * initialization
+     *
+     * @return true means initialization successful
      */
     boolean initialize() {
-        //使用单例模式获取蓝牙管理器
+
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
 
         if (bluetoothManager == null) {
-            Tool.warnOut("BluetoothLeService", "get bluetoothManager failed!");
+            DebugUtil.warnOut(TAG, "get bluetoothManager failed!");
             return false;
         }
 
         bluetoothAdapter = bluetoothManager.getAdapter();
         if (bluetoothAdapter == null) {
-            Tool.warnOut("BluetoothLeService", "get bluetoothAdapter failed!");
+            DebugUtil.warnOut(TAG, "get bluetoothAdapter failed!");
             return false;
         }
         return true;
     }
 
     /**
-     * 发起连接远端设备的请求
+     * Initiate a request to connect to a remote device
      *
-     * @param address       远端设备地址
-     * @param autoReconnect 自动重连标志
-     * @return true表示成功
+     * @param address       device address
+     * @param autoReconnect Whether to automatically reconnect
+     * @return true means request successful
      */
-    boolean connect(String address, boolean autoReconnect) {
-        if (bluetoothAdapter == null || address == null) {
+    boolean connect(@NonNull String address, boolean autoReconnect) {
+        if (bluetoothAdapter == null) {
             return false;
         }
-
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            return false;
+        }
         BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(address);
         if (remoteDevice == null) {
             return false;
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            bluetoothGatt = remoteDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback);
-        } else {
-            bluetoothGatt = remoteDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
-        }
-
-        return autoReconnect || bluetoothGatt != null && bluetoothGatt.connect();
-
+        return connect(remoteDevice, autoReconnect);
     }
 
     /**
-     * 发起连接远端设备的请求
+     * Initiate a request to connect to a remote device
      *
-     * @param bluetoothDevice 远端设备地址
-     * @param autoReconnect   自动重连标志
-     * @return true表示成功
+     * @param bluetoothDevice remote device
+     * @param autoReconnect   Whether to automatically reconnect
+     * @return true means request successful.
      */
-    boolean connect(BluetoothDevice bluetoothDevice, boolean autoReconnect) {
-        if (bluetoothAdapter == null || bluetoothDevice == null) {
+    boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect) {
+        if (bluetoothAdapter == null) {
             return false;
         }
 
-        bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback);
-        return bluetoothGatt != null && (autoReconnect || bluetoothGatt.connect());
-
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback);
+        } else {
+            bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
+        }
+        return autoReconnect || bluetoothGatt != null && bluetoothGatt.connect();
     }
 
     /**
-     * 发起断开连接的请求
+     * Initiate a disconnect request
      *
-     * @return true表示成功
+     * @return true means request successful.
      */
     boolean disconnect() {
         if (bluetoothGatt == null) {
@@ -201,15 +223,14 @@ public class BluetoothLeService extends Service {
     }
 
     /**
-     * 关闭GATT服务
+     * closeGatt GATT connection
      *
-     * @return true表示成功
+     * @return true means close Gatt successful
      */
-    boolean close() {
+    boolean closeGatt() {
         if (bluetoothGatt == null) {
             return false;
         }
-
         try {
             bluetoothGatt.close();
             return true;
@@ -220,50 +241,53 @@ public class BluetoothLeService extends Service {
     }
 
     /**
-     * 写入数据到蓝牙远端设备
+     * write data to remote device.Result for request will be trigger callback {@link OnBleConnectStateChangedListener#writeCharacteristicData(BluetoothGattCharacteristic, byte[])}
      *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @param values             数据
-     * @return true表示成功
+     * @param serviceUUID        service UUID
+     * @param characteristicUUID characteristic UUID
+     * @param data               data
+     * @return true means request successful
      */
-    boolean writeData(String serviceUUID, String characteristicUUID, byte[] values) {
-        Tool.warnOut(TAG, "bluetoothGatt == " + bluetoothGatt);
-        if (serviceUUID == null || characteristicUUID == null || values == null || bluetoothGatt == null) {
+    boolean writeData(@NonNull String serviceUUID, @NonNull String characteristicUUID, @NonNull byte[] data) {
+        DebugUtil.warnOut(TAG, "bluetoothGatt == " + bluetoothGatt);
+        if (bluetoothGatt == null) {
             return false;
         }
         BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(serviceUUID));
-        Tool.warnOut(TAG, "service from uuid = " + service);
+        DebugUtil.warnOut(TAG, "service from uuid = " + service);
         if (service == null) {
             return false;
         }
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        Tool.warnOut(TAG, "characteristic from uuid = " + characteristic);
+
+        DebugUtil.warnOut(TAG, "characteristic from uuid = " + characteristic);
         if (characteristic == null) {
             return false;
         }
 
-        if (!characteristic.setValue(values)) {
-            Tool.warnOut(TAG, "characteristic setValue failed");
+        if (!canWrite(characteristic)) {
             return false;
         }
-        Tool.warnOut(TAG, "characteristic setValue success");
 
-        Tool.warnOut(TAG, "values = " + Tool.bytesToHexStr(values));
+        if (!characteristic.setValue(data)) {
+            DebugUtil.warnOut(TAG, "characteristic setValue failed");
+            return false;
+        }
+        DebugUtil.warnOut(TAG, "characteristic setValue success");
+
+        DebugUtil.warnOut(TAG, "values = " + ConversionUtil.bytesToHexStr(data));
         return bluetoothGatt.writeCharacteristic(characteristic);
     }
 
     /**
-     * 从蓝牙远端设备获取数据
+     * read data from remote device.Result for request will be trigger callback {@link OnBleConnectStateChangedListener#readCharacteristicData(BluetoothGattCharacteristic, byte[])}
      *
-     * @param serviceUUID        服务UUID
-     *                           *
-     * @param characteristicUUID 特征UUID
-     *                           *
-     * @return true表示成功
+     * @param serviceUUID        service UUID
+     * @param characteristicUUID characteristic UUID
+     * @return true means request successful
      */
-    boolean readData(String serviceUUID, String characteristicUUID) {
-        if (serviceUUID == null || characteristicUUID == null || bluetoothGatt == null) {
+    boolean readData(@NonNull String serviceUUID, @NonNull String characteristicUUID) {
+        if (bluetoothGatt == null) {
             return false;
         }
         BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(serviceUUID));
@@ -277,20 +301,22 @@ public class BluetoothLeService extends Service {
         if (characteristic == null) {
             return false;
         }
-
+        if (!canRead(characteristic)) {
+            return false;
+        }
         return bluetoothGatt.readCharacteristic(characteristic);
     }
 
     /**
-     * 打开或者关闭通知
+     * enable or disable notification
      *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @param enable             是否打开通知
-     * @return true表示执行成功
+     * @param serviceUUID        service UUID
+     * @param characteristicUUID characteristic UUID
+     * @param enable             true means enable notification,false means disable notification
+     * @return true means successful
      */
-    boolean enableNotification(String serviceUUID, String characteristicUUID, boolean enable) {
-        if (serviceUUID == null || characteristicUUID == null) {
+    boolean enableNotification(@NonNull String serviceUUID, @NonNull String characteristicUUID, boolean enable) {
+        if (bluetoothGatt == null) {
             return false;
         }
         BluetoothGattService bluetoothGattService = bluetoothGatt.getService(UUID.fromString(serviceUUID));
@@ -311,20 +337,23 @@ public class BluetoothLeService extends Service {
     }
 
     /**
-     * 获取设备信号强度
+     * get remote device RSSI.Result for request will be trigger callback {@link OnBleConnectStateChangedListener#readRemoteRssi(int)}
      *
-     * @return true表示成功
+     * @return true means request successful
      */
     boolean getRssi() {
+        if (bluetoothGatt == null) {
+            return false;
+        }
         return bluetoothGatt.readRemoteRssi();
     }
 
     /**
-     * 刷新蓝牙缓存
+     * refresh GATT cache.
+     * Notice:Some Custom system return true but not take effect.There is no solution so far.
      *
-     * @return true表示成功
+     * @return true means successful.
      */
-    @SuppressWarnings("TryWithIdenticalCatches")
     boolean refreshGattCache() {
         if (bluetoothGatt == null) {
             return false;
@@ -333,9 +362,7 @@ public class BluetoothLeService extends Service {
         try {
             //noinspection JavaReflectionMemberAccess
             Method refresh = bluetoothGatt.getClass().getMethod("refresh");
-            if (refresh != null) {
-                return (boolean) refresh.invoke(bluetoothGatt);
-            }
+            return (boolean) refresh.invoke(bluetoothGatt);
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
@@ -343,61 +370,282 @@ public class BluetoothLeService extends Service {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
-
         return false;
     }
 
     /**
-     * 获取服务列表
+     * get remote service list
      *
-     * @return 服务列表
+     * @return service Bluetooth Gatt list
      */
+    @Nullable
     List<BluetoothGattService> getServices() {
-        return bleBluetoothGattCallback.getServices();
+        if (bluetoothGatt == null) {
+            return null;
+        }
+        return bluetoothGatt.getServices();
     }
 
     /**
-     * 根据指定的UUID获取服务
+     * get remote device service by UUID
      *
-     * @param uuid 服务的UUID
-     * @return BluetoothGattService
+     * @param uuid UUID
+     * @return Bluetooth Gatt Service
      */
+    @Nullable
     BluetoothGattService getService(UUID uuid) {
-        if (bleBluetoothGattCallback == null) {
+        if (bluetoothGatt == null) {
             return null;
         }
-        return bleBluetoothGattCallback.getService(uuid);
+        return bluetoothGatt.getService(uuid);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    /**
+     * request change mtu value.Result of request will be trigger callback{@link OnBleConnectStateChangedListener#mtuChanged(int)}
+     *
+     * @param mtu mtu value
+     * @return true means request send successful.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     boolean requestMtu(int mtu) {
         return bluetoothGatt != null && bluetoothGatt.requestMtu(mtu);
     }
 
     /**
-     * 获取当前连接的GATT
+     * Get BluetoothGatt instance
      *
-     * @return BluetoothGatt
+     * @return BluetoothGatt instance
      */
+    @Nullable
     BluetoothGatt getBluetoothGatt() {
         return bluetoothGatt;
     }
 
     /**
-     * 当前设备的连接状态
+     * Check for support notifications
      *
-     * @return 是否已经连接
+     * @param characteristic BluetoothGattCharacteristic
+     * @return true means support
+     */
+    boolean canNotify(@NonNull BluetoothGattCharacteristic characteristic) {
+        int properties = characteristic.getProperties();
+        return (properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0;
+    }
+
+    /**
+     * Check for support read
+     *
+     * @param characteristic BluetoothGattCharacteristic
+     * @return true means support
+     */
+    boolean canRead(@NonNull BluetoothGattCharacteristic characteristic) {
+        int properties = characteristic.getProperties();
+        return (properties & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
+    }
+
+    /**
+     * Check for support write(Signed)
+     *
+     * @param characteristic BluetoothGattCharacteristic
+     * @return true means support
+     */
+    boolean canSignedWrite(@NonNull BluetoothGattCharacteristic characteristic) {
+        int properties = characteristic.getProperties();
+        return (properties & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) != 0;
+    }
+
+    /**
+     * Check for support write
+     *
+     * @param characteristic BluetoothGattCharacteristic
+     * @return true means support
+     */
+    boolean canWrite(@NonNull BluetoothGattCharacteristic characteristic) {
+        int properties = characteristic.getProperties();
+        return (properties & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
+    }
+
+    /**
+     * Check for support write(no response)
+     *
+     * @param characteristic BluetoothGattCharacteristic
+     * @return true means support
+     */
+    boolean canWriteNoResponse(@NonNull BluetoothGattCharacteristic characteristic) {
+
+        int properties = characteristic.getProperties();
+        return (properties & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0;
+    }
+
+    /**
+     * get connection status
+     *
+     * @return true means remote device is connected
      */
     boolean isConnected() {
         return bluetoothGatt != null && bleBluetoothGattCallback.isConnected();
     }
 
     /**
-     * 设备是否已经完成发现服务
+     * get service discovered status
      *
-     * @return 设备是否已经完成发现服务
+     * @return true means remote device is discovered
      */
     boolean isServiceDiscovered() {
         return bluetoothGatt != null && bleBluetoothGattCallback.isServiceDiscovered();
+    }
+
+    /**
+     * add a callback triggered when descriptor write successful
+     *
+     * @param onBleDescriptorWriteListener callback triggered when descriptor write successful
+     * @return true means successful
+     */
+    boolean addOnBleDescriptorWriteListener(@NonNull OnBleDescriptorWriteListener onBleDescriptorWriteListener) {
+        return bleBluetoothGattCallback.addOnBleDescriptorWriteListener(onBleDescriptorWriteListener);
+    }
+
+    /**
+     * remove a callback triggered when descriptor write successful
+     *
+     * @param onBleDescriptorWriteListener callback triggered when descriptor write successful
+     * @return true means successful
+     */
+    boolean removeOnBleDescriptorWriteListener(@NonNull OnBleDescriptorWriteListener onBleDescriptorWriteListener) {
+        return bleBluetoothGattCallback.removeOnBleDescriptorWriteListener(onBleDescriptorWriteListener);
+    }
+
+    /**
+     * add a callback triggered when received notification data
+     *
+     * @param onBleReceiveNotificationListener callback triggered when descriptor write successful
+     * @return true means successful
+     */
+    boolean addOnBleReceiveNotificationListener(@NonNull OnBleReceiveNotificationListener onBleReceiveNotificationListener) {
+        return bleBluetoothGattCallback.addOnBleReceiveNotificationListener(onBleReceiveNotificationListener);
+    }
+
+    /**
+     * remove a callback triggered when received notification data
+     *
+     * @param onBleReceiveNotificationListener callback triggered when received notification data
+     * @return true means successful
+     */
+    boolean removeOnBleReceiveNotificationListener(@NonNull OnBleReceiveNotificationListener onBleReceiveNotificationListener) {
+        return bleBluetoothGattCallback.removeOnBleReceiveNotificationListener(onBleReceiveNotificationListener);
+    }
+
+    /**
+     * add a callback triggered when gatt characteristic write data successful
+     *
+     * @param onBleCharacteristicWriteListener callback triggered when gatt characteristic write data successful
+     * @return true means successful
+     */
+    boolean addOnBleCharacteristicWriteListener(@NonNull OnBleCharacteristicWriteListener onBleCharacteristicWriteListener) {
+        return bleBluetoothGattCallback.addOnBleCharacteristicWriteListener(onBleCharacteristicWriteListener);
+    }
+
+    /**
+     * remove a callback triggered when gatt characteristic write data successful
+     *
+     * @param onBleCharacteristicWriteListener callback triggered when gatt characteristic write data successful
+     * @return true means successful
+     */
+    boolean removeOnBleCharacteristicWriteListener(@NonNull OnBleCharacteristicWriteListener onBleCharacteristicWriteListener) {
+        return bleBluetoothGattCallback.removeOnBleCharacteristicWriteListener(onBleCharacteristicWriteListener);
+    }
+
+    /**
+     * set BLE device connect status changed listener
+     *
+     * @param onBleConnectStateChangedListener BLE device connect status changed listener
+     */
+    void setOnBleConnectStateChangedListener(@Nullable OnBleConnectStateChangedListener onBleConnectStateChangedListener) {
+        bleBluetoothGattCallback.setOnBleConnectStateChangedListener(onBleConnectStateChangedListener);
+
+    }
+
+    /**
+     * Initiates a reliable write transaction for a given remote device.
+     *
+     * <p>Once a reliable write transaction has been initiated, all calls
+     * to {@link BluetoothGatt#writeCharacteristic} are sent to the remote device for
+     * verification and queued up for atomic execution. The application will
+     * receive an {@link BluetoothGattCallback#onCharacteristicWrite} callback
+     * in response to every {@link BluetoothGatt#writeCharacteristic} call and is responsible
+     * for verifying if the value has been transmitted accurately.
+     *
+     * <p>After all characteristics have been queued up and verified,
+     * {@link #executeReliableWrite} will execute all writes. If a characteristic
+     * was not written correctly, calling {@link #abortReliableWrite} will
+     * cancel the current transaction without commiting any values on the
+     * remote device.
+     *
+     * <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
+     *
+     * @return true, if the reliable write transaction has been initiated
+     */
+    boolean beginReliableWrite() {
+        if (bluetoothGatt == null) {
+            return false;
+        }
+        return bluetoothGatt.beginReliableWrite();
+    }
+
+    /**
+     * Cancels a reliable write transaction for a given device.
+     *
+     * <p>Calling this function will discard all queued characteristic write
+     * operations for a given remote device.
+     *
+     * <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    boolean abortReliableWrite() {
+        if (bluetoothGatt == null) {
+            return false;
+        }
+        bluetoothGatt.abortReliableWrite();
+        return true;
+    }
+
+    /**
+     * Discovers services offered by a remote device as well as their
+     * characteristics and descriptors.
+     *
+     * <p>This is an asynchronous operation. Once service discovery is completed,
+     * the {@link BluetoothGattCallback#onServicesDiscovered} callback is
+     * triggered. If the discovery was successful, the remote services can be
+     * retrieved using the {@link #getServices} function.
+     *
+     * <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
+     *
+     * @return true, if the remote service discovery has been started
+     */
+    boolean discoverServices() {
+        if (bluetoothGatt == null) {
+            return false;
+        }
+        return bluetoothGatt.discoverServices();
+    }
+
+    /**
+     * Executes a reliable write transaction for a given remote device.
+     *
+     * <p>This function will commit all queued up characteristic write
+     * operations for a given remote device.
+     *
+     * <p>A {@link BluetoothGattCallback#onReliableWriteCompleted} callback is
+     * invoked to indicate whether the transaction has been executed correctly.
+     *
+     * <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
+     *
+     * @return true, if the request to execute the transaction has been sent
+     */
+    boolean executeReliableWrite() {
+        if (bluetoothGatt == null) {
+            return false;
+        }
+        return bluetoothGatt.executeReliableWrite();
     }
 }

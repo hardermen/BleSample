@@ -2,7 +2,7 @@ package cn.almsound.www.myblesample.guid;
 
 import android.content.Intent;
 
-import com.jackiepenghe.baselibrary.BaseSplashActivity;
+import com.jackiepenghe.baselibrary.activity.BaseSplashActivity;
 
 /**
  *

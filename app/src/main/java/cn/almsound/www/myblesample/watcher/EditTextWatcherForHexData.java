@@ -5,7 +5,7 @@ import android.text.Spannable;
 import android.text.TextWatcher;
 import android.widget.EditText;
 
-import com.jackiepenghe.baselibrary.Tool;
+import com.jackiepenghe.baselibrary.tools.Tool;
 
 /**
  * @author jacke

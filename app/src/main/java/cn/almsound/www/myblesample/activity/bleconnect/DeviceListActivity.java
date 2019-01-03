@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -24,14 +25,16 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
-import com.jackiepenghe.baselibrary.BaseAppCompatActivity;
-import com.jackiepenghe.baselibrary.DefaultItemDecoration;
-import com.jackiepenghe.baselibrary.Tool;
-import com.jackiepenghe.blelibrary.AdRecord;
+import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.tools.Tool;
+import com.jackiepenghe.baselibrary.view.utils.DefaultItemDecoration;
 import com.jackiepenghe.blelibrary.BleDevice;
-import com.jackiepenghe.blelibrary.BleInterface;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleScanner;
+import com.jackiepenghe.blelibrary.enums.BleMatchMode;
+import com.jackiepenghe.blelibrary.enums.BleScanMode;
+import com.jackiepenghe.blelibrary.interfaces.OnBleScanStateChangedListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBluetoothStateChangedListener;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -61,10 +64,6 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      */
     private static final int REQUEST_CODE_ASK_ACCESS_COARSE_LOCATION = 1;
     /**
-     * 广播包数据的固定长度
-     */
-    private static final int BROADCAST_PACKAGE_LENGTH = 31;
-    /**
      * 要过滤的设备名
      */
     private String filterName;
@@ -93,20 +92,34 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         }
     };
 
+
     /**
-     * 扫描结束后会触发此回调
+     * 点击事件的监听
      */
-    private BleInterface.OnScanCompleteListener onScanCompleteListener = new BleInterface.OnScanCompleteListener() {
+    private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
-        public void onScanComplete() {
-            button.setText(R.string.start_scan);
-            clickCount++;
+        public void onClick(View view) {
+            switch (view.getId()) {
+                case R.id.button:
+                    checkAPIVersion();
+                    break;
+                default:
+                    break;
+            }
         }
     };
     /**
-     * 在扫描过程中发现一个设备就会触发一次此回调，不论该设备是否被发现过。在安卓5.0之前此回调效果完全等同于BleInterface.OnScanFindOneNewDeviceListener
+     * 列表子选项被长按时进行的回调
      */
-    private BleInterface.OnScanFindOneDeviceListener onScanFindOneDeviceListener = new BleInterface.OnScanFindOneDeviceListener() {
+    private BaseQuickAdapter.OnItemLongClickListener onItemLongClickListener = new BaseQuickAdapter.OnItemLongClickListener() {
+        @Override
+        public boolean onItemLongClick(BaseQuickAdapter adapter, View view, int position) {
+            BleDevice bleDevice = adapterList.get(position);
+            showScanRecordDataDialog(bleDevice);
+            return true;
+        }
+    };
+    private OnBleScanStateChangedListener onBleScanStateChangedListener = new OnBleScanStateChangedListener() {
         @Override
         public void onScanFindOneDevice(BleDevice bleDevice) {
             String deviceName = bleDevice.getDeviceName();
@@ -136,29 +149,18 @@ public class DeviceListActivity extends BaseAppCompatActivity {
                 adapter.notifyItemChanged(indexOf);
             }
         }
-    };
 
-
-    /**
-     * 点击事件的监听
-     */
-    private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
-        public void onClick(View view) {
-            switch (view.getId()) {
-                case R.id.button:
-                    checkAPIVersion();
-                    break;
-                default:
-                    break;
-            }
-        }
-    };
+        public void onScanFindOneNewDevice(int index, @Nullable BleDevice bleDevice, @NonNull ArrayList<BleDevice> bleDevices) {
 
-    /**
-     * 安卓5.0以上的API才拥有的接口
-     */
-    private BleInterface.On21ScanCallback on21ScanCallback = new BleInterface.On21ScanCallback() {
+        }
+
+        @Override
+        public void onScanComplete() {
+            button.setText(R.string.start_scan);
+            clickCount++;
+        }
+
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
             Tool.warnOut(TAG, "onBatchScanResults");
@@ -176,36 +178,33 @@ public class DeviceListActivity extends BaseAppCompatActivity {
             Tool.warnOut(TAG, "onScanFailed:errorCode = " + errorCode);
         }
     };
-    /**
-     * 列表子选项被长按时进行的回调
-     */
-    private BaseQuickAdapter.OnItemLongClickListener onItemLongClickListener = new BaseQuickAdapter.OnItemLongClickListener() {
+    private OnBluetoothStateChangedListener onBluetoothStateChangedListener = new OnBluetoothStateChangedListener() {
         @Override
-        public boolean onItemLongClick(BaseQuickAdapter adapter, View view, int position) {
-            BleDevice bleDevice = adapterList.get(position);
-            showScanRecordDataDialog(bleDevice);
-            return true;
+        public void onBluetoothEnabling() {
+
         }
-    };
-    /**
-     * 蓝牙的开关状态被改变时进行的回调
-     */
-    private BleInterface.OnBluetoothSwitchChangedListener onBluetoothSwitchChangedListener = new BleInterface.OnBluetoothSwitchChangedListener() {
+
         @Override
-        public void onBluetoothSwitchChanged(boolean switchStatus) {
-            if (!switchStatus) {
-                if (clickCount % TWO != 0) {
-                    clickCount++;
-                    button.setText(R.string.start_scan);
-                }
-            } else {
-                if (clickCount % TWO == 0) {
-                    clickCount++;
-                    button.setText(R.string.stop_scan);
-                    adapterList.clear();
-                    adapter.notifyDataSetChanged();
-                    bleScanner.startScan(true);
-                }
+        public void onBluetoothEnable() {
+            if (clickCount % TWO == 0) {
+                clickCount++;
+                button.setText(R.string.stop_scan);
+                adapterList.clear();
+                adapter.notifyDataSetChanged();
+                bleScanner.startScan(true);
+            }
+        }
+
+        @Override
+        public void onBluetoothDisabling() {
+
+        }
+
+        @Override
+        public void onBluetoothDisable() {
+            if (clickCount % TWO != 0) {
+                clickCount++;
+                button.setText(R.string.start_scan);
             }
         }
     };
@@ -223,6 +222,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doBeforeSetLayout() {
+        BleManager.addOnBluetoothStateChangedListener(onBluetoothStateChangedListener);
         adapterList = new ArrayList<>();
         //初始化BLE扫描器
         initBleScanner();
@@ -371,30 +371,19 @@ public class DeviceListActivity extends BaseAppCompatActivity {
             Tool.toastL(DeviceListActivity.this, R.string.ble_not_supported);
             return;
         }
-        /*
-         * 打开扫描器，并设置相关回调
-         * @param scanResults                  扫描到的设备结果存放列表
-         * @param onScanFindOneNewDeviceListener 发现一个新设备的回调
-         * @param scanPeriod                   扫描持续时间
-         * @param scanContinueFlag             是否在扫描完成后立即进行下一次扫描的标志
-         *                                     为true表示一直扫描，永远不会调用BleInterface.OnScanCompleteListener，
-         *                                     为false，在时间到了之后回调BleInterface.OnScanCompleteListener，然后结束
-         * @param onScanCompleteListener       扫描完成的回调
-         * @return true表示打开成功
-         */
-//        bleScanner.init(scanList, onScanFindOneNewDeviceListener, 10000, false, onScanCompleteListener);；
         bleScanner.init();
         //设置扫描周期，扫描会在自动在一段时间后自动停止
         bleScanner.setScanPeriod(10000);
         //设置是否一直持续扫描，true表示一直扫描，false表示在扫描结束后不再进行扫描
-        bleScanner.setScanContinue(false);
-        //设置其他回调
-        bleScanner.setOnScanFindOneDeviceListener(onScanFindOneDeviceListener);
-        bleScanner.setOnScanCompleteListener(onScanCompleteListener);
-        bleScanner.setOnBluetoothSwitchChangedListener(onBluetoothSwitchChangedListener);
+        bleScanner.setAutoStartNextScan(false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            bleScanner.setOn21ScanCallback(on21ScanCallback);
+            bleScanner.setBleScanMode(BleScanMode.LOW_LATENCY);
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            bleScanner.setBleMatchMode(BleMatchMode.AGGRESSIVE);
+        }
+        //设置相关回调
+        bleScanner.setOnBleScanStateChangedListener(onBleScanStateChangedListener);
     }
 
 

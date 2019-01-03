@@ -7,27 +7,26 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
 
+
 import java.util.HashMap;
 
 /**
- * 多连接时库中默认预设的连接回调
+ * BLE Gatt callback for multiple connections
+ *
  * @author jacke
  */
 
-public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
+public final class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
 
-    /*-------------------------静态常量-------------------------*/
+    /*-----------------------------------static constant-----------------------------------*/
 
     private static final String TAG = BleBluetoothMultiGattCallback.class.getSimpleName();
 
-     /*-------------------------成员变量-------------------------*/
+    /*-----------------------------------field variables-----------------------------------*/
 
-    HashMap<String, BaseConnectCallback> callbackHashMap = new HashMap<>();
+    HashMap<String, BaseBleConnectCallback> callbackHashMap = new HashMap<>();
 
-     /*-------------------------构造函数-------------------------*/
-
-
-     /*-------------------------重写父类函数-------------------------*/
+    /*-----------------------------------override method-----------------------------------*/
 
     /**
      * Callback triggered as result of {@link BluetoothGatt#setPreferredPhy}, or as a result of
@@ -43,23 +42,11 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
      */
     @Override
     public void onPhyUpdate(final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
-        final String gattAddress = gatt.getDevice().getAddress();
-        if (callbackHashMap.containsKey(gattAddress)) {
-
-            final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (BluetoothGatt.GATT_SUCCESS != status) {
-                        baseConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onPhyUpdate", status);
-                    } else {
-                        baseConnectCallback.onPhyUpdate(gatt, txPhy, rxPhy);
-                    }
-                }
-            });
-        }
-
+        String gattAddress = gatt.getDevice().getAddress();
+        BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
+        triggerDevicePhyUpdateCallback(gatt, txPhy, rxPhy, status, baseBleConnectCallback);
     }
+
 
     /**
      * Callback triggered as result of {@link BluetoothGatt#readPhy}
@@ -75,23 +62,12 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
     @Override
     public void onPhyRead(final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
         String gattAddress = gatt.getDevice().getAddress();
-        if (callbackHashMap.containsKey(gattAddress)) {
-            final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (BluetoothGatt.GATT_SUCCESS != status) {
-                        baseConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onPhyRead", status);
-                    } else {
-                        baseConnectCallback.onPhyRead(gatt, txPhy, rxPhy);
-                    }
-                }
-            });
-        }
+        BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
+        triggerDevicePhyReadCallback(gatt, txPhy, rxPhy, status, baseBleConnectCallback);
     }
 
     /**
-     * BaseConnectCallback indicating when GATT client has connected/disconnected to/from a remote
+     * BaseBleConnectCallback indicating when GATT client has connected/disconnected to/from a remote
      * GATT server.
      *
      * @param gatt     GATT client
@@ -104,72 +80,27 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
     @Override
     public void onConnectionStateChange(final BluetoothGatt gatt, int status, int newState) {
 
-        String gattAddress;
-        final BaseConnectCallback baseConnectCallback;
-
-
+        String gattAddress = gatt.getDevice().getAddress();
+        BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
         switch (newState) {
             case BluetoothGatt.STATE_DISCONNECTED:
-                gattAddress = gatt.getDevice().getAddress();
-                if (callbackHashMap.containsKey(gattAddress)) {
-                    baseConnectCallback = callbackHashMap.get(gattAddress);
-                    BleManager.getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            baseConnectCallback.setConnected(false);
-                            baseConnectCallback.onDisConnected(gatt);
-                        }
-                    });
-                }
+                triggerDeviceDisconnectedCallback(gatt, baseBleConnectCallback);
                 break;
             case BluetoothGatt.STATE_CONNECTING:
-                gattAddress = gatt.getDevice().getAddress();
-                if (callbackHashMap.containsKey(gattAddress)) {
-                    baseConnectCallback = callbackHashMap.get(gattAddress);
-                    BleManager.getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            baseConnectCallback.onConnecting(gatt);
-                        }
-                    });
-                }
+                triggerDeviceConnectingCallback(gatt, baseBleConnectCallback);
                 break;
             case BluetoothGatt.STATE_CONNECTED:
-                gattAddress = gatt.getDevice().getAddress();
-                if (callbackHashMap.containsKey(gattAddress)) {
-                    baseConnectCallback = callbackHashMap.get(gattAddress);
-                    if (!gatt.discoverServices()) {
-                        BleManager.getHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                baseConnectCallback.onDiscoverServicesFailed(gatt);
-                            }
-                        });
-                        return;
-                    }
-                    BleManager.getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            baseConnectCallback.setConnected(true);
-                            baseConnectCallback.onConnected(gatt);
-                        }
-                    });
+                triggerDeviceConnectedCallback(gatt, baseBleConnectCallback);
+                if (!gatt.discoverServices()) {
+                    triggerDeviceAutoDiscoverServiceFailedCallback(gatt, baseBleConnectCallback);
                 }
                 break;
             case BluetoothGatt.STATE_DISCONNECTING:
-                gattAddress = gatt.getDevice().getAddress();
-                if (callbackHashMap.containsKey(gattAddress)) {
-                    baseConnectCallback = callbackHashMap.get(gattAddress);
-                    BleManager.getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            baseConnectCallback.onDisconnecting(gatt);
-                        }
-                    });
-                }
+                triggerDeviceDisconnectingCallback(gatt, baseBleConnectCallback);
                 break;
             default:
-                Tool.warnOut(TAG, gatt.getDevice().getAddress() + "other state");
+                triggerDeviceUnknownStateCallback(newState, gatt, baseBleConnectCallback);
+                DebugUtil.warnOut(TAG, gatt.getDevice().getAddress() + "other state");
                 break;
         }
     }
@@ -184,19 +115,8 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
     @Override
     public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
         String gattAddress = gatt.getDevice().getAddress();
-        if (callbackHashMap.containsKey(gattAddress)) {
-            final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (BluetoothGatt.GATT_SUCCESS != status) {
-                        baseConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onServicesDiscovered", status);
-                    } else {
-                        baseConnectCallback.onServicesDiscovered(gatt);
-                    }
-                }
-            });
-        }
+        BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
+        triggerDeviceServiceDiscoveredCallback(gatt, status, baseBleConnectCallback);
     }
 
     /**
@@ -210,25 +130,14 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
     @Override
     public void onCharacteristicRead(final BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, final int status) {
         String gattAddress = gatt.getDevice().getAddress();
-        if (callbackHashMap.containsKey(gattAddress)) {
-            final byte[] values = characteristic.getValue();
-            final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (BluetoothGatt.GATT_SUCCESS != status) {
-                        baseConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onCharacteristicRead", status);
-                    } else {
-                        baseConnectCallback.onCharacteristicRead(gatt, values);
-                    }
-                }
-            });
-        }
+        BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
+        byte[] values = characteristic.getValue();
+        triggerDeviceCharacteristicReadCallback(gatt, characteristic, status, baseBleConnectCallback, values);
     }
 
     /**
      * Callback indicating the result of a characteristic write operation.
-     *
+     * <p>
      * If this callback is invoked while a reliable write transaction is
      * in progress, the value of the characteristic represents the value
      * reported by the remote device. An application should compare this
@@ -243,21 +152,10 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
      */
     @Override
     public void onCharacteristicWrite(final BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, final int status) {
-        String gattAddress = gatt.getDevice().getAddress() + gatt.getDevice().getAddress();
-        if (callbackHashMap.containsKey(gattAddress)) {
-            final byte[] values = characteristic.getValue();
-            final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (BluetoothGatt.GATT_SUCCESS != status) {
-                        baseConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onCharacteristicWrite", status);
-                    } else {
-                        baseConnectCallback.onCharacteristicWrite(gatt, values);
-                    }
-                }
-            });
-        }
+        String gattAddress = gatt.getDevice().getAddress();
+        byte[] values = characteristic.getValue();
+        BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
+        triggerDeviceCharacteristicWriteCallback(gatt, characteristic, status, values, baseBleConnectCallback);
     }
 
     /**
@@ -269,16 +167,9 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
     @Override
     public void onCharacteristicChanged(final BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         String gattAddress = gatt.getDevice().getAddress();
-        if (callbackHashMap.containsKey(gattAddress)) {
-            final byte[] values = characteristic.getValue();
-            final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    baseConnectCallback.onReceivedNotification(gatt, values);
-                }
-            });
-        }
+        BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
+        byte[] values = characteristic.getValue();
+        triggerDeviceCharacteristicChangedCallback(gatt, characteristic, values, baseBleConnectCallback);
     }
 
     /**
@@ -292,20 +183,9 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
     @Override
     public void onDescriptorRead(final BluetoothGatt gatt, BluetoothGattDescriptor descriptor, final int status) {
         String gattAddress = gatt.getDevice().getAddress();
-        if (callbackHashMap.containsKey(gattAddress)) {
-            final byte[] values = descriptor.getValue();
-            final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (BluetoothGatt.GATT_SUCCESS != status) {
-                        baseConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onDescriptorRead", status);
-                    } else {
-                        baseConnectCallback.onDescriptorRead(gatt, values);
-                    }
-                }
-            });
-        }
+        byte[] values = descriptor.getValue();
+        BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
+        triggerDeviceDescriptorReadCallback(gatt, descriptor, status, values, baseBleConnectCallback);
     }
 
     /**
@@ -320,20 +200,9 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
     @Override
     public void onDescriptorWrite(final BluetoothGatt gatt, BluetoothGattDescriptor descriptor, final int status) {
         String gattAddress = gatt.getDevice().getAddress();
-        if (callbackHashMap.containsKey(gattAddress)) {
-            final byte[] values = descriptor.getValue();
-            final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (BluetoothGatt.GATT_SUCCESS != status) {
-                        baseConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onDescriptorWrite", status);
-                    } else {
-                        baseConnectCallback.onDescriptorWrite(gatt, values);
-                    }
-                }
-            });
-        }
+        byte[] values = descriptor.getValue();
+        BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
+        triggerDeviceDescriptorWriteCallback(gatt, descriptor, status, values, baseBleConnectCallback);
     }
 
     /**
@@ -345,19 +214,8 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
     @Override
     public void onReliableWriteCompleted(final BluetoothGatt gatt, final int status) {
         String gattAddress = gatt.getDevice().getAddress();
-        if (callbackHashMap.containsKey(gattAddress)) {
-            final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (BluetoothGatt.GATT_SUCCESS != status) {
-                        baseConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onReliableWriteCompleted", status);
-                    } else {
-                        baseConnectCallback.onReliableWriteCompleted(gatt);
-                    }
-                }
-            });
-        }
+        BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
+        triggerDeviceReliableWriteCompletedCallback(gatt, status, baseBleConnectCallback);
     }
 
     /**
@@ -373,19 +231,8 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
     @Override
     public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int status) {
         String gattAddress = gatt.getDevice().getAddress();
-        if (callbackHashMap.containsKey(gattAddress)) {
-            final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (BluetoothGatt.GATT_SUCCESS != status) {
-                        baseConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onReliableWriteCompleted", status);
-                    } else {
-                        baseConnectCallback.onReadRemoteRssi(gatt, rssi);
-                    }
-                }
-            });
-        }
+        BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
+        triggerDeviceReadRemoteRssiCallback(gatt, rssi, status, baseBleConnectCallback);
     }
 
     /**
@@ -403,22 +250,246 @@ public class BleBluetoothMultiGattCallback extends BluetoothGattCallback {
     public void onMtuChanged(final BluetoothGatt gatt, final int mtu, final int status) {
         String gattAddress = gatt.getDevice().getAddress();
         if (callbackHashMap.containsKey(gattAddress)) {
-            final BaseConnectCallback baseConnectCallback = callbackHashMap.get(gattAddress);
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (BluetoothGatt.GATT_SUCCESS != status) {
-                        baseConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onReliableWriteCompleted", status);
-                    } else {
-                        baseConnectCallback.onMtuChanged(gatt, mtu);
-                    }
-                }
-            });
+            final BaseBleConnectCallback baseBleConnectCallback = callbackHashMap.get(gattAddress);
+            triggerDeviceMtuChangedCallback(gatt, mtu, status, baseBleConnectCallback);
         }
     }
 
     public void close() {
         callbackHashMap.clear();
         callbackHashMap = null;
+    }
+
+    /*-----------------------------------private method-----------------------------------*/
+
+    private void triggerDevicePhyUpdateCallback(final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    if (BluetoothGatt.GATT_SUCCESS != status) {
+                        baseBleConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onPhyUpdate", status);
+                    } else {
+                        baseBleConnectCallback.onPhyUpdate(gatt, txPhy, rxPhy);
+                    }
+                }
+            }
+        });
+    }
+
+    private void triggerDevicePhyReadCallback(final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    if (BluetoothGatt.GATT_SUCCESS != status) {
+                        baseBleConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onPhyRead", status);
+                    } else {
+                        baseBleConnectCallback.onPhyRead(gatt, txPhy, rxPhy);
+                    }
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceDisconnectedCallback(final BluetoothGatt gatt, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    baseBleConnectCallback.setConnected(false);
+                    baseBleConnectCallback.setServiceDiscovered(false);
+                    baseBleConnectCallback.onDisConnected(gatt);
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceConnectingCallback(final BluetoothGatt gatt, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    baseBleConnectCallback.onConnecting(gatt);
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceConnectedCallback(final BluetoothGatt gatt, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    baseBleConnectCallback.setConnected(true);
+                    baseBleConnectCallback.onConnected(gatt);
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceAutoDiscoverServiceFailedCallback(final BluetoothGatt gatt, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    baseBleConnectCallback.onServicesAutoDiscoverFailed(gatt);
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceDisconnectingCallback(final BluetoothGatt gatt, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    baseBleConnectCallback.onDisconnecting(gatt);
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceUnknownStateCallback(final int state, final BluetoothGatt gatt, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    baseBleConnectCallback.onUnknownState(gatt, state);
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceServiceDiscoveredCallback(final BluetoothGatt gatt, final int status, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    if (BluetoothGatt.GATT_SUCCESS != status) {
+                        baseBleConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onServicesDiscovered", status);
+                    } else {
+                        baseBleConnectCallback.setServiceDiscovered(true);
+                        baseBleConnectCallback.onServicesDiscovered(gatt);
+                    }
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceCharacteristicReadCallback(final BluetoothGatt gatt, final BluetoothGattCharacteristic gattCharacteristic, final int status, final BaseBleConnectCallback baseBleConnectCallback, final byte[] values) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    if (BluetoothGatt.GATT_SUCCESS != status) {
+                        baseBleConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onCharacteristicRead", status);
+                    } else {
+                        baseBleConnectCallback.onCharacteristicRead(gatt, gattCharacteristic, values);
+                    }
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceCharacteristicWriteCallback(final BluetoothGatt gatt, final BluetoothGattCharacteristic gattCharacteristic, final int status, final byte[] values, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    if (BluetoothGatt.GATT_SUCCESS != status) {
+                        baseBleConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onCharacteristicWrite", status);
+                    } else {
+                        baseBleConnectCallback.onCharacteristicWrite(gatt, gattCharacteristic, values);
+                    }
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceCharacteristicChangedCallback(final BluetoothGatt gatt, final BluetoothGattCharacteristic gattCharacteristic, final byte[] values, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    baseBleConnectCallback.onReceivedNotification(gatt, gattCharacteristic, values);
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceDescriptorReadCallback(final BluetoothGatt gatt, final BluetoothGattDescriptor gattDescriptor, final int status, final byte[] values, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    if (BluetoothGatt.GATT_SUCCESS != status) {
+                        baseBleConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onDescriptorRead", status);
+                    } else {
+                        baseBleConnectCallback.onDescriptorRead(gatt, gattDescriptor, values);
+                    }
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceDescriptorWriteCallback(final BluetoothGatt gatt, final BluetoothGattDescriptor gattDescriptor, final int status, final byte[] values, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    if (BluetoothGatt.GATT_SUCCESS != status) {
+                        baseBleConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onDescriptorWrite", status);
+                    } else {
+                        baseBleConnectCallback.onDescriptorWrite(gatt, gattDescriptor, values);
+                    }
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceReliableWriteCompletedCallback(final BluetoothGatt gatt, final int status, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    if (BluetoothGatt.GATT_SUCCESS != status) {
+                        baseBleConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onReliableWriteCompleted", status);
+                    } else {
+                        baseBleConnectCallback.onReliableWriteCompleted(gatt);
+                    }
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceReadRemoteRssiCallback(final BluetoothGatt gatt, final int rssi, final int status, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    if (BluetoothGatt.GATT_SUCCESS != status) {
+                        baseBleConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onReliableWriteCompleted", status);
+                    } else {
+                        baseBleConnectCallback.onReadRemoteRssi(gatt, rssi);
+                    }
+                }
+            }
+        });
+    }
+
+    private void triggerDeviceMtuChangedCallback(final BluetoothGatt gatt, final int mtu, final int status, final BaseBleConnectCallback baseBleConnectCallback) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (baseBleConnectCallback != null) {
+                    if (BluetoothGatt.GATT_SUCCESS != status) {
+                        baseBleConnectCallback.onBluetoothGattOptionsNotSuccess(gatt, "onReliableWriteCompleted", status);
+                    } else {
+                        baseBleConnectCallback.onMtuChanged(gatt, mtu);
+                    }
+                }
+            }
+        });
     }
 }

@@ -1,313 +1,273 @@
 package com.jackiepenghe.blelibrary;
 
-import android.annotation.TargetApi;
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.support.annotation.IntRange;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import com.jackiepenghe.blelibrary.interfaces.OnBleCharacteristicWriteListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBleConnectStateChangedListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBleDescriptorWriteListener;
+import com.jackiepenghe.blelibrary.interfaces.OnBleReceiveNotificationListener;
+import com.jackiepenghe.blelibrary.interfaces.OnDeviceBondStateChangedListener;
+import com.jackiepenghe.blelibrary.interfaces.OnLargeDataSendStateChangedListener;
+import com.jackiepenghe.blelibrary.interfaces.OnLargeDataWriteWithNotificationSendStateChangedListener;
+
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
- * BLE连接器
+ * BLE connect utils
  *
- * @author alm
+ * @author jackie
  */
+public final class BleConnector {
 
-@SuppressWarnings({"unused", "WeakerAccess"})
-public class BleConnector {
-
-    /*-------------------------静态常量-------------------------*/
+    /*-----------------------------------static constant-----------------------------------*/
 
     /**
      * TAG
      */
     private static final String TAG = BleConnector.class.getSimpleName();
     /**
-     * 默认的连接超时时间
-     */
-    private static final long DEFAULT_CONNECT_TIME_OUT = 10000;
-    /**
-     * 数据连接传输时，每一包数据的最大长度
+     * default value of maximum length of data packets sent while Bluetooth connection
      */
     private static final int PACKAGE_MAX_LENGTH = 20;
     /**
-     * 分包传输时，每一包传输的有效数据的最大长度
+     * default value of maximum length of valid data transmitted per packet when large packet transmission
      */
     private static final int LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH = 17;
     /**
-     * 大数据的最大字节长度
-     */
-    private static final int LARGE_DATA_MAX_LENGTH = 0xFFFF;
-    /**
-     * 默认的重试次数
+     * default value of try count
      */
     private static final int DEFAULT_MAX_TRY_COUNT = 10;
     /**
-     * 默认的延迟时间
-     */
-    private static final int DEFAULT_PACKAGE_DELAY_TIME = 0;
-    /**
-     * 默认的发送分包数据的超时判断
-     */
-    private static final long DEFAULT_SEND_BIG_DATA_TIME_OUT = 3000;
-    /**
-     * 当数据发送失败重新发送时，固定的延时
+     * default value of resend delay when data transmission fails
      */
     private static final int RETRY_DELAY_TIME = 100;
 
-    /**
-     * 上下文弱引用
-     */
-    private Context context;
+    /*-----------------------------------field variables-----------------------------------*/
 
     /**
-     * 关闭完成时执行的回调
+     * connect time out
      */
-    private BleInterface.OnCloseCompleteListener onCloseCompleteListener;
+    private long connectTimeOut = 10000;
     /**
-     * 默认的延迟时间
+     * timeout for sending large data pack
      */
-    private int packageDelayTime = DEFAULT_PACKAGE_DELAY_TIME;
+    private long sendLargeDataTimeOut = 3000;
 
     /**
-     * 服务连接工具
+     * Service Connection for {@link BluetoothLeService}
      */
-    private BleServiceConnection bleServiceConnection;
+    private BleServiceConnection bleServiceConnection = new BleServiceConnection(this);
 
     /**
-     * BLE连接的广播接收者
+     * BLE device Broadcast receiver of the binding result
      */
-    private ConnectBleBroadcastReceiver connectBleBroadcastReceiver;
-
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private BoundBleBroadcastReceiver boundBleBroadcastReceiver = new BoundBleBroadcastReceiver();
     /**
-     * BLE绑定的广播接收者
+     * delay time
      */
-    private BoundBleBroadcastReceiver boundBleBroadcastReceiver;
-
+    private int sendLargeDataPackageDelayTime = 0;
     /**
-     * 记录BLE连接工具是否关闭的标志
+     * If the binding is initiated, the address of the bound device is recorded.
      */
-    private boolean mClosed;
-    /**
-     * 如果发起绑定，会记录下绑定设备的地址
-     */
+    @Nullable
     private String bondAddress;
     /**
-     * 是否继续写入大量数据（需要收到通知）的标志
+     * Whether to continue writing large amounts of data.
+     * requires receive remote device notification data and return true in callback {@link OnLargeDataWriteWithNotificationSendStateChangedListener}
      */
-    private boolean writeBigDataWithNotificationContinueFlag;
+    private boolean writeLargeDataWithNotificationContinueFlag;
     /**
-     * 是否继续写入大量数据的标志
+     * Whether to keep writing large amounts of data
      */
-    private boolean writeBigDataContinueFlag;
-    /**
-     * 是否执行过绑定指令
-     */
-    private boolean doBonded;
-    /**
-     * 连接超时的时间
-     */
-    private long connectTimeOut = DEFAULT_CONNECT_TIME_OUT;
-    /**
-     * 发送分包数据超时的时间
-     */
-    private long sendBigDataTimeOut = DEFAULT_SEND_BIG_DATA_TIME_OUT;
-    /**
-     * 连接超时的回调
-     */
-    private BleInterface.OnConnectTimeOutListener onConnectTimeOutListener;
-
-    /*-------------------------构造函数-------------------------*/
+    private boolean writeLargeDataContinueFlag;
 
     /**
-     * 构造函数
-     *
-     * @param context 上下文
+     * Callback triggered when connect state changed
      */
-    BleConnector(Context context) {
-        this.context = context;
-        connectBleBroadcastReceiver = new ConnectBleBroadcastReceiver();
-        boundBleBroadcastReceiver = new BoundBleBroadcastReceiver();
+    @Nullable
+    private OnBleConnectStateChangedListener onBleConnectStateChangedListener;
+    /**
+     * LE Connection service
+     */
+    @Nullable
+    private BluetoothLeService bluetoothLeService;
+
+    private boolean closed;
+
+    private boolean initialized;
+
+    /*-----------------------------------Constructor-----------------------------------*/
+
+    /**
+     * Constructor
+     */
+    BleConnector() {
+        //bind BLE connection service
+        Intent intent = new Intent(BleManager.getContext(), BluetoothLeService.class);
+        BleManager.getContext().bindService(intent, bleServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
-    /*-------------------------公开函数-------------------------*/
+    /*-----------------------------------package private setter-----------------------------------*/
 
     /**
-     * 检查设备地址并设置地址
+     * set BluetoothLeService
      *
-     * @param bluetoothDevice 设备
-     * @return true表示成功设置地址
+     * @param bluetoothLeService BluetoothLeService
      */
-    public boolean checkAndSetDevice(BluetoothDevice bluetoothDevice) {
-        if (bluetoothDevice == null) {
-            return false;
+    void setBluetoothLeService(@Nullable BluetoothLeService bluetoothLeService) {
+        this.bluetoothLeService = bluetoothLeService;
+        if (this.bluetoothLeService != null) {
+            this.bluetoothLeService.setOnBleConnectStateChangedListener(onBleConnectStateChangedListener);
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            setAddress(bluetoothDevice.getAddress());
-        } else {
-            setDevice(bluetoothDevice);
-        }
-        return true;
     }
 
+    void setInitialized() {
+        this.initialized = true;
+    }
+
+    /*-----------------------------------setter and getter-----------------------------------*/
+
     /**
-     * 通过设备地址直接解绑某个设备
+     * set connect timeout
      *
-     * @param context 上下文
-     * @param address 设备地址
-     * @return true表示成功解绑
+     * @param connectTimeOut timeout(unit:ms)
      */
-    @SuppressWarnings("WeakerAccess")
-    public static boolean unBound(Context context, String address) {
-
-        if (context == null) {
-            return false;
-        }
-
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            return false;
-        }
-
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-
-        if (bluetoothManager == null) {
-            return false;
-        }
-
-        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
-
-        if (bluetoothAdapter == null) {
-            return false;
-        }
-
-        BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(address);
-
-        if (remoteDevice.getBondState() != BluetoothDevice.BOND_BONDED) {
-            return false;
-        }
-
-        Method removeBondMethod;
-        boolean result = false;
-        try {
-            //noinspection JavaReflectionMemberAccess
-            removeBondMethod = BluetoothDevice.class.getMethod("removeBond");
-            result = (boolean) removeBondMethod.invoke(remoteDevice);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-
-        if (result) {
-            Tool.warnOut(TAG, "解除配对成功");
-        } else {
-            Tool.warnOut(TAG, "解除配对失败");
-        }
-
-        return result;
+    public void setConnectTimeOut(@IntRange(from = 0) long connectTimeOut) {
+        this.connectTimeOut = connectTimeOut;
     }
 
     /**
-     * 检查设备地址并设置地址
+     * set large data send timeout
      *
-     * @param address 设备地址
-     * @return true表示成功设置地址
+     * @param sendLargeDataTimeOut timeout(unit:ms)
      */
-    public boolean checkAndSetAddress(String address) {
-        if (address == null || !BluetoothAdapter.checkBluetoothAddress(address)) {
-            return false;
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            setAddress(address);
-        } else {
-            setDevice(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address));
-        }
-        return true;
+    public void setSendLargeDataTimeOut(@IntRange(from = 0) long sendLargeDataTimeOut) {
+        this.sendLargeDataTimeOut = sendLargeDataTimeOut;
     }
 
     /**
-     * 请求更改mtu
+     * set large data send package delay time.
      *
-     * @param mtu mtu值
-     * @return true代表请求发起成功，执行结果在回调 onMtuChanged 中对比mtu值，来判断mtu是否真的被更改
+     * @param sendLargeDataPackageDelayTime Fixed delay between each packet of data
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public void setSendLargeDataPackageDelayTime(@IntRange(from = 0) int sendLargeDataPackageDelayTime) {
+        this.sendLargeDataPackageDelayTime = sendLargeDataPackageDelayTime;
+    }
+
+    /**
+     * get connect time out
+     *
+     * @return timeout value
+     */
+    public long getConnectTimeOut() {
+        return connectTimeOut;
+    }
+
+    /**
+     * get timeout for sending large data pack
+     *
+     * @return timeout for sending large data pack
+     */
+    public long getSendLargeDataTimeOut() {
+        return sendLargeDataTimeOut;
+    }
+
+    /**
+     * get BluetoothLeService
+     *
+     * @return BluetoothLeService
+     */
+    @Nullable
+    public BluetoothLeService getBluetoothLeService() {
+        return bluetoothLeService;
+    }
+
+    public boolean isInitialized() {
+        return initialized;
+    }
+
+    /**
+     * get Bluetooth Adapter
+     *
+     * @return Bluetooth Adapter
+     */
+    @Nullable
+    public BluetoothAdapter getBluetoothAdapter() {
+        if (bluetoothLeService == null) {
+            return null;
+        }
+        return bluetoothLeService.getBluetoothAdapter();
+    }
+
+    /*-----------------------------------public method-----------------------------------*/
+
+    /**
+     * set BLE device connect status changed listener
+     *
+     * @param onBleConnectStateChangedListener BLE device connect status changed listener
+     */
+    public void setOnBleConnectStateChangedListener(@Nullable OnBleConnectStateChangedListener onBleConnectStateChangedListener) {
+        this.onBleConnectStateChangedListener = onBleConnectStateChangedListener;
+        if (bluetoothLeService != null) {
+            bluetoothLeService.setOnBleConnectStateChangedListener(onBleConnectStateChangedListener);
+        }
+    }
+
+    /**
+     * request change mtu value.Result of request will be trigger callback{@link OnBleConnectStateChangedListener#mtuChanged(int)}
+     *
+     * @param mtu mtu value
+     * @return true means request send successful.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     public boolean requestMtu(int mtu) {
-        return bleServiceConnection != null && bleServiceConnection.requestMtu(mtu);
+        return bluetoothLeService != null && bluetoothLeService.requestMtu(mtu);
     }
 
     /**
-     * 发起连接
+     * start bind device
      *
-     * @return true表示成功发起连接
+     * @param address device address
+     * @return request result is constant in  {@link BleConstants}
+     * {@link BleConstants#BLUETOOTH_ADDRESS_INCORRECT} wrong address
+     * {@link BleConstants#BLUETOOTH_MANAGER_NULL} No Bluetooth Manager
+     * {@link BleConstants#BLUETOOTH_ADAPTER_NULL} No Bluetooth adapter
+     * {@link BleConstants#DEVICE_BOND_BONDED} The device has been bound
+     * {@link BleConstants#DEVICE_BOND_BONDING} A binding is being initiated to the device (or the device is being bound to another device)
+     * {@link BleConstants#DEVICE_BOND_REQUEST_SUCCESS} Successfully initiated a bind request
+     * {@link BleConstants#DEVICE_BOND_REQUEST_FAILED} Failed to initiate a bind request
      */
-    public boolean startConnect() {
-        return startConnect(false);
-    }
 
-    /**
-     * 发起连接
-     *
-     * @param autoConnect 自动连接（当连接被断开后，自动尝试重连，这是系统中蓝牙的API中自带的参数）
-     * @return true表示成功发起连接
-     */
-    @SuppressWarnings("WeakerAccess")
-    public boolean startConnect(boolean autoConnect) {
-        if (bleServiceConnection == null) {
-            return false;
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public int startBound(@NonNull String address) {
+        //Register a broadcast receiver for bound to BLE bleDevice
+        BleManager.getContext().registerReceiver(boundBleBroadcastReceiver, makeBoundBLEIntentFilter());
+        if (BleManager.getContext() == null) {
+            return BleConstants.CONTEXT_NULL;
         }
-
-        if (context == null) {
-            return false;
-        }
-        mClosed = false;
-
-        bleServiceConnection.setAutoConnect(autoConnect);
-
-        //注册广播接收者
-        context.registerReceiver(connectBleBroadcastReceiver, makeConnectBLEIntentFilter());
-        //绑定BLE连接服务
-        Intent intent = new Intent(context, BluetoothLeService.class);
-        boolean bindService = context.bindService(intent, bleServiceConnection, Context.BIND_AUTO_CREATE);
-        if (bindService) {
-            startThreadToCheckTimeOut();
-        }
-        return bindService;
-    }
-
-    /**
-     * 发起设备绑定
-     *
-     * @param address 设备地址
-     * @return BleConstants中定义的常量
-     * {@link BleConstants#BLUETOOTH_ADDRESS_INCORRECT} 设备地址错误
-     * {@link BleConstants#BLUETOOTH_MANAGER_NULL} 没有蓝牙管理器
-     * {@link BleConstants#BLUETOOTH_ADAPTER_NULL} 没有蓝牙适配器
-     * {@link BleConstants#DEVICE_BOND_BONDED} 该设备已被绑定
-     * {@link BleConstants#DEVICE_BOND_BONDING} 该设备正在进行绑定（或正在向该设备发起绑定）
-     * {@link BleConstants#DEVICE_BOND_START_SUCCESS} 成功发起绑定请求
-     * {@link BleConstants#DEVICE_BOND_START_FAILED} 发起绑定请求失败
-     */
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    public int startBound(String address) {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return BleConstants.BLUETOOTH_ADDRESS_INCORRECT;
         }
-
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothManager bluetoothManager = (BluetoothManager) BleManager.getContext().getSystemService(Context.BLUETOOTH_SERVICE);
 
         if (bluetoothManager == null) {
             return BleConstants.BLUETOOTH_MANAGER_NULL;
@@ -320,7 +280,6 @@ public class BleConnector {
         }
 
         bondAddress = address;
-        this.mClosed = false;
 
         BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(address);
         switch (remoteDevice.getBondState()) {
@@ -331,298 +290,196 @@ public class BleConnector {
             default:
                 break;
         }
-
-        //注册绑定BLE的广播接收者
-        context.registerReceiver(boundBleBroadcastReceiver, makeBoundBLEIntentFilter());
-        doBonded = true;
-        //发起绑定
+        //create bound by system api
         if (remoteDevice.createBond()) {
-            return BleConstants.DEVICE_BOND_START_SUCCESS;
+            return BleConstants.DEVICE_BOND_REQUEST_SUCCESS;
         } else {
-            return BleConstants.DEVICE_BOND_START_FAILED;
+            return BleConstants.DEVICE_BOND_REQUEST_FAILED;
         }
     }
 
     /**
-     * 断开连接
+     * Disconnect remote device
      *
-     * @return true表示成功断开
+     * @return true means disconnect success
      */
     public boolean disconnect() {
-        return bleServiceConnection != null && bleServiceConnection.disconnect();
+        return bluetoothLeService != null && bluetoothLeService.disconnect();
     }
 
     /**
-     * 解除之前前发起绑定的设备之间的配对
+     * Initiate a request to connect to a remote device
      *
-     * @return true代表成功
+     * @param address device address
+     * @return true means request successful
      */
-    public boolean unBound() {
-        return unBound(context, bondAddress);
-    }
+    public boolean connect(@NonNull String address) {
+        return connect(address, false);
 
-    public BluetoothGatt getBluetoothGatt() {
-        return bleServiceConnection.getBluetoothGatt();
     }
 
     /**
-     * 关闭BLE连接工具
+     * Initiate a request to connect to a remote device
      *
-     * @return true表示关闭成功
+     * @param address       device address
+     * @param autoReconnect Whether to automatically reconnect
+     * @return true means request successful
+     */
+    public boolean connect(@NonNull String address, boolean autoReconnect) {
+        if (!isInitialized()) {
+            return connect(address, autoReconnect);
+        }
+        boolean result = bluetoothLeService != null && bluetoothLeService.connect(address, autoReconnect);
+        if (result) {
+            closed = false;
+            checkConnectTimeOut();
+        }
+        return result;
+    }
+
+    /**
+     * Initiate a request to connect to a remote device
+     *
+     * @param bluetoothDevice remote device
+     * @return true means request successful.
+     */
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice) {
+        return connect(bluetoothDevice, false);
+    }
+
+    /**
+     * Initiate a request to connect to a remote device
+     *
+     * @param bluetoothDevice remote device
+     * @param autoReconnect   Whether to automatically reconnect
+     * @return true means request successful.
+     */
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect) {
+        if (!isInitialized()) {
+            return connect(bluetoothDevice, autoReconnect);
+        }
+        boolean result = bluetoothLeService != null && bluetoothLeService.connect(bluetoothDevice, autoReconnect);
+        if (result) {
+            closed = false;
+            checkConnectTimeOut();
+        }
+        return result;
+    }
+
+    /**
+     * Unbind device
+     *
+     * @return true means request successful
+     */
+
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
+    public boolean unBound() {
+        if (bondAddress == null) {
+            return false;
+        }
+        return BleManager.unBound(BleManager.getContext(), bondAddress);
+    }
+
+    /**
+     * Get BluetoothGatt instance
+     *
+     * @return BluetoothGatt instance
+     */
+    @Nullable
+    public BluetoothGatt getBluetoothGatt() {
+        if (bluetoothLeService == null) {
+            return null;
+        }
+        return bluetoothLeService.getBluetoothGatt();
+    }
+
+    /**
+     * get connection status
+     *
+     * @return true means remote device is connected
+     */
+    public boolean isConnected() {
+        return bluetoothLeService != null && bluetoothLeService.isConnected();
+    }
+
+    /**
+     * get service discovered status
+     *
+     * @return true means remote device is discovered
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean isServiceDiscovered() {
+        return bluetoothLeService != null && bluetoothLeService.isServiceDiscovered();
+    }
+
+    /**
+     * closeGatt this connection util
+     *
+     * @return true means closeGatt successful
      */
     public boolean close() {
         return close(false);
     }
 
     /**
-     * 是否已经成功连接到了远端设备
+     * closeGatt this connection util
      *
-     * @return true表示已连接
-     */
-    public boolean isConnected() {
-        return bleServiceConnection.isConnected();
-    }
-
-    /**
-     * 是否已经成功发现了远端设备的服务
-     *
-     * @return true表示已经成功发现了远端设备的服务
-     */
-    public boolean isServiceDiscovered() {
-        return bleServiceConnection.isServiceDiscovered();
-    }
-
-    /**
-     * 设置连接超时的时间
-     *
-     * @param connectTimeOut 连接超时的时间
-     */
-    public void setConnectTimeOut(long connectTimeOut) {
-        this.connectTimeOut = connectTimeOut;
-    }
-
-    /**
-     * 设置发送多包数据的超时判断时间
-     *
-     * @param sendBigDataTimeOut 发送多包数据的超时时间
-     */
-    public void setSendBigDataTimeOut(long sendBigDataTimeOut) {
-        this.sendBigDataTimeOut = sendBigDataTimeOut;
-    }
-
-    /**
-     * 设置发送多包数据时，每一包数据的延时（单位：毫秒）
-     *
-     * @param packageDelayTime 每一包数据的延时
-     */
-    public void setSendBigDataPackageDelayTime(int packageDelayTime) {
-        this.packageDelayTime = packageDelayTime;
-    }
-
-    /**
-     * 关闭BLE连接工具
-     *
-     * @param withGattRefresh 是否要在关闭连接之前 刷新GATT缓存
-     * @return true表示关闭成功
+     * @param withGattRefresh whether refresh the GATT cache before closeGatt this connection
+     * @return true means closeGatt successful
      */
     public boolean close(boolean withGattRefresh) {
-        if (bleServiceConnection == null) {
+
+        if (bluetoothLeService == null) {
             return false;
         }
 
-        if (mClosed) {
+        if (BleManager.getContext() == null) {
             return false;
         }
-        mClosed = true;
-        writeBigDataWithNotificationContinueFlag = false;
-        writeBigDataContinueFlag = false;
-        if (doBonded) {
-            bondAddress = null;
+        writeLargeDataWithNotificationContinueFlag = false;
+        writeLargeDataContinueFlag = false;
+        bondAddress = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             boundBleBroadcastReceiver.setOnDeviceBondStateChangedListener(null);
-            context.unregisterReceiver(boundBleBroadcastReceiver);
         }
-
-        context.unregisterReceiver(connectBleBroadcastReceiver);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            try {
+                BleManager.getContext().unregisterReceiver(boundBleBroadcastReceiver);
+            } catch (Exception e) {
+                DebugUtil.verOut(TAG, "unregisterReceiver(boundBleBroadcastReceiver) failed");
+            }
+        }
         if (withGattRefresh) {
             refreshGattCache();
         }
         disconnect();
-        bleServiceConnection.closeGatt();
-        bleServiceConnection.stopService();
+        closeGatt();
+        bluetoothLeService.stopSelf();
         try {
-            context.unbindService(bleServiceConnection);
+            BleManager.getContext().unbindService(bleServiceConnection);
         } catch (Exception e) {
-            e.printStackTrace();
+            DebugUtil.verOut(TAG, "unbindService(bleServiceConnection) failed");
         }
-        onConnectTimeOutListener = null;
-        connectBleBroadcastReceiver.setOnReceiveNotificationListener(null);
-        connectBleBroadcastReceiver.setOnServicesDiscoveredListener(null);
-        connectBleBroadcastReceiver.setOnStatusErrorListener(null);
-        connectBleBroadcastReceiver.setOnCharacteristicReadListener(null);
-        connectBleBroadcastReceiver.setOnConnectedListener(null);
-        connectBleBroadcastReceiver.setOnDisconnectedListener(null);
-        connectBleBroadcastReceiver.setOnDisconnectingListener(null);
-        setAddress(null);
-        setDevice(null);
-        connectBleBroadcastReceiver.setOnBluetoothGattOptionsNotSuccessListener(null);
-        connectBleBroadcastReceiver.setOnBluetoothSwitchChangedListener(null);
-        boundBleBroadcastReceiver.setOnDeviceBondStateChangedListener(null);
-        connectBleBroadcastReceiver.setOnConnectingListener(null);
-        connectBleBroadcastReceiver.setOnDescriptorReadListener(null);
-        connectBleBroadcastReceiver.setOnDescriptorWriteListener(null);
-        connectBleBroadcastReceiver.setOnMtuChangedListener(null);
-        connectBleBroadcastReceiver.setOnReadRemoteRssiListener(null);
-        connectBleBroadcastReceiver.setOnReliableWriteCompletedListener(null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            boundBleBroadcastReceiver.setOnDeviceBondStateChangedListener(null);
+        }
         checkCloseStatus();
-        boundBleBroadcastReceiver = null;
-        connectBleBroadcastReceiver = null;
-        bleServiceConnection = null;
-        context = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            boundBleBroadcastReceiver = null;
+        }
+        bluetoothLeService = null;
+        closed = true;
+        BleManager.releaseBleConnector();
         return true;
     }
 
     /**
-     * 设置连接成功的监听事件
+     * Set the callback when the binding state changes
      *
-     * @param onConnectedListener 连接成功的监听事件
+     * @param onDeviceBondStateChangedListener binding state changes callback
      */
-    public void setOnConnectedListener(BleInterface.OnConnectedListener onConnectedListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnConnectedListener(onConnectedListener);
-    }
-
-    /**
-     * 设置连接断开的监听事件
-     *
-     * @param onDisconnectedListener 连接断开的监听事件
-     */
-    public void setOnDisconnectedListener(BleInterface.OnDisconnectedListener onDisconnectedListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnDisconnectedListener(onDisconnectedListener);
-    }
-
-    public void setOnStatusErrorListener(BleInterface.OnStatusErrorListener onStatusErrorListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnStatusErrorListener(onStatusErrorListener);
-    }
-
-    /**
-     * 设置服务发现完成的监听事件
-     *
-     * @param onServicesDiscoveredListener 服务发现完成的监听事件
-     */
-    public void setOnServicesDiscoveredListener(BleInterface.OnServicesDiscoveredListener onServicesDiscoveredListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnServicesDiscoveredListener(onServicesDiscoveredListener);
-    }
-
-    /**
-     * 设置正在连接的监听事件
-     *
-     * @param onConnectingListener 正在连接的监听事件
-     */
-    public void setOnConnectingListener(BleInterface.OnConnectingListener onConnectingListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnConnectingListener(onConnectingListener);
-    }
-
-    /**
-     * 设置正在断开连接的监听事件
-     *
-     * @param onDisconnectingListener 正在断开连接的监听事件
-     */
-    public void setOnDisconnectingListener(BleInterface.OnDisconnectingListener onDisconnectingListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnDisconnectingListener(onDisconnectingListener);
-    }
-
-    /**
-     * 设置读到特征数据的回调
-     *
-     * @param onCharacteristicReadListener 读到特征数据的回调
-     */
-    public void setOnCharacteristicReadListener(BleInterface.OnCharacteristicReadListener onCharacteristicReadListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnCharacteristicReadListener(onCharacteristicReadListener);
-    }
-
-    /**
-     * 设置收到远端设备通知数据的回调
-     *
-     * @param onReceiveNotificationListener 收到远端设备通知数据的回调
-     */
-    public void setOnReceiveNotificationListener(BleInterface.OnReceiveNotificationListener onReceiveNotificationListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnReceiveNotificationListener(onReceiveNotificationListener);
-    }
-
-    /**
-     * 设置写入特征数据的回调
-     *
-     * @param onCharacteristicWriteListener 写入特征数据的回调
-     */
-    public void setOnCharacteristicWriteListener(BleInterface.OnCharacteristicWriteListener onCharacteristicWriteListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnCharacteristicWriteListener(onCharacteristicWriteListener);
-    }
-
-    /**
-     * 设置连接超时的回调
-     *
-     * @param onConnectTimeOutListener 连接超时的回调
-     */
-    public void setOnConnectTimeOutListener(BleInterface.OnConnectTimeOutListener onConnectTimeOutListener) {
-        this.onConnectTimeOutListener = onConnectTimeOutListener;
-    }
-
-    /**
-     * 设置读取描述符数据的回调
-     *
-     * @param onDescriptorReadListener 读取描述符数据的回调
-     */
-    public void setOnDescriptorReadListener(BleInterface.OnDescriptorReadListener onDescriptorReadListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnDescriptorReadListener(onDescriptorReadListener);
-    }
-
-    /**
-     * 设置写入描述符数据的回调
-     *
-     * @param onDescriptorWriteListener 写入描述符数据的
-     */
-    public void setOnDescriptorWriteListener(BleInterface.OnDescriptorWriteListener onDescriptorWriteListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnDescriptorWriteListener(onDescriptorWriteListener);
-    }
-
-    /**
-     * 设置绑定状态改变时的回调
-     *
-     * @param onDeviceBondStateChangedListener 绑定状态改变时的回调
-     */
-    public void setOnDeviceBondStateChangedListener(BleInterface.OnDeviceBondStateChangedListener onDeviceBondStateChangedListener) {
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public void setOnDeviceBondStateChangedListener(@Nullable OnDeviceBondStateChangedListener onDeviceBondStateChangedListener) {
         if (boundBleBroadcastReceiver == null) {
             return;
         }
@@ -630,447 +487,887 @@ public class BleConnector {
     }
 
     /**
-     * 设置可靠数据写入完成的回调
+     * Send large amounts of data to remote devices and automate packet formatting
      *
-     * @param onReliableWriteCompletedListener 可靠数据写入完成的回调z
+     * @param serviceUuid        Service UUID
+     * @param characteristicUuid characteristic UUID
+     * @param largeData          large data
      */
-    public void setOnReliableWriteCompletedListener(BleInterface.OnReliableWriteCompletedListener onReliableWriteCompletedListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnReliableWriteCompletedListener(onReliableWriteCompletedListener);
+    public void writeLargeData(@NonNull String serviceUuid, @NonNull String characteristicUuid, @NonNull byte[] largeData) {
+        writeLargeData(serviceUuid, characteristicUuid, largeData, true);
     }
 
     /**
-     * 设置读到远端设备rssi的回调
+     * Send large amounts of data to remote devices
      *
-     * @param onReadRemoteRssiListener 读到远端设备rssi的回调
-     */
-    public void setOnReadRemoteRssiListener(BleInterface.OnReadRemoteRssiListener onReadRemoteRssiListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnReadRemoteRssiListener(onReadRemoteRssiListener);
-    }
-
-    /**
-     * 设置最大传输单位被改变的回调
-     *
-     * @param onMtuChangedListener 最大传输单位被改变的回调
-     */
-    public void setOnMtuChangedListener(BleInterface.OnMtuChangedListener onMtuChangedListener) {
-        if (connectBleBroadcastReceiver == null) {
-            return;
-        }
-        connectBleBroadcastReceiver.setOnMtuChangedListener(onMtuChangedListener);
-    }
-
-    /**
-     * 发送大量数据到远端设备，并进行自动数据包格式化
-     *
-     * @param serviceUuid        服务UUID
-     * @param characteristicUuid 特征UUID
-     * @param bigData            数据
-     */
-    public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData) {
-        writeBigData(serviceUuid, characteristicUuid, bigData, true);
-    }
-
-    /**
-     * 发送大量数据到远端设备，并进行自动数据包格式化
-     *
-     * @param serviceUuid        服务UUID
-     * @param characteristicUuid 特征UUID
-     * @param bigData            数据
-     */
-    public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, boolean autoFormat) {
-        writeBigData(serviceUuid, characteristicUuid, bigData, new DefaultBigDataSendStateChangedListener(), autoFormat);
-    }
-
-    /**
-     * 发送大量数据到远端设备，并进行自动数据包格式化
-     *
-     * @param serviceUuid                       服务UUID
-     * @param characteristicUuid                特征UUID
-     * @param bigData                           数据
-     * @param onBigDataSendStateChangedListener 数据发送的相关回调
-     */
-    public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
-        writeBigData(serviceUuid, characteristicUuid, bigData, packageDelayTime, onBigDataSendStateChangedListener);
-    }
-
-    /**
-     * 发送大量数据到远端设备，并进行自动数据包格式化
-     *
-     * @param serviceUuid                       服务UUID
-     * @param characteristicUuid                特征UUID
-     * @param bigData                           数据
-     * @param onBigDataSendStateChangedListener 数据发送的相关回调
-     */
-    public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener, boolean autoFormat) {
-        writeBigData(serviceUuid, characteristicUuid, bigData, packageDelayTime, onBigDataSendStateChangedListener, autoFormat);
-    }
-
-
-    /**
-     * 发送大量数据到远端设备，并进行自动数据包格式化
-     *
-     * @param serviceUuid                       服务UUID
-     * @param characteristicUuid                特征UUID
-     * @param bigData                           大量数据
-     * @param packageDelayTime                  每一包数据之间的时间间隔
-     * @param onBigDataSendStateChangedListener 数据发送的相关回调
-     */
-    public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, int packageDelayTime, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
-        writeBigData(serviceUuid, characteristicUuid, bigData, packageDelayTime, DEFAULT_MAX_TRY_COUNT, onBigDataSendStateChangedListener, true);
-    }
-
-
-    /**
-     * 发送大量数据到远端设备，并进行自动数据包格式化
-     *
-     * @param serviceUuid                       服务UUID
-     * @param characteristicUuid                特征UUID
-     * @param bigData                           大量数据
-     * @param packageDelayTime                  每一包数据之间的时间间隔
-     * @param onBigDataSendStateChangedListener 数据发送的相关回调
-     */
-    public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, int packageDelayTime, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener, boolean autoFormat) {
-        writeBigData(serviceUuid, characteristicUuid, bigData, packageDelayTime, DEFAULT_MAX_TRY_COUNT, onBigDataSendStateChangedListener, autoFormat);
-    }
-
-    /**
-     * 发送大量数据到远端设备，并进行自动数据包格式化
-     *
-     * @param serviceUuid                       服务UUID
-     * @param characteristicUuid                特征UUID
-     * @param bigData                           大量数据
-     * @param packageDelayTime                  每一包数据之间的时间间隔
-     * @param maxTryCount                       每一包数据最大重发次数
-     * @param onBigDataSendStateChangedListener 数据发送的相关回调
-     */
-    public void writeBigData(String serviceUuid, String characteristicUuid, byte[] bigData, int packageDelayTime, int maxTryCount, BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener, boolean autoFormat) {
-        int dataLength = bigData.length;
-        startThreadToWriteBigData(serviceUuid, characteristicUuid, bigData, dataLength, packageDelayTime, maxTryCount, onBigDataSendStateChangedListener, autoFormat);
-    }
-
-    /**
-     * 设置close的回调
-     *
-     * @param onCloseCompleteListener close的回调
-     */
-    public void setOnCloseCompleteListener(BleInterface.OnCloseCompleteListener onCloseCompleteListener) {
-        this.onCloseCompleteListener = onCloseCompleteListener;
-    }
-
-    /**
-     * 写入数据
-     *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @param value              数据
-     * @return true表示成功
-     */
-    public boolean writeData(String serviceUUID, String characteristicUUID, byte[] value) {
-        Tool.warnOut(TAG, "bleServiceConnection == " + bleServiceConnection);
-        return bleServiceConnection != null && bleServiceConnection.writeData(serviceUUID, characteristicUUID, value);
-    }
-
-    /**
-     * 刷新蓝牙缓存
-     *
-     * @return true表示成功
-     */
-    @SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
-    public boolean refreshGattCache() {
-        return bleServiceConnection != null && bleServiceConnection.refreshGattCache();
-    }
-
-    /**
-     * 读取数据
-     *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @return true表示成功
-     */
-    public boolean readData(String serviceUUID, String characteristicUUID) {
-        return bleServiceConnection != null && bleServiceConnection.readData(serviceUUID, characteristicUUID);
-    }
-
-    /**
-     * 打开或关闭通知
-     *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @param enable             true表示开启，false表示关闭
-     * @return true表示成功
-     */
-    public boolean enableNotification(String serviceUUID, String characteristicUUID, @SuppressWarnings("SameParameterValue") boolean enable) {
-        return bleServiceConnection != null && bleServiceConnection.enableNotification(serviceUUID, characteristicUUID, enable);
-    }
-
-    /**
-     * 设置蓝牙开关状态被改变时的回调
-     *
-     * @param onBluetoothSwitchChangedListener 蓝牙开启时的回调
-     */
-    public void setOnBluetoothSwitchChangedListener(BleInterface.OnBluetoothSwitchChangedListener onBluetoothSwitchChangedListener) {
-        connectBleBroadcastReceiver.setOnBluetoothSwitchChangedListener(onBluetoothSwitchChangedListener);
-    }
-
-    /**
-     * 设置蓝牙GATT客户端配置出错时的回调
-     *
-     * @param onBluetoothGattOptionsNotSuccessListener 蓝牙GATT客户端配置出错时的回调
-     */
-    public void setOnBluetoothGattOptionsNotSuccessListener(BleInterface.OnBluetoothGattOptionsNotSuccessListener onBluetoothGattOptionsNotSuccessListener) {
-        connectBleBroadcastReceiver.setOnBluetoothGattOptionsNotSuccessListener(onBluetoothGattOptionsNotSuccessListener);
-    }
-
-    /**
-     * 获取远端设备的所有服务
-     *
-     * @return 远端设备的所有服务
-     */
-    public List<BluetoothGattService> getServices() {
-        return bleServiceConnection.getServices();
-    }
-
-    /**
-     * 根据UUID获取指定的服务
-     *
-     * @param uuid UUID
-     * @return 服务
+     * @param serviceUuid        Service UUID
+     * @param characteristicUuid characteristic UUID
+     * @param largeData          large data
+     * @param autoFormat         whether to format the packet
      */
     @SuppressWarnings("WeakerAccess")
+    public void writeLargeData(@NonNull String serviceUuid, @NonNull String characteristicUuid, @NonNull byte[] largeData, boolean autoFormat) {
+        writeLargeData(serviceUuid, characteristicUuid, largeData, new DefaultLargeDataSendStateChangedListener(), autoFormat);
+    }
+
+    /**
+     * Send large amounts of data to remote devices and automate packet formatting
+     *
+     * @param serviceUuid                         Service UUID
+     * @param characteristicUuid                  characteristic UUID
+     * @param largeData                           large data
+     * @param onLargeDataSendStateChangedListener Callback during large data transmission
+     */
+    public void writeLargeData(@NonNull String serviceUuid, @NonNull String characteristicUuid, @NonNull byte[] largeData, @Nullable OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener) {
+        writeLargeData(serviceUuid, characteristicUuid, largeData, sendLargeDataPackageDelayTime, onLargeDataSendStateChangedListener);
+    }
+
+    /**
+     * Send large amounts of data to remote devices
+     *
+     * @param serviceUuid                         Service UUID
+     * @param characteristicUuid                  characteristic UUID
+     * @param largeData                           large data
+     * @param onLargeDataSendStateChangedListener Callback during large data transmission
+     * @param autoFormat                          whether to format the packet
+     */
+    public void writeLargeData(@NonNull String serviceUuid, @NonNull String characteristicUuid, @NonNull byte[] largeData, @Nullable OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener, boolean autoFormat) {
+        writeLargeData(serviceUuid, characteristicUuid, largeData, sendLargeDataPackageDelayTime, onLargeDataSendStateChangedListener, autoFormat);
+    }
+
+
+    /**
+     * Send large amounts of data to remote devices and automate packet formatting
+     *
+     * @param serviceUuid                         Service UUID
+     * @param characteristicUuid                  characteristic UUID
+     * @param largeData                           large data
+     * @param packageDelayTime                    Time interval between each packet of data
+     * @param onLargeDataSendStateChangedListener Callback during large data transmission
+     */
+    @SuppressWarnings("WeakerAccess")
+    public void writeLargeData(@NonNull String serviceUuid, @NonNull String characteristicUuid, @NonNull byte[] largeData, @IntRange(from = 0) int packageDelayTime, @Nullable OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener) {
+        writeLargeData(serviceUuid, characteristicUuid, largeData, packageDelayTime, DEFAULT_MAX_TRY_COUNT, onLargeDataSendStateChangedListener, true);
+    }
+
+
+    /**
+     * Send large amounts of data to remote devices
+     *
+     * @param serviceUuid                         Service UUID
+     * @param characteristicUuid                  characteristic UUID
+     * @param largeData                           large data
+     * @param packageDelayTime                    Time interval between each packet of data
+     * @param onLargeDataSendStateChangedListener Callback during large data transmission
+     * @param autoFormat                          whether to format the packet
+     */
+    @SuppressWarnings("WeakerAccess")
+    public void writeLargeData(@NonNull String serviceUuid, @NonNull String characteristicUuid, @NonNull byte[] largeData, @IntRange(from = 0) int packageDelayTime, @Nullable OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener, boolean autoFormat) {
+        writeLargeData(serviceUuid, characteristicUuid, largeData, packageDelayTime, DEFAULT_MAX_TRY_COUNT, onLargeDataSendStateChangedListener, autoFormat);
+    }
+
+    /**
+     * Send large amounts of data to remote devices
+     *
+     * @param serviceUuid                         Service UUID
+     * @param characteristicUuid                  characteristic UUID
+     * @param largeData                           large data
+     * @param packageDelayTime                    ime interval between each packet of data
+     * @param maxTryCount                         Maximum number of retransmissions per packet of data
+     * @param onLargeDataSendStateChangedListener Callback during large data transmission
+     * @param autoFormat                          whether to format the packet
+     */
+    @SuppressWarnings("WeakerAccess")
+    public void writeLargeData(@NonNull String serviceUuid, @NonNull String characteristicUuid, @NonNull byte[] largeData, @IntRange(from = 0) int packageDelayTime, @IntRange(from = 0) int maxTryCount, @Nullable OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener, boolean autoFormat) {
+        int dataLength = largeData.length;
+        startThreadToWriteLargeData(serviceUuid, characteristicUuid, largeData, dataLength, packageDelayTime, maxTryCount, onLargeDataSendStateChangedListener, autoFormat);
+    }
+
+    /**
+     * closeGatt GATT connection
+     *
+     * @return true means close Gatt successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean closeGatt() {
+        return bluetoothLeService != null && bluetoothLeService.closeGatt();
+    }
+
+    /**
+     * write data to remote device.Result for request will be trigger callback {@link OnBleConnectStateChangedListener#writeCharacteristicData(BluetoothGattCharacteristic, byte[])}
+     *
+     * @param serviceUUID        service UUID
+     * @param characteristicUUID characteristic UUID
+     * @param data               data
+     * @return true means request successful
+     */
+    public boolean writeData(@NonNull String serviceUUID, @NonNull String characteristicUUID, @NonNull byte[] data) {
+        DebugUtil.warnOut(TAG, "bluetoothLeService == " + bluetoothLeService);
+        return bluetoothLeService != null && bluetoothLeService.writeData(serviceUUID, characteristicUUID, data);
+    }
+
+    /**
+     * read data from remote device.Result for request will be trigger callback {@link OnBleConnectStateChangedListener#readCharacteristicData(BluetoothGattCharacteristic, byte[])}
+     *
+     * @param serviceUUID        service UUID
+     * @param characteristicUUID characteristic UUID
+     * @return true means request successful
+     */
+    public boolean readData(@NonNull String serviceUUID, @NonNull String characteristicUUID) {
+        return bluetoothLeService != null && bluetoothLeService.readData(serviceUUID, characteristicUUID);
+    }
+
+    /**
+     * enable or disable notification
+     *
+     * @param serviceUUID        service UUID
+     * @param characteristicUUID characteristic UUID
+     * @param enable             true means enable notification,false means disable notification
+     * @return true means successful
+     */
+    public boolean enableNotification(@NonNull String serviceUUID, @NonNull String characteristicUUID, boolean enable) {
+        return bluetoothLeService != null && bluetoothLeService.enableNotification(serviceUUID, characteristicUUID, enable);
+    }
+
+    /**
+     * stop BLE connection service
+     */
+    public void stopService() {
+        if (bluetoothLeService == null) {
+            return;
+        }
+        bluetoothLeService.stopSelf();
+    }
+
+    /**
+     * get remote device RSSI.Result for request will be trigger callback {@link OnBleConnectStateChangedListener#readRemoteRssi(int)}
+     *
+     * @return true means request successful
+     */
+    public boolean getRssi() {
+        return bluetoothLeService != null && bluetoothLeService.getRssi();
+    }
+
+    /**
+     * refresh GATT cache.
+     * Notice:Some Custom system return true but not take effect.There is no solution so far.
+     *
+     * @return true means successful.
+     */
+    public boolean refreshGattCache() {
+        return bluetoothLeService != null && bluetoothLeService.refreshGattCache();
+    }
+
+    /**
+     * get remote service list
+     *
+     * @return service Bluetooth Gatt list
+     */
+    @Nullable
+    public List<BluetoothGattService> getServices() {
+        if (bluetoothLeService == null) {
+            return null;
+        }
+        return bluetoothLeService.getServices();
+    }
+
+    /**
+     * get remote device service by UUID
+     *
+     * @param uuid UUID
+     * @return Bluetooth Gatt Service
+     */
+    @SuppressWarnings("WeakerAccess")
+    @Nullable
     public BluetoothGattService getService(UUID uuid) {
-        return bleServiceConnection.getService(uuid);
+        if (bluetoothLeService == null) {
+            return null;
+        }
+        return bluetoothLeService.getService(uuid);
     }
 
     /**
-     * 传输大量数据并需要通知回调以继续发送
+     * add a callback triggered when descriptor write successful
      *
-     * @param serviceUUID        写入数据的服务UUID，通知的服务UUID
-     * @param characteristicUUID 写入数据的特征UUID，通知的特征UUID
-     * @param bigData            大数据内容
+     * @param onBleDescriptorWriteListener callback triggered when descriptor write successful
+     * @return true means successful
      */
-    public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, new DefaultBigDataWriteWithNotificationSendStateChangedListener());
+    public boolean addOnBleDescriptorWriteListener(@NonNull OnBleDescriptorWriteListener onBleDescriptorWriteListener) {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+        return bluetoothLeService.addOnBleDescriptorWriteListener(onBleDescriptorWriteListener);
     }
 
     /**
-     * 传输大量数据并需要通知回调以继续发送
+     * remove a callback triggered when descriptor write successful
      *
-     * @param serviceUUID        写入数据的服务UUID，通知的服务UUID
-     * @param characteristicUUID 写入数据的特征UUID，通知的特征UUID
-     * @param bigData            大数据内容
+     * @param onBleDescriptorWriteListener callback triggered when descriptor write successful
+     * @return true means successful
      */
-    public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData, boolean autoFormat) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, new DefaultBigDataWriteWithNotificationSendStateChangedListener(), autoFormat);
+    public boolean removeOnBleDescriptorWriteListener(@NonNull OnBleDescriptorWriteListener onBleDescriptorWriteListener) {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+        return bluetoothLeService.removeOnBleDescriptorWriteListener(onBleDescriptorWriteListener);
     }
 
     /**
-     * 传输大量数据并需要通知回调以继续发送
+     * add a callback triggered when received notification data
      *
-     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
-     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
-     * @param bigData                                                大数据内容
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     * @param onBleReceiveNotificationListener callback triggered when received notification data
+     * @return true means successful
      */
-    public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData, BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, packageDelayTime, onBigDataWriteWithNotificationSendStateChangedListener);
+    @SuppressWarnings("WeakerAccess")
+    public boolean addOnBleReceiveNotificationListener(@NonNull OnBleReceiveNotificationListener onBleReceiveNotificationListener) {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+        return bluetoothLeService.addOnBleReceiveNotificationListener(onBleReceiveNotificationListener);
     }
 
     /**
-     * 传输大量数据并需要通知回调以继续发送
+     * remove a callback triggered when received notification data
      *
-     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
-     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
-     * @param bigData                                                大数据内容
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     * @param onBleReceiveNotificationListener callback triggered when received notification data
+     * @return true means successful
      */
-    public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID, byte[] bigData, BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, boolean autoFormat) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, packageDelayTime, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
+    @SuppressWarnings("WeakerAccess")
+    public boolean removeOnBleReceiveNotificationListener(@NonNull OnBleReceiveNotificationListener onBleReceiveNotificationListener) {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+        return bluetoothLeService.removeOnBleReceiveNotificationListener(onBleReceiveNotificationListener);
     }
 
     /**
-     * 传输大量数据并需要通知回调以继续发送
+     * add a callback triggered when gatt characteristic write data successful
      *
-     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
-     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
-     * @param bigData                                                大数据内容
-     * @param packageDelayTime                                       每一包之间的发送间隔
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     * @param onBleCharacteristicWriteListener callback triggered when gatt characteristic write data successful
+     * @return true means successful
      */
-    public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID,
-                                                byte[] bigData, int packageDelayTime, BleInterface.
-                                                        OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, packageDelayTime, DEFAULT_MAX_TRY_COUNT, onBigDataWriteWithNotificationSendStateChangedListener);
+    @SuppressWarnings({"WeakerAccess", "BooleanMethodIsAlwaysInverted"})
+    public boolean addOnBleCharacteristicWriteListener(@NonNull OnBleCharacteristicWriteListener onBleCharacteristicWriteListener) {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+        return bluetoothLeService.addOnBleCharacteristicWriteListener(onBleCharacteristicWriteListener);
     }
 
     /**
-     * 传输大量数据并需要通知回调以继续发送
+     * remove a callback triggered when gatt characteristic write data successful
      *
-     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
-     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
-     * @param bigData                                                大数据内容
-     * @param packageDelayTime                                       每一包之间的发送间隔
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     * @param onBleCharacteristicWriteListener callback triggered when gatt characteristic write data successful
+     * @return true means successful
      */
-    public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID,
-                                                byte[] bigData, int packageDelayTime, BleInterface.
-                                                        OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener,
-                                                boolean autoFormat) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, bigData, packageDelayTime, DEFAULT_MAX_TRY_COUNT, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
+    @SuppressWarnings("WeakerAccess")
+    public boolean removeOnBleCharacteristicWriteListener(@NonNull OnBleCharacteristicWriteListener onBleCharacteristicWriteListener) {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+        return bluetoothLeService.removeOnBleCharacteristicWriteListener(onBleCharacteristicWriteListener);
     }
 
     /**
-     * 传输大量数据并需要通知回调以继续发送
+     * write large data and require remote devices to notify collaboration.And automatically format the packet.
      *
-     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
-     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
-     * @param bigData                                                大数据内容
-     * @param packageDelayTime                                       每一包之间的发送间隔
-     * @param maxTryCount                                            最大重试次数
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     * @param serviceUUID        service UUID for writing data and receiving notification data
+     * @param characteristicUUID characteristic UUID for writing data and receiving notification data
+     * @param largeData          large data
+     * @return true means request successful
      */
-    public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID,
-                                                byte[] bigData, int packageDelayTime, int maxTryCount,
-                                                BleInterface.
-                                                        OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, serviceUUID, characteristicUUID, bigData, packageDelayTime, maxTryCount, onBigDataWriteWithNotificationSendStateChangedListener, true);
+    public boolean writeLargeDataWithNotification(@NonNull String serviceUUID, @NonNull String characteristicUUID, @NonNull byte[] largeData) {
+        return writeLargeDataWithNotification(serviceUUID, characteristicUUID, largeData, new DefaultLargeDataWriteWithNotificationSendStateChangedListener());
     }
 
     /**
-     * 传输大量数据并需要通知回调以继续发送
+     * write large data and require remote devices to notify collaboration
      *
-     * @param serviceUUID                                            写入数据的服务UUID，通知的服务UUID
-     * @param characteristicUUID                                     写入数据的特征UUID，通知的特征UUID
-     * @param bigData                                                大数据内容
-     * @param packageDelayTime                                       每一包之间的发送间隔
-     * @param maxTryCount                                            最大重试次数
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     * @param serviceUUID        service UUID for writing data and receiving notification data
+     * @param characteristicUUID characteristic UUID for writing data and receiving notification data
+     * @param largeData          large data
+     * @param autoFormat         whether to format the packet
+     * @return true means request successful
      */
-    public boolean writeBigDataWithNotification(String serviceUUID, String characteristicUUID,
-                                                byte[] bigData, int packageDelayTime, int maxTryCount, BleInterface.
-                                                        OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, boolean autoFormat) {
-        return writeBigDataWithNotification(serviceUUID, characteristicUUID, serviceUUID, characteristicUUID, bigData, packageDelayTime, maxTryCount, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
+    public boolean writeLargeDataWithNotification(@NonNull String serviceUUID, @NonNull String characteristicUUID, @NonNull byte[] largeData, boolean autoFormat) {
+        return writeLargeDataWithNotification(serviceUUID, characteristicUUID, largeData, new DefaultLargeDataWriteWithNotificationSendStateChangedListener(), autoFormat);
     }
 
     /**
-     * 传输大量数据并需要通知回调以继续发送
+     * write large data and require remote devices to notify collaboration.And automatically format the packet.
      *
-     * @param writeDataServiceUUID                                   写入数据的服务UUID
-     * @param writeDataCharacteristicUUID                            写入数据的特征UUID
-     * @param notificationServiceUUID                                通知的服务UUID
-     * @param notificationCharacteristicUUID                         通知的特征UUID
-     * @param bigData                                                大数据内容
-     * @param packageDelayTime                                       每一包之间的发送间隔
-     * @param maxTryCount                                            最大重试次数
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     * @param serviceUUID                                              service UUID for writing data and receiving notification data
+     * @param characteristicUUID                                       characteristic UUID for writing data and receiving notification data
+     * @param largeData                                                large data
+     * @param onLargeDataWriteWithNotificationSendStateChangedListener Callback that write large data and require remote devices to notify collaboration
+     * @return true means request successful
      */
-    public boolean writeBigDataWithNotification(final String writeDataServiceUUID, final String
-            writeDataCharacteristicUUID, final String notificationServiceUUID, final String
-                                                        notificationCharacteristicUUID, final byte[] bigData,
-                                                final int packageDelayTime, final int maxTryCount,
-                                                final BleInterface.
-                                                        OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener,
-                                                final boolean autoFormat) {
-        final int length = bigData.length;
+    @SuppressWarnings("WeakerAccess")
+    public boolean writeLargeDataWithNotification(@NonNull String serviceUUID, @NonNull String characteristicUUID, @NonNull byte[] largeData, @Nullable OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener) {
+        return writeLargeDataWithNotification(serviceUUID, characteristicUUID, largeData, sendLargeDataPackageDelayTime, onLargeDataWriteWithNotificationSendStateChangedListener);
+    }
+
+    /**
+     * write large data and require remote devices to notify collaboration
+     *
+     * @param serviceUUID                                              service UUID for writing data and receiving notification data
+     * @param characteristicUUID                                       characteristic UUID for writing data and receiving notification data
+     * @param largeData                                                large data
+     * @param onLargeDataWriteWithNotificationSendStateChangedListener Callback that write large data and require remote devices to notify collaboration
+     * @param autoFormat                                               whether to format the packet
+     * @return true means request successful
+     */
+    public boolean writeLargeDataWithNotification(@NonNull String serviceUUID, @NonNull String characteristicUUID, @NonNull byte[] largeData, @Nullable OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener, boolean autoFormat) {
+        return writeLargeDataWithNotification(serviceUUID, characteristicUUID, largeData, sendLargeDataPackageDelayTime, onLargeDataWriteWithNotificationSendStateChangedListener, autoFormat);
+    }
+
+    /**
+     * write large data and require remote devices to notify collaboration.And automatically format the packet.
+     *
+     * @param serviceUUID                                              service UUID for writing data and receiving notification data
+     * @param characteristicUUID                                       characteristic UUID for writing data and receiving notification data
+     * @param largeData                                                large data
+     * @param packageDelayTime                                         Time interval between each packet of data
+     * @param onLargeDataWriteWithNotificationSendStateChangedListener Callback that write large data and require remote devices to notify collaboration
+     * @return true means request successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean writeLargeDataWithNotification(@NonNull String serviceUUID, @NonNull String characteristicUUID,
+                                                  @NonNull byte[] largeData, @IntRange(from = 0) int packageDelayTime,
+                                                  @Nullable OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener) {
+        return writeLargeDataWithNotification(serviceUUID, characteristicUUID, largeData, packageDelayTime, DEFAULT_MAX_TRY_COUNT, onLargeDataWriteWithNotificationSendStateChangedListener);
+    }
+
+    /**
+     * write large data and require remote devices to notify collaboration
+     *
+     * @param serviceUUID                                              service UUID for writing data and receiving notification data
+     * @param characteristicUUID                                       characteristic UUID for writing data and receiving notification data
+     * @param largeData                                                large data
+     * @param packageDelayTime                                         Time interval between each packet of data
+     * @param onLargeDataWriteWithNotificationSendStateChangedListener Callback that write large data and require remote devices to notify collaboration
+     * @param autoFormat                                               whether to format the packet
+     * @return true means request successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean writeLargeDataWithNotification(@NonNull String serviceUUID, @NonNull String characteristicUUID,
+                                                  @NonNull byte[] largeData, int packageDelayTime,
+                                                  @Nullable OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener,
+                                                  boolean autoFormat) {
+        return writeLargeDataWithNotification(serviceUUID, characteristicUUID, largeData, packageDelayTime, DEFAULT_MAX_TRY_COUNT, onLargeDataWriteWithNotificationSendStateChangedListener, autoFormat);
+    }
+
+    /**
+     * write large data and require remote devices to notify collaboration.And automatically format the packet.
+     *
+     * @param serviceUUID                                              service UUID for writing data and receiving notification data
+     * @param characteristicUUID                                       characteristic UUID for writing data and receiving notification data
+     * @param largeData                                                large data
+     * @param packageDelayTime                                         Time interval between each packet of data
+     * @param maxTryCount                                              Maximum number of retries
+     * @param onLargeDataWriteWithNotificationSendStateChangedListener Callback that write large data and require remote devices to notify collaboration
+     * @return true means request successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean writeLargeDataWithNotification(@NonNull String serviceUUID, @NonNull String characteristicUUID,
+                                                  @NonNull byte[] largeData, @IntRange(from = 0) int packageDelayTime, @IntRange(from = 0) int maxTryCount,
+                                                  @Nullable OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener) {
+        return writeLargeDataWithNotification(serviceUUID, characteristicUUID, serviceUUID, characteristicUUID, largeData, packageDelayTime, maxTryCount, onLargeDataWriteWithNotificationSendStateChangedListener, true);
+    }
+
+    /**
+     * write large data and require remote devices to notify collaboration.
+     *
+     * @param serviceUUID                                              service UUID for writing data and receiving notification data
+     * @param characteristicUUID                                       characteristic UUID for writing data and receiving notification data
+     * @param largeData                                                large data
+     * @param packageDelayTime                                         Time interval between each packet of data
+     * @param maxTryCount                                              Maximum number of retries
+     * @param onLargeDataWriteWithNotificationSendStateChangedListener Callback that write large data and require remote devices to notify collaboration
+     * @param autoFormat                                               whether to format the packet
+     * @return true means request successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean writeLargeDataWithNotification(@NonNull String serviceUUID, @NonNull String characteristicUUID,
+                                                  @NonNull byte[] largeData, @IntRange(from = 0) int packageDelayTime, @IntRange(from = 0) int maxTryCount,
+                                                  @Nullable OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener,
+                                                  boolean autoFormat) {
+        return writeLargeDataWithNotification(serviceUUID, characteristicUUID, serviceUUID, characteristicUUID, largeData, packageDelayTime, maxTryCount, onLargeDataWriteWithNotificationSendStateChangedListener, autoFormat);
+    }
+
+    /**
+     * write large data and require remote devices to notify collaboration.
+     *
+     * @param writeDataServiceUUID                                     service UUID for writing data
+     * @param writeDataCharacteristicUUID                              characteristic UUID for writing data
+     * @param notificationServiceUUID                                  service UUID for receiving notification data
+     * @param notificationCharacteristicUUID                           characteristic UUID for receiving notification data
+     * @param largeData                                                large data
+     * @param packageDelayTime                                         Time interval between each packet of data
+     * @param maxTryCount                                              Maximum number of retries
+     * @param onLargeDataWriteWithNotificationSendStateChangedListener Callback that write large data and require remote devices to notify collaboration
+     * @param autoFormat                                               whether to format the packet
+     * @return true means request successful
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean writeLargeDataWithNotification(@NonNull final String writeDataServiceUUID, @NonNull final String writeDataCharacteristicUUID,
+                                                  @NonNull final String notificationServiceUUID, @NonNull final String notificationCharacteristicUUID,
+                                                  @NonNull final byte[] largeData, @IntRange(from = 0) final int packageDelayTime,
+                                                  @IntRange(from = 0) final int maxTryCount,
+                                                  @Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener,
+                                                  final boolean autoFormat) {
+        final int length = largeData.length;
         if (!canWrite(writeDataServiceUUID, writeDataCharacteristicUUID)) {
             return false;
         }
         if (!canNotify(notificationServiceUUID, notificationCharacteristicUUID)) {
             return false;
         }
-        if (!enableNotification(notificationServiceUUID, notificationCharacteristicUUID, true)) {
-            return false;
-        }
-        BleInterface.OnDescriptorWriteListener onDescriptorWriteListener = new BleInterface.OnDescriptorWriteListener() {
+        OnBleDescriptorWriteListener onBleDescriptorWriteListener = new OnBleDescriptorWriteListener() {
+            /**
+             * descriptor write successful
+             *
+             * @param bluetoothGattDescriptor BluetoothGattDescriptor
+             * @param data                    descriptor
+             */
             @Override
-            public void onDescriptorWrite(String uuid, byte[] values) {
-                Tool.warnOut(TAG, "open notification success");
-                startThreadToWriteBigDataWithNotification(bigData, length, maxTryCount, writeDataServiceUUID, writeDataCharacteristicUUID, notificationServiceUUID, notificationCharacteristicUUID, packageDelayTime, onBigDataWriteWithNotificationSendStateChangedListener, autoFormat);
-                setOnDescriptorWriteListener(null);
+            public void onBleDescriptorWrite(BluetoothGattDescriptor bluetoothGattDescriptor, byte[] data) {
+                DebugUtil.warnOut(TAG, "open notification success");
+                if (!removeOnBleDescriptorWriteListener(this)) {
+                    performLargeDataSendWithNotificationStartFailedListener(onLargeDataWriteWithNotificationSendStateChangedListener);
+                    return;
+                }
+                startThreadToWriteLargeDataWithNotification(largeData, length, maxTryCount, writeDataServiceUUID, writeDataCharacteristicUUID, notificationCharacteristicUUID, packageDelayTime, onLargeDataWriteWithNotificationSendStateChangedListener, autoFormat);
             }
         };
-        setOnDescriptorWriteListener(onDescriptorWriteListener);
-        return true;
+        if (!addOnBleDescriptorWriteListener(onBleDescriptorWriteListener)) {
+            performLargeDataSendWithNotificationStartFailedListener(onLargeDataWriteWithNotificationSendStateChangedListener);
+            return false;
+        }
+
+        return enableNotification(notificationServiceUUID, notificationCharacteristicUUID, true);
     }
 
     /**
-     * 开启一个线程发送大数据
+     * Check for support notifications
      *
-     * @param bigData                                                大数据内容
-     * @param dataLength                                             数据大小
-     * @param maxTryCount                                            最大重试次数
-     * @param writeDataServiceUUID                                   写入数据的服务UUID
-     * @param writeDataCharacteristicUUID                            写入数据的特征UUID
-     * @param notificationServiceUUID                                通知的服务UUID
-     * @param notificationCharacteristicUUID                         通知的特征UUID
-     * @param packageDelayTime                                       每一包之间的发送间隔
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关回调
+     * @param serviceUUID        Service UUID
+     * @param characteristicUUID characteristic UUID
+     * @return true means support
      */
-    private void startThreadToWriteBigDataWithNotification(final byte[] bigData,
-                                                           final int dataLength, final int maxTryCount, final String writeDataServiceUUID,
-                                                           final String writeDataCharacteristicUUID, String notificationServiceUUID,
-                                                           final String notificationCharacteristicUUID, final int packageDelayTime,
-                                                           final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, final boolean autoFormat) {
+    public boolean canNotify(@NonNull String serviceUUID, @NonNull String characteristicUUID) {
+        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
+        if (service == null) {
+            return false;
+        }
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+        if (characteristic == null) {
+            return false;
+        }
+        return canNotify(characteristic);
+    }
+
+    /**
+     * Check for support notifications
+     *
+     * @param characteristic BluetoothGattCharacteristic
+     * @return true means support
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean canNotify(@NonNull BluetoothGattCharacteristic characteristic) {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+
+        return bluetoothLeService.canNotify(characteristic);
+    }
+
+    /**
+     * Check for support read
+     *
+     * @param serviceUUID        Service UUID
+     * @param characteristicUUID characteristic UUID
+     * @return true means support
+     */
+    public boolean canRead(@NonNull String serviceUUID, @NonNull String characteristicUUID) {
+        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
+        if (service == null) {
+            return false;
+        }
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+        if (characteristic == null) {
+            return false;
+        }
+
+        return canRead(characteristic);
+    }
+
+    /**
+     * Check for support read
+     *
+     * @param characteristic BluetoothGattCharacteristic
+     * @return true means support
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean canRead(@NonNull BluetoothGattCharacteristic characteristic) {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+
+        return bluetoothLeService.canRead(characteristic);
+    }
+
+    /**
+     * Check for support write(Signed)
+     *
+     * @param serviceUUID        Service UUID
+     * @param characteristicUUID characteristic UUID
+     * @return true means support
+     */
+    public boolean canSignedWrite(@NonNull String serviceUUID, @NonNull String characteristicUUID) {
+        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
+        if (service == null) {
+            return false;
+        }
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+        if (characteristic == null) {
+            return false;
+        }
+
+        return canSignedWrite(characteristic);
+    }
+
+    /**
+     * Check for support write(Signed)
+     *
+     * @param characteristic BluetoothGattCharacteristic
+     * @return true means support
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean canSignedWrite(@NonNull BluetoothGattCharacteristic characteristic) {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+
+        return bluetoothLeService.canSignedWrite(characteristic);
+    }
+
+    /**
+     * Check for support write
+     *
+     * @param serviceUUID        Service UUID
+     * @param characteristicUUID characteristic UUID
+     * @return true means support
+     */
+    public boolean canWrite(@NonNull String serviceUUID, @NonNull String characteristicUUID) {
+        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
+        if (service == null) {
+            return false;
+        }
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+        if (characteristic == null) {
+            return false;
+        }
+
+        return canWrite(characteristic);
+    }
+
+    /**
+     * Check for support write
+     *
+     * @param characteristic BluetoothGattCharacteristic
+     * @return true means support
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean canWrite(@NonNull BluetoothGattCharacteristic characteristic) {
+
+        if (bluetoothLeService == null) {
+            return false;
+        }
+
+        return bluetoothLeService.canWrite(characteristic);
+    }
+
+    /**
+     * Check for support write(no response)
+     *
+     * @param serviceUUID        Service UUID
+     * @param characteristicUUID characteristic UUID
+     * @return true means support
+     */
+    public boolean canWriteNoResponse(@NonNull String serviceUUID, @NonNull String characteristicUUID) {
+        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
+        if (service == null) {
+            return false;
+        }
+
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+        if (characteristic == null) {
+            return false;
+        }
+
+        return canWriteNoResponse(characteristic);
+    }
+
+    /**
+     * Check for support write(no response)
+     *
+     * @param characteristic BluetoothGattCharacteristic
+     * @return true means support
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean canWriteNoResponse(@NonNull BluetoothGattCharacteristic characteristic) {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+        return bluetoothLeService.canWriteNoResponse(characteristic);
+    }
+
+    /**
+     * Initiates a reliable write transaction for a given remote device.
+     *
+     * <p>Once a reliable write transaction has been initiated, all calls
+     * to {@link BluetoothGatt#writeCharacteristic} are sent to the remote device for
+     * verification and queued up for atomic execution. The application will
+     * receive an {@link BluetoothGattCallback#onCharacteristicWrite} callback
+     * in response to every {@link BluetoothGatt#writeCharacteristic} call and is responsible
+     * for verifying if the value has been transmitted accurately.
+     *
+     * <p>After all characteristics have been queued up and verified,
+     * {@link #executeReliableWrite} will execute all writes. If a characteristic
+     * was not written correctly, calling {@link #abortReliableWrite} will
+     * cancel the current transaction without commiting any values on the
+     * remote device.
+     *
+     * <p>Requires {@link Manifest.permission#BLUETOOTH} permission.
+     *
+     * @return true, if the reliable write transaction has been initiated
+     */
+    public boolean beginReliableWrite() {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+        return bluetoothLeService.beginReliableWrite();
+    }
+
+    /**
+     * Cancels a reliable write transaction for a given device.
+     *
+     * <p>Calling this function will discard all queued characteristic write
+     * operations for a given remote device.
+     *
+     * <p>Requires {@link Manifest.permission#BLUETOOTH} permission.
+     */
+    @SuppressWarnings("WeakerAccess")
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public boolean abortReliableWrite() {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+        return bluetoothLeService.abortReliableWrite();
+    }
+
+    /**
+     * Discovers services offered by a remote device as well as their
+     * characteristics and descriptors.
+     *
+     * <p>This is an asynchronous operation. Once service discovery is completed,
+     * the {@link BluetoothGattCallback#onServicesDiscovered} callback is
+     * triggered. If the discovery was successful, the remote services can be
+     * retrieved using the {@link #getServices} function.
+     *
+     * <p>Requires {@link Manifest.permission#BLUETOOTH} permission.
+     *
+     * @return true, if the remote service discovery has been started
+     */
+    public boolean discoverServices() {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+        return bluetoothLeService.discoverServices();
+    }
+
+    /**
+     * Executes a reliable write transaction for a given remote device.
+     *
+     * <p>This function will commit all queued up characteristic write
+     * operations for a given remote device.
+     *
+     * <p>A {@link BluetoothGattCallback#onReliableWriteCompleted} callback is
+     * invoked to indicate whether the transaction has been executed correctly.
+     *
+     * <p>Requires {@link Manifest.permission#BLUETOOTH} permission.
+     *
+     * @return true, if the request to execute the transaction has been sent
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean executeReliableWrite() {
+        if (bluetoothLeService == null) {
+            return false;
+        }
+        return bluetoothLeService.executeReliableWrite();
+    }
+
+    /*-----------------------------------private method-----------------------------------*/
+
+    /**
+     * check connect time out
+     */
+    private void checkConnectTimeOut() {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                boolean first = true;
-                final byte[][] data = {new byte[0]};
-                final int writeBigDataWithNotificationPackageCount = getPageCount(dataLength, autoFormat);
-                final int[] writeBigDataWithNotificationCurrentPackageCount = {0};
-                //记录数据重发的次数
-                final int[] writeBigDataWithNotificationTryCount = {0};
-                writeBigDataWithNotificationContinueFlag = true;
-                final int[] wrongNotificationResultCount = {0};
-                final boolean[] receivedNotification = {true};
-                final boolean[] characteristicWriteSuccess = {true};
-                BleInterface.OnReceiveNotificationListener writeBigDataWithNotificationOnReceiveNotificationListener = new BleInterface.OnReceiveNotificationListener() {
-                    @Override
-                    public void onReceiveNotification(String uuid, final byte[] values) {
-                        if (uuid.equalsIgnoreCase(notificationCharacteristicUUID)) {
-                            performBigDataWriteWithNotificationSendStateChangedListener(values, onBigDataWriteWithNotificationSendStateChangedListener, writeBigDataWithNotificationCurrentPackageCount, writeBigDataWithNotificationPackageCount, bigData, autoFormat, wrongNotificationResultCount, maxTryCount, receivedNotification);
-                        }
+                DebugUtil.warnOut(TAG, "time out thread start");
+                long startTime = System.currentTimeMillis();
+                while (!closed) {
+                    if (isConnected() && isServiceDiscovered()) {
+                        DebugUtil.warnOut(TAG, "connected and serviceDiscovered,cancel time out thread");
+                        break;
                     }
-                };
-                BleInterface.OnCharacteristicWriteListener onCharacteristicWriteListener = new BleInterface.OnCharacteristicWriteListener() {
-                    @Override
-                    public void onCharacteristicWrite(String uuid, byte[] values) {
-                        writeBigDataWithNotificationTryCount[0] = 0;
-                        characteristicWriteSuccess[0] = true;
-                        performBigDataWriteWithNotificationSendProgressChangedListener(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationCurrentPackageCount[0], onBigDataWriteWithNotificationSendStateChangedListener);
-                        writeBigDataWithNotificationCurrentPackageCount[0]++;
+                    if (System.currentTimeMillis() - startTime >= connectTimeOut) {
+                        BleManager.getHANDLER().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                DebugUtil.warnOut(TAG, "connect time out");
+                                if (onBleConnectStateChangedListener != null) {
+                                    onBleConnectStateChangedListener.onConnectTimeOut();
+                                }
+                            }
+                        });
+                        break;
                     }
-                };
-                setOnReceiveNotificationListener(writeBigDataWithNotificationOnReceiveNotificationListener);
-                setOnCharacteristicWriteListener(onCharacteristicWriteListener);
-                performBigDataWriteWithNotificationSendStartListener(onBigDataWriteWithNotificationSendStateChangedListener);
-                long lastSystemTime = System.currentTimeMillis();
-                doTransmission(data, writeBigDataWithNotificationPackageCount, writeBigDataWithNotificationCurrentPackageCount, writeBigDataWithNotificationTryCount, receivedNotification, characteristicWriteSuccess, lastSystemTime, maxTryCount, onBigDataWriteWithNotificationSendStateChangedListener, writeDataServiceUUID, writeDataCharacteristicUUID, packageDelayTime, bigData, autoFormat);
-                setOnReceiveNotificationListener(null);
-                setOnCharacteristicWriteListener(null);
+                }
+                DebugUtil.warnOut(TAG, "time out thread end");
             }
         };
         BleManager.getThreadFactory().newThread(runnable).start();
     }
 
-    private void doTransmission(byte[][] data, int writeBigDataWithNotificationPackageCount, int[] writeBigDataWithNotificationCurrentPackageCount, int[] writeBigDataWithNotificationTryCount, boolean[] receivedNotification, boolean[] characteristicWriteSuccess, long lastSystemTime, int maxTryCount, BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, String writeDataServiceUUID, String writeDataCharacteristicUUID, int packageDelayTime, byte[] bigData, boolean autoFormat) {
-        while (writeBigDataWithNotificationContinueFlag) {
+    /**
+     * create a thread to write large data
+     *
+     * @param largeData                                                large data
+     * @param dataLength                                               large data length
+     * @param maxTryCount                                              if a packet write failed,will retry to write,It is max try count to set.
+     * @param writeDataServiceUUID                                     service uuid to write data
+     * @param writeDataCharacteristicUUID                              characteristic uuid to write data
+     * @param notificationCharacteristicUUID                           characteristic uuid to receive notification data
+     * @param packageDelayTime                                         Time interval between each packet of data
+     * @param onLargeDataWriteWithNotificationSendStateChangedListener Callback that write large data and require remote devices to notify collaboration
+     * @param autoFormat                                               whether to format the packet
+     */
+    private void startThreadToWriteLargeDataWithNotification(@NonNull final byte[] largeData,
+                                                             final int dataLength,
+                                                             final int maxTryCount,
+                                                             @NonNull final String writeDataServiceUUID,
+                                                             @NonNull final String writeDataCharacteristicUUID,
+                                                             @NonNull final String notificationCharacteristicUUID,
+                                                             final int packageDelayTime,
+                                                             @Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener,
+                                                             final boolean autoFormat) {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                final byte[][] packetData = {new byte[0]};
+                final int writeLargeDataWithNotificationPackageCount = getPageCount(dataLength, autoFormat);
+                final int[] writeLargeDataWithNotificationCurrentPackageCount = {0};
+                //Record the number of data retransmissions
+                final int[] writeLargeDataWithNotificationTryCount = {0};
+                writeLargeDataWithNotificationContinueFlag = true;
+                final int[] wrongNotificationResultCount = {0};
+                final boolean[] receivedNotification = {true};
+                final boolean[] characteristicWriteSuccess = {true};
+
+                OnBleReceiveNotificationListener onBleReceiveNotificationListener = new OnBleReceiveNotificationListener() {
+                    /**
+                     * received remote device data
+                     *
+                     * @param gattCharacteristic BluetoothGattCharacteristic
+                     * @param data                        received data
+                     */
+                    @Override
+                    public void onBleReceiveNotification(BluetoothGattCharacteristic gattCharacteristic, byte[] data) {
+                        String uuidString = gattCharacteristic.getUuid().toString();
+
+                        if (!uuidString.equalsIgnoreCase(notificationCharacteristicUUID)) {
+                            return;
+                        }
+                        performLargeDataWriteWithNotificationSendStateChangedListener(data, onLargeDataWriteWithNotificationSendStateChangedListener, writeLargeDataWithNotificationCurrentPackageCount, writeLargeDataWithNotificationPackageCount, largeData, autoFormat, wrongNotificationResultCount, maxTryCount, receivedNotification);
+                    }
+                };
+
+                OnBleCharacteristicWriteListener onBleCharacteristicWriteListener = new OnBleCharacteristicWriteListener() {
+                    @Override
+                    public void onBleCharacteristicWrite(BluetoothGattCharacteristic gattCharacteristic, byte[] data) {
+                        String uuidString = gattCharacteristic.getUuid().toString();
+                        if (!uuidString.equalsIgnoreCase(writeDataCharacteristicUUID)) {
+                            return;
+                        }
+                        writeLargeDataWithNotificationTryCount[0] = 0;
+                        characteristicWriteSuccess[0] = true;
+                        performLargeDataWriteWithNotificationSendProgressChangedListener(writeLargeDataWithNotificationPackageCount, packetData[0], writeLargeDataWithNotificationCurrentPackageCount[0], onLargeDataWriteWithNotificationSendStateChangedListener);
+                        writeLargeDataWithNotificationCurrentPackageCount[0]++;
+                    }
+                };
+                if (!addOnBleReceiveNotificationListener(onBleReceiveNotificationListener)) {
+                    performLargeDataSendWithNotificationStartFailedListener(onLargeDataWriteWithNotificationSendStateChangedListener);
+                    return;
+                }
+                if (!addOnBleCharacteristicWriteListener(onBleCharacteristicWriteListener)) {
+                    performLargeDataSendWithNotificationStartFailedListener(onLargeDataWriteWithNotificationSendStateChangedListener);
+                    return;
+                }
+                performLargeDataWriteWithNotificationSendStartListener(onLargeDataWriteWithNotificationSendStateChangedListener);
+                long lastSystemTime = System.currentTimeMillis();
+                doTransmission(packetData, writeLargeDataWithNotificationPackageCount, writeLargeDataWithNotificationCurrentPackageCount, writeLargeDataWithNotificationTryCount, receivedNotification, characteristicWriteSuccess, lastSystemTime, maxTryCount, onLargeDataWriteWithNotificationSendStateChangedListener, writeDataServiceUUID, writeDataCharacteristicUUID, packageDelayTime, largeData, autoFormat);
+                removeOnBleReceiveNotificationListener(onBleReceiveNotificationListener);
+                removeOnBleCharacteristicWriteListener(onBleCharacteristicWriteListener);
+            }
+        };
+        BleManager.getThreadFactory().newThread(runnable).start();
+    }
+
+    /**
+     * send large data to remote device
+     *
+     * @param data                                                     data
+     * @param writeLargeDataWithNotificationPackageCount               total package count
+     * @param writeLargeDataWithNotificationCurrentPackageCount        current package number
+     * @param writeLargeDataWithNotificationTryCount                   try count
+     * @param receivedNotification                                     received notification data
+     * @param characteristicWriteSuccess                               Whether the write is successful
+     * @param lastSystemTime                                           System time when the last write was performed
+     * @param maxTryCount                                              max try count
+     * @param onLargeDataWriteWithNotificationSendStateChangedListener Callback that write large data and require remote devices to notify collaboration
+     * @param writeDataServiceUUID                                     service uuid to write data
+     * @param writeDataCharacteristicUUID                              characteristic uuid to write data
+     * @param packageDelayTime                                         Time interval between each packet of data
+     * @param largeData                                                large data
+     * @param autoFormat                                               whether to format the packet
+     */
+    private void doTransmission(@NonNull byte[][] data, int writeLargeDataWithNotificationPackageCount,
+                                @NonNull int[] writeLargeDataWithNotificationCurrentPackageCount,
+                                @NonNull int[] writeLargeDataWithNotificationTryCount,
+                                @NonNull boolean[] receivedNotification,
+                                @NonNull boolean[] characteristicWriteSuccess,
+                                long lastSystemTime, int maxTryCount,
+                                @Nullable OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener,
+                                @NonNull String writeDataServiceUUID, String writeDataCharacteristicUUID,
+                                int packageDelayTime,
+                                @NonNull byte[] largeData, boolean autoFormat) {
+
+        while (writeLargeDataWithNotificationContinueFlag) {
             if (!characteristicWriteSuccess[0]) {
-                if (System.currentTimeMillis() - lastSystemTime >= sendBigDataTimeOut) {
-                    if (writeBigDataWithNotificationTryCount[0] >= maxTryCount) {
-                        performBigDataWriteWithNotificationSendTimeOut(onBigDataWriteWithNotificationSendStateChangedListener, writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, data[0]);
+                if (System.currentTimeMillis() - lastSystemTime >= sendLargeDataTimeOut) {
+                    if (writeLargeDataWithNotificationTryCount[0] >= maxTryCount) {
+                        performLargeDataWriteWithNotificationSendTimeOut(onLargeDataWriteWithNotificationSendStateChangedListener, writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, data[0]);
                         break;
                     }
                     lastSystemTime = System.currentTimeMillis();
-                    writeBigDataWithNotificationTryCount[0]++;
+                    writeLargeDataWithNotificationTryCount[0]++;
                     if (data[0] != null) {
                         if (writeData(writeDataServiceUUID, writeDataCharacteristicUUID, data[0])) {
-                            performBigDataWriteWithNotificationSendTimeOutAndRetry(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationTryCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
+                            performLargeDataWriteWithNotificationSendTimeOutAndRetry(writeLargeDataWithNotificationPackageCount, data[0], writeLargeDataWithNotificationTryCount[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, onLargeDataWriteWithNotificationSendStateChangedListener);
                             continue;
                         }
                         sleepTime(RETRY_DELAY_TIME);
@@ -1078,18 +1375,18 @@ public class BleConnector {
                 }
                 continue;
             }
-            Tool.warnOut(TAG, "send state characteristicWriteSuccess");
+            DebugUtil.warnOut(TAG, "send state characteristicWriteSuccess");
             if (!receivedNotification[0]) {
-                if (System.currentTimeMillis() - lastSystemTime >= sendBigDataTimeOut) {
-                    if (writeBigDataWithNotificationTryCount[0] >= maxTryCount) {
-                        performBigDataWriteWithNotificationSendTimeOut(onBigDataWriteWithNotificationSendStateChangedListener, writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, data[0]);
+                if (System.currentTimeMillis() - lastSystemTime >= sendLargeDataTimeOut) {
+                    if (writeLargeDataWithNotificationTryCount[0] >= maxTryCount) {
+                        performLargeDataWriteWithNotificationSendTimeOut(onLargeDataWriteWithNotificationSendStateChangedListener, writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, data[0]);
                         break;
                     }
-                    writeBigDataWithNotificationTryCount[0]++;
+                    writeLargeDataWithNotificationTryCount[0]++;
                     lastSystemTime = System.currentTimeMillis();
                     if (data[0] != null) {
                         if (writeData(writeDataServiceUUID, writeDataCharacteristicUUID, data[0])) {
-                            performBigDataWriteWithNotificationSendTimeOutAndRetry(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationTryCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
+                            performLargeDataWriteWithNotificationSendTimeOutAndRetry(writeLargeDataWithNotificationPackageCount, data[0], writeLargeDataWithNotificationTryCount[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, onLargeDataWriteWithNotificationSendStateChangedListener);
                             sleepTime(RETRY_DELAY_TIME);
                             continue;
                         }
@@ -1097,280 +1394,58 @@ public class BleConnector {
                 }
                 continue;
             }
-            Tool.warnOut(TAG, "send state receivedNotification");
+            DebugUtil.warnOut(TAG, "send state receivedNotification");
             sleepTime(packageDelayTime);
-            data[0] = getCurrentPackageData(writeBigDataWithNotificationCurrentPackageCount[0], bigData, writeBigDataWithNotificationPackageCount, autoFormat);
+            data[0] = getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat);
             if (data[0] == null) {
-                performBigDataWriteWithNotificationSendFinishedListener(onBigDataWriteWithNotificationSendStateChangedListener);
+                performLargeDataWriteWithNotificationSendFinishedListener(onLargeDataWriteWithNotificationSendStateChangedListener);
                 break;
             }
-            if (writeBigDataWithNotificationTryCount[0] >= maxTryCount) {
-                performBigDataWriteWithNotificationSendFailedListener(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
+            if (writeLargeDataWithNotificationTryCount[0] >= maxTryCount) {
+                performLargeDataWriteWithNotificationSendFailedListener(writeLargeDataWithNotificationPackageCount, data[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, onLargeDataWriteWithNotificationSendStateChangedListener);
                 break;
             }
             if (!writeData(writeDataServiceUUID, writeDataCharacteristicUUID, data[0])) {
-                performBigDataWriteWithNotificationSendFailedAndRetryListener(writeBigDataWithNotificationPackageCount, data[0], writeBigDataWithNotificationTryCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, onBigDataWriteWithNotificationSendStateChangedListener);
-                writeBigDataWithNotificationTryCount[0]++;
-                Tool.warnOut(TAG, "writeData failed");
+                performLargeDataWriteWithNotificationSendFailedAndRetryListener(writeLargeDataWithNotificationPackageCount, data[0], writeLargeDataWithNotificationTryCount[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, onLargeDataWriteWithNotificationSendStateChangedListener);
+                writeLargeDataWithNotificationTryCount[0]++;
+                DebugUtil.warnOut(TAG, "writeData failed");
                 sleepTime(RETRY_DELAY_TIME);
                 continue;
             }
-            Tool.warnOut(TAG, "packageDelayTime = " + packageDelayTime);
+            DebugUtil.warnOut(TAG, "sendLargeDataPackageDelayTime = " + packageDelayTime);
         }
     }
 
-    private void performBigDataWriteWithNotificationSendStateChangedListener(final byte[] values, final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, final int[] writeBigDataWithNotificationCurrentPackageCount, final int writeBigDataWithNotificationPackageCount, final byte[] bigData, final boolean autoFormat, final int[] wrongNotificationResultCount, final int maxTryCount, final boolean[] receivedNotification) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                    boolean result = onBigDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, getCurrentPackageData(writeBigDataWithNotificationCurrentPackageCount[0], bigData, writeBigDataWithNotificationPackageCount, autoFormat));
-                    Tool.warnOut(TAG, "onBigDataWriteWithNotificationSendStateChangedListener onReceiveNotification result = " + result);
-                    if (!result) {
-                        if (wrongNotificationResultCount[0] >= maxTryCount) {
-                            performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataListener(onBigDataWriteWithNotificationSendStateChangedListener);
-                            writeBigDataWithNotificationContinueFlag = false;
-                        } else {
-                            wrongNotificationResultCount[0]++;
-                            performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onBigDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount[0], writeBigDataWithNotificationCurrentPackageCount[0] + 1, writeBigDataWithNotificationPackageCount, getCurrentPackageData(writeBigDataWithNotificationCurrentPackageCount[0], bigData, writeBigDataWithNotificationPackageCount, autoFormat));
-                        }
-                    } else {
-                        wrongNotificationResultCount[0] = 0;
-                    }
-                }
-                receivedNotification[0] = true;
-            }
-        });
-    }
-
-    private void performBigDataWriteWithNotificationSendStartListener(final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendStart();
-                }
-            }
-        });
-    }
-
-    private void performBigDataWriteWithNotificationSendTimeOutAndRetry(final int packageCount, final byte[] data, final int tryCount, final int currentPackageIndex, final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendTimeOutAndRetry(data, tryCount, currentPackageIndex, packageCount);
-                }
-            }
-        });
-    }
-
-    private void performBigDataWriteWithNotificationSendTimeOut(final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, final int currentPackageIndex, final int packageCount, final byte[] data) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendTimeOut(currentPackageIndex, packageCount, data);
-                }
-            }
-        });
-    }
-
     /**
-     * 让线程睡眠一段时间
+     * Let the current thread delay for a while before continuing
      *
-     * @param packageDelayTime 线程睡眠的时间
+     * @param packageDelayTime delay time (unit:ms)
      */
     private void sleepTime(int packageDelayTime) {
-        Tool.sleep(packageDelayTime);
+        ThreadUtil.sleep(packageDelayTime);
     }
 
     /**
-     * 获取上下文
-     *
-     * @return 上下文
-     */
-    public Context getContext() {
-        return context;
-    }
-
-    /**
-     * 检查特征是否支持通知
-     *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @return true表示支持通知
-     */
-    public boolean canNotify(String serviceUUID, String characteristicUUID) {
-        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
-        if (service == null) {
-            return false;
-        }
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (characteristic == null) {
-            return false;
-        }
-
-        int properties = characteristic.getProperties();
-        return (properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0;
-    }
-
-    /**
-     * 检查特征是否支持读取
-     *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @return true表示支持读取
-     */
-    public boolean canRead(String serviceUUID, String characteristicUUID) {
-        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
-        if (service == null) {
-            return false;
-        }
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (characteristic == null) {
-            return false;
-        }
-
-        int properties = characteristic.getProperties();
-        return (properties & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
-    }
-
-    public long getConnectTimeOut() {
-        return connectTimeOut;
-    }
-
-    public long getSendBigDataTimeOut() {
-        return sendBigDataTimeOut;
-    }
-
-    /**
-     * 检查特征是否支持写入（带符号）
-     *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @return true表示支持写入（带符号）
-     */
-    public boolean canSignedWrite(String serviceUUID, String characteristicUUID) {
-        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
-        if (service == null) {
-            return false;
-        }
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (characteristic == null) {
-            return false;
-        }
-
-        int properties = characteristic.getProperties();
-        return (properties & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) != 0;
-    }
-
-    /**
-     * 检查特征是否支持写入
-     *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @return true表示支持写入
-     */
-    public boolean canWrite(String serviceUUID, String characteristicUUID) {
-        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
-        if (service == null) {
-            return false;
-        }
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (characteristic == null) {
-            return false;
-        }
-
-        int properties = characteristic.getProperties();
-        return (properties & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
-    }
-
-    /**
-     * 检查特征是否支持写入（无回复方式）
-     *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @return true表示支持写入（无回复方式）
-     */
-    public boolean canWriteNoResponse(String serviceUUID, String characteristicUUID) {
-        BluetoothGattService service = getService(UUID.fromString(serviceUUID));
-        if (service == null) {
-            return false;
-        }
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
-        if (characteristic == null) {
-            return false;
-        }
-
-        int properties = characteristic.getProperties();
-        return (properties & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0;
-    }
-
-    /*-------------------------私有函数-------------------------*/
-
-    /**
-     * 设置连接地址
-     *
-     * @param address 连接地址
-     */
-    private void setAddress(String address) {
-        //将地址传入服务连接工具并初始化
-        bleServiceConnection = new BleServiceConnection(address);
-    }
-
-    private void setDevice(BluetoothDevice bluetoothDevice) {
-        bleServiceConnection = new BleServiceConnection(bluetoothDevice);
-    }
-
-    /**
-     * 检查关闭状况（用于调用回调）
+     * check close state to trigger call back
      */
     private void checkCloseStatus() {
-        BleManager.getHandler().post(new Runnable() {
+        BleManager.getHANDLER().post(new Runnable() {
             @Override
             public void run() {
-                if (onCloseCompleteListener != null) {
-                    onCloseCompleteListener.onCloseComplete();
-                    onCloseCompleteListener = null;
+                if (onBleConnectStateChangedListener != null) {
+                    onBleConnectStateChangedListener.onCloseComplete();
+                    onBleConnectStateChangedListener = null;
                 }
             }
         });
     }
 
     /**
-     * 广播接收者Action过滤器
+     * get broadcast receiver filter
      *
-     * @return 接收者Action过滤器
+     * @return Broadcast receiver filter
      */
-    private IntentFilter makeConnectBLEIntentFilter() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_CONNECTING);
-        intentFilter.addAction(BleConstants.ACTION_GATT_DISCONNECTING);
-        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_READ);
-        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_CHANGED);
-        intentFilter.addAction(BleConstants.ACTION_CHARACTERISTIC_WRITE);
-        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_READ);
-        intentFilter.addAction(BleConstants.ACTION_DESCRIPTOR_WRITE);
-        intentFilter.addAction(BleConstants.ACTION_RELIABLE_WRITE_COMPLETED);
-        intentFilter.addAction(BleConstants.ACTION_READ_REMOTE_RSSI);
-        intentFilter.addAction(BleConstants.ACTION_MTU_CHANGED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_NOT_SUCCESS);
-        intentFilter.addAction(BleConstants.ACTION_GATT_DISCOVER_SERVICES_FAILED);
-        intentFilter.addAction(BleConstants.ACTION_GATT_STATUS_ERROR);
-        intentFilter.setPriority(Integer.MAX_VALUE);
-        return intentFilter;
-    }
-
-    /**
-     * 广播接收者Action过滤器
-     *
-     * @return 接收者Action过滤器
-     */
-    @TargetApi(Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private IntentFilter makeBoundBLEIntentFilter() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
@@ -1380,10 +1455,11 @@ public class BleConnector {
     }
 
     /**
-     * 获取分包传输时，要传输的总包数
+     * get total package count
      *
-     * @param dataLength 有效数据的总长度
-     * @param autoFormat 是否有自动格式化
+     * @param dataLength data length
+     * @param autoFormat whether to format the packet
+     * @return total package count
      */
     private int getPageCount(int dataLength, boolean autoFormat) {
 
@@ -1403,19 +1479,20 @@ public class BleConnector {
     }
 
     /**
-     * 根据当前需要第几包，获取对应的数据包内容
+     * get package data by specified index
      *
-     * @param packageIndex 当前需要第几包
-     * @param bigData      整个大型数据
-     * @param pageCount    总包数
-     * @param autoFormat   是否自动格式化
-     * @return byte数组
+     * @param packageIndex index
+     * @param largeData    large data
+     * @param pageCount    total count
+     * @param autoFormat   whether to format the packet
+     * @return packet data
      */
-    private byte[] getCurrentPackageData(int packageIndex, byte[] bigData, int pageCount, boolean autoFormat) {
+    @Nullable
+    private byte[] getCurrentPackageData(int packageIndex, @NonNull byte[] largeData, int pageCount, boolean autoFormat) {
         if (packageIndex >= pageCount) {
             return null;
         }
-        int largeDataLength = bigData.length;
+        int largeDataLength = largeData.length;
         if (autoFormat) {
             if (packageIndex == pageCount - 1) {
                 int remainder = largeDataLength % LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH;
@@ -1424,24 +1501,22 @@ public class BleConnector {
                     data[0] = (byte) pageCount;
                     data[1] = (byte) (packageIndex + 1);
                     data[2] = LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH;
-                    System.arraycopy(bigData, packageIndex * LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH));
+                    System.arraycopy(largeData, packageIndex * LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH));
                     return data;
                 } else {
                     byte[] data = new byte[remainder + PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH];
-                    byte[] bytes = Tool.intToBytes2(largeDataLength);
                     data[0] = (byte) pageCount;
                     data[1] = (byte) (packageIndex + 1);
                     data[2] = (byte) remainder;
-                    System.arraycopy(bigData, packageIndex * LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH));
+                    System.arraycopy(largeData, packageIndex * LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH));
                     return data;
                 }
             } else {
                 byte[] data = new byte[20];
-                byte[] bytes = Tool.intToBytes2(largeDataLength);
                 data[0] = (byte) pageCount;
                 data[1] = (byte) (packageIndex + 1);
                 data[2] = (byte) LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH;
-                System.arraycopy(bigData, packageIndex * LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH));
+                System.arraycopy(largeData, packageIndex * LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data, PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH, data.length - (PACKAGE_MAX_LENGTH - LARGE_DATA_AUTO_FORMAT_TRANSFORM_PACKAGE_MAX_LENGTH));
                 return data;
             }
         } else {
@@ -1449,37 +1524,39 @@ public class BleConnector {
                 int remainder = largeDataLength % PACKAGE_MAX_LENGTH;
                 if (remainder == 0) {
                     byte[] data = new byte[20];
-                    System.arraycopy(bigData, packageIndex * PACKAGE_MAX_LENGTH, data, 0, data.length);
+                    System.arraycopy(largeData, packageIndex * PACKAGE_MAX_LENGTH, data, 0, data.length);
                     return data;
                 } else {
                     byte[] data = new byte[remainder];
-                    System.arraycopy(bigData, packageIndex * PACKAGE_MAX_LENGTH, data, 0, data.length);
+                    System.arraycopy(largeData, packageIndex * PACKAGE_MAX_LENGTH, data, 0, data.length);
                     return data;
                 }
             } else {
                 byte[] data = new byte[20];
-                System.arraycopy(bigData, packageIndex * PACKAGE_MAX_LENGTH, data, 0, data.length);
+                System.arraycopy(largeData, packageIndex * PACKAGE_MAX_LENGTH, data, 0, data.length);
                 return data;
             }
         }
     }
 
     /**
-     * 发起一个线程开始进行数据传输
+     * create a thread to send large data
      *
-     * @param serviceUuid                       服务UUID
-     * @param characteristicUuid                特征UUID
-     * @param bigData                           大数据内容
-     * @param dataLength                        数据长度
-     * @param packageDelayTime                  每一包数据之间的间隔时间
-     * @param maxTryCount                       最大的重发次数
-     * @param onBigDataSendStateChangedListener 大数据传输时的相关回调
-     * @param autoFormat                        是否自动格式化数据包
+     * @param serviceUuid                         service uuid to write data
+     * @param characteristicUuid                  characteristic uuid to write data
+     * @param largeData                           large data
+     * @param dataLength                          large data length
+     * @param packageDelayTime                    Time interval between each packet of data
+     * @param maxTryCount                         max try count
+     * @param onLargeDataSendStateChangedListener Callback during large data transmission
+     * @param autoFormat                          whether to format the packet data
      */
-    private void startThreadToWriteBigData(final String serviceUuid,
-                                           final String characteristicUuid, final byte[] bigData, final int dataLength,
-                                           final int packageDelayTime, final int maxTryCount,
-                                           final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener, final boolean autoFormat) {
+    private void startThreadToWriteLargeData(@NonNull final String serviceUuid,
+                                             @NonNull final String characteristicUuid,
+                                             @NonNull final byte[] largeData, final int dataLength,
+                                             final int packageDelayTime, final int maxTryCount,
+                                             @Nullable final OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener,
+                                             final boolean autoFormat) {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -1487,31 +1564,42 @@ public class BleConnector {
                 final int[] currentPackageCount = {0};
                 final int[] tryCount = {0};
                 byte[] data = null;
-                writeBigDataContinueFlag = true;
+                writeLargeDataContinueFlag = true;
                 final boolean[] characteristicWriteSuccess = {true};
-                BleInterface.OnCharacteristicWriteListener onCharacteristicWriteListener = new BleInterface.OnCharacteristicWriteListener() {
+
+                OnBleCharacteristicWriteListener onBleCharacteristicWriteListener = new OnBleCharacteristicWriteListener() {
                     @Override
-                    public void onCharacteristicWrite(String uuid, byte[] values) {
+                    public void onBleCharacteristicWrite(BluetoothGattCharacteristic gattCharacteristic, byte[] data) {
+                        String uuidString = gattCharacteristic.getUuid().toString();
+                        if (!uuidString.equalsIgnoreCase(characteristicUuid)) {
+                            return;
+                        }
                         tryCount[0] = 0;
                         currentPackageCount[0]++;
                         characteristicWriteSuccess[0] = true;
                     }
                 };
-                setOnCharacteristicWriteListener(onCharacteristicWriteListener);
-                performBigDataSendStartedListener(onBigDataSendStateChangedListener);
+
+                if (!addOnBleCharacteristicWriteListener(onBleCharacteristicWriteListener)) {
+                    performLargeDataSendStartFailedListener(onLargeDataSendStateChangedListener);
+                    return;
+                }
+                performLargeDataSendStartedListener(onLargeDataSendStateChangedListener);
                 long lastSystemTime = System.currentTimeMillis();
-                while (writeBigDataContinueFlag) {
+                while (writeLargeDataContinueFlag) {
                     if (!characteristicWriteSuccess[0]) {
-                        if (System.currentTimeMillis() - lastSystemTime >= sendBigDataTimeOut) {
+                        if (System.currentTimeMillis() - lastSystemTime >= sendLargeDataTimeOut) {
                             if (tryCount[0] >= maxTryCount) {
-                                performBigDataWriteSendTimeOut(onBigDataSendStateChangedListener, pageCount, currentPackageCount[0], data);
+                                if (data != null) {
+                                    performLargeDataWriteSendTimeOut(onLargeDataSendStateChangedListener, pageCount, currentPackageCount[0], data);
+                                }
                                 break;
                             }
                             lastSystemTime = System.currentTimeMillis();
                             tryCount[0]++;
                             if (data != null) {
                                 if (writeData(serviceUuid, characteristicUuid, data)) {
-                                    performBigDataWriteSendTimeOutAndRetry(pageCount, data, tryCount[0], currentPackageCount[0] + 1, onBigDataSendStateChangedListener);
+                                    performLargeDataWriteSendTimeOutAndRetry(pageCount, data, tryCount[0], currentPackageCount[0] + 1, onLargeDataSendStateChangedListener);
                                     continue;
                                 }
                                 sleepTime(RETRY_DELAY_TIME);
@@ -1521,296 +1609,309 @@ public class BleConnector {
                         continue;
                     }
                     sleepTime(packageDelayTime);
-                    data = getCurrentPackageData(currentPackageCount[0], bigData, pageCount, autoFormat);
+                    data = getCurrentPackageData(currentPackageCount[0], largeData, pageCount, autoFormat);
                     if (data == null) {
-                        performBigDataSendFinishedListener(onBigDataSendStateChangedListener);
+                        performLargeDataSendFinishedListener(onLargeDataSendStateChangedListener);
                         break;
                     }
-                    performBigDataSendProgressChangedListener(pageCount, data, currentPackageCount[0], onBigDataSendStateChangedListener);
+                    performLargeDataSendProgressChangedListener(pageCount, data, currentPackageCount[0], onLargeDataSendStateChangedListener);
                     if (tryCount[0] >= maxTryCount) {
-                        performBigDataSendFailedListener(pageCount, data, currentPackageCount[0], onBigDataSendStateChangedListener);
+                        performLargeDataSendFailedListener(pageCount, data, currentPackageCount[0], onLargeDataSendStateChangedListener);
                         break;
                     }
                     if (!writeData(serviceUuid, characteristicUuid, data)) {
-                        performBigDataSendFailedAndRetryListener(pageCount, data, tryCount[0], currentPackageCount[0], onBigDataSendStateChangedListener);
+                        performLargeDataSendFailedAndRetryListener(pageCount, data, tryCount[0], currentPackageCount[0], onLargeDataSendStateChangedListener);
                         tryCount[0]++;
                         characteristicWriteSuccess[0] = true;
-                        Tool.warnOut(TAG, "writeData failed");
+                        DebugUtil.warnOut(TAG, "writeData failed");
                         sleepTime(RETRY_DELAY_TIME);
                         continue;
                     }
                     characteristicWriteSuccess[0] = false;
                 }
-                setOnCharacteristicWriteListener(null);
+                removeOnBleCharacteristicWriteListener(onBleCharacteristicWriteListener);
             }
         };
         BleManager.getThreadFactory().newThread(runnable).start();
     }
 
-    private void performBigDataWriteSendTimeOutAndRetry(final int pageCount, final byte[] data, final int tryCount, final int currentPackageIndex, final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
+    private void performLargeDataWriteWithNotificationSendStateChangedListener(@NonNull final byte[] values,
+                                                                               @Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener,
+                                                                               @NonNull final int[] writeLargeDataWithNotificationCurrentPackageCount,
+                                                                               final int writeLargeDataWithNotificationPackageCount,
+                                                                               @NonNull final byte[] largeData,
+                                                                               final boolean autoFormat,
+                                                                               @NonNull final int[] wrongNotificationResultCount,
+                                                                               final int maxTryCount,
+                                                                               @NonNull final boolean[] receivedNotification) {
+        BleManager.getHANDLER().post(new Runnable() {
             @Override
             public void run() {
-                if (onBigDataSendStateChangedListener != null) {
-                    onBigDataSendStateChangedListener.onSendTimeOutAndRetry(tryCount, currentPackageIndex, pageCount, data);
-                }
-            }
-        });
-    }
-
-    private void performBigDataWriteSendTimeOut(final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener, final int pageCount, final int currentPackageIndex, final byte[] data) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataSendStateChangedListener != null) {
-                    onBigDataSendStateChangedListener.onSendTimeOut(currentPackageIndex, pageCount, data);
-                }
-            }
-        });
-    }
-
-    /**
-     * 触发大量数据传输进度更新时进行的回调
-     *
-     * @param pageCount                         总包数
-     * @param data                              当前包数据
-     * @param currentPackageCount               当前包数
-     * @param onBigDataSendStateChangedListener 相关的回调
-     */
-    private void performBigDataSendProgressChangedListener(final int pageCount, final byte[] data, final int currentPackageCount,
-                                                           final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataSendStateChangedListener != null) {
-                    onBigDataSendStateChangedListener.packageSendProgressChanged(currentPackageCount + 1, pageCount, data);
-                }
-            }
-        });
-    }
-
-    /**
-     * 触发大量数据传输时失败，尝试重传时的回调
-     *
-     * @param pageCount                         总包数
-     * @param data                              当前包数据
-     * @param tryCount                          尝试次数
-     * @param currentPackageCount               当前包数
-     * @param onBigDataSendStateChangedListener 相关的回调
-     */
-    private void performBigDataSendFailedAndRetryListener(final int pageCount, final byte[] data,
-                                                          final int tryCount, final int currentPackageCount,
-                                                          final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataSendStateChangedListener != null) {
-                    onBigDataSendStateChangedListener.packageSendFailedAndRetry(currentPackageCount + 1, pageCount, tryCount, data);
-                }
-            }
-        });
-    }
-
-    /**
-     * 触发大量数据传输时失败时的回调
-     *
-     * @param pageCount                         总包数
-     * @param data                              当前包数据
-     * @param currentPackageCount               当前包数
-     * @param onBigDataSendStateChangedListener 相关的回调
-     */
-    private void performBigDataSendFailedListener(final int pageCount, final byte[] data, final int currentPackageCount,
-                                                  final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataSendStateChangedListener != null) {
-                    onBigDataSendStateChangedListener.packageSendFailed(currentPackageCount + 1, pageCount, data);
-                }
-            }
-        });
-    }
-
-    /**
-     * 触发大量数据传输时完成时的回调
-     *
-     * @param onBigDataSendStateChangedListener 相关的回调
-     */
-    private void performBigDataSendFinishedListener(final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataSendStateChangedListener != null) {
-                    onBigDataSendStateChangedListener.sendFinished();
-                }
-            }
-        });
-    }
-
-    /**
-     * 触发大量数据开始传输时进行的回调
-     *
-     * @param onBigDataSendStateChangedListener 相关的回调
-     */
-    private void performBigDataSendStartedListener(final BleInterface.OnBigDataSendStateChangedListener onBigDataSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataSendStateChangedListener != null) {
-                    onBigDataSendStateChangedListener.sendStarted();
-                }
-            }
-        });
-    }
-
-    /**
-     * 触发写入大量数据并包含通知时，数据发送完成的回调
-     *
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 写入大数据并包含通知 到远端设备时相关的回调
-     */
-    private void performBigDataWriteWithNotificationSendFinishedListener(
-            final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendFinished();
-                }
-            }
-        });
-    }
-
-    /**
-     * 触发写入大量数据并包含通知时，数据传输失败的回调
-     *
-     * @param pageCount                                              数据总包数
-     * @param data                                                   传输失败的当前包内容
-     * @param currentPackageCount                                    当前传输的包数
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关的回调
-     */
-    private void performBigDataWriteWithNotificationSendFailedListener(final int pageCount,
-                                                                       final byte[] data, final int currentPackageCount,
-                                                                       final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendFailed(currentPackageCount, pageCount, data);
-                }
-            }
-        });
-    }
-
-    /**
-     * 触发写入大量数据并包含通知时，数据传输失败并尝试重发的回调
-     *
-     * @param pageCount                                              数据总包数
-     * @param data                                                   传输失败的当前包内容
-     * @param tryCount                                               本包重试次数
-     * @param currentPackageCount                                    当前传输的包数
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关的回调
-     */
-    private void performBigDataWriteWithNotificationSendFailedAndRetryListener(
-            final int pageCount, final byte[] data, final int tryCount, final int currentPackageCount,
-            final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendFailedAndRetry(currentPackageCount, pageCount, data, tryCount);
-                }
-            }
-        });
-    }
-
-    /**
-     * 触发写入大量数据并包含通知时，数据传输进度更改时进行的回调的回调
-     *
-     * @param pageCount                                              数据总包数
-     * @param data                                                   传输失败的当前包内容
-     * @param currentPackageCount                                    当前传输的包数
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关的回调
-     */
-    private void performBigDataWriteWithNotificationSendProgressChangedListener(final int pageCount,
-                                                                                final byte[] data,
-                                                                                final int currentPackageCount,
-                                                                                final BleInterface.
-                                                                                        OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                    onBigDataWriteWithNotificationSendStateChangedListener.onDataSendProgressChanged(currentPackageCount + 1, pageCount, data);
-                }
-            }
-        });
-    }
-
-    /**
-     * 触发写入大量数据并包含通知时,通知数据异常导致传输结束的回调
-     *
-     * @param onBigDataWriteWithNotificationSendStateChangedListener 相关的回调
-     */
-    private void performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataListener(final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                    onBigDataWriteWithNotificationSendStateChangedListener.onSendFailedWithWrongNotifyData();
-                }
-            }
-        });
-    }
-
-    private void performBigDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(final BleInterface.OnBigDataWriteWithNotificationSendStateChangedListener onBigDataWriteWithNotificationSendStateChangedListener, final int tryCount, final int currentPackageIndex, final int packageCount, final byte[] data) {
-        BleManager.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (onBigDataWriteWithNotificationSendStateChangedListener != null) {
-                    onBigDataWriteWithNotificationSendStateChangedListener.onSendFailedWithWrongNotifyDataAndRetry(tryCount, currentPackageIndex, packageCount, data);
-                }
-            }
-        });
-    }
-
-    private void startThreadToCheckTimeOut() {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                long currentTimeMillis = System.currentTimeMillis();
-                while (!mClosed) {
-                    if (System.currentTimeMillis() - currentTimeMillis > connectTimeOut) {
-                        break;
+                if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
+                    boolean result = false;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        result = onLargeDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, Objects.requireNonNull(getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat)));
+                    } else {
+                        byte[] currentPackageData = getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat);
+                        if (currentPackageData != null) {
+                            result = onLargeDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, currentPackageData);
+                        }
                     }
-                    if (bleServiceConnection.isConnected() && bleServiceConnection.isServiceDiscovered()) {
-                        break;
+                    DebugUtil.warnOut(TAG, "onLargeDataWriteWithNotificationSendStateChangedListener onReceiveNotification result = " + result);
+                    if (!result) {
+                        if (wrongNotificationResultCount[0] >= maxTryCount) {
+                            performLargeDataWriteWithNotificationSendFailedWithWrongNotifyDataListener(onLargeDataWriteWithNotificationSendStateChangedListener);
+                            writeLargeDataWithNotificationContinueFlag = false;
+                        } else {
+                            wrongNotificationResultCount[0]++;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                performLargeDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onLargeDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, Objects.requireNonNull(getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat)));
+                            } else {
+                                byte[] currentPackageData = getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat);
+                                if (currentPackageData != null) {
+                                    performLargeDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onLargeDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, currentPackageData);
+                                }
+                            }
+                        }
+                    } else {
+                        wrongNotificationResultCount[0] = 0;
                     }
                 }
-                if (bleServiceConnection.isConnected() && bleServiceConnection.isServiceDiscovered()) {
-                    return;
-                }
-                checkTimeOut();
+                receivedNotification[0] = true;
             }
-        };
-        BleManager.getThreadFactory().newThread(runnable).start();
+        });
     }
 
-    /**
-     * 检查超时的回调
-     */
-    private void checkTimeOut() {
-        if (mClosed) {
-            return;
-        }
-        if (!bleServiceConnection.isConnected() || !bleServiceConnection.isServiceDiscovered()) {
-            BleManager.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (onConnectTimeOutListener != null) {
-                        onConnectTimeOutListener.onConnectTimeOut();
-                    }
+    private void performLargeDataWriteWithNotificationSendStartListener(@Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
+                    onLargeDataWriteWithNotificationSendStateChangedListener.onDataSendStart();
                 }
-            });
-        }
+            }
+        });
+    }
+
+    private void performLargeDataWriteWithNotificationSendTimeOutAndRetry(final int packageCount,
+                                                                          @NonNull final byte[] data,
+                                                                          final int tryCount,
+                                                                          final int currentPackageIndex,
+                                                                          @Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
+                    onLargeDataWriteWithNotificationSendStateChangedListener.onDataSendTimeOutAndRetry(data, tryCount, currentPackageIndex, packageCount);
+                }
+            }
+        });
+    }
+
+    private void performLargeDataWriteWithNotificationSendTimeOut(@Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener,
+                                                                  final int currentPackageIndex,
+                                                                  final int packageCount,
+                                                                  @NonNull final byte[] data) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
+                    onLargeDataWriteWithNotificationSendStateChangedListener.onDataSendTimeOut(currentPackageIndex, packageCount, data);
+                }
+            }
+        });
+    }
+
+    private void performLargeDataWriteSendTimeOutAndRetry(final int pageCount, @NonNull final byte[] data,
+                                                          final int tryCount, final int currentPackageIndex,
+                                                          @Nullable final OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataSendStateChangedListener != null) {
+                    onLargeDataSendStateChangedListener.onSendTimeOutAndRetry(tryCount, currentPackageIndex, pageCount, data);
+                }
+            }
+        });
+    }
+
+    private void performLargeDataWriteSendTimeOut(@Nullable final OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener,
+                                                  final int pageCount, final int currentPackageIndex,
+                                                  @NonNull final byte[] data) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataSendStateChangedListener != null) {
+                    onLargeDataSendStateChangedListener.onSendTimeOut(currentPackageIndex, pageCount, data);
+                }
+            }
+        });
+    }
+
+    private void performLargeDataSendProgressChangedListener(final int pageCount, @NonNull final byte[] data,
+                                                             final int currentPackageCount,
+                                                             @Nullable final OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataSendStateChangedListener != null) {
+                    onLargeDataSendStateChangedListener.packageSendProgressChanged(currentPackageCount + 1, pageCount, data);
+                }
+            }
+        });
+    }
+
+    private void performLargeDataSendFailedAndRetryListener(final int pageCount, @NonNull final byte[] data,
+                                                            final int tryCount, final int currentPackageCount,
+                                                            @Nullable final OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataSendStateChangedListener != null) {
+                    onLargeDataSendStateChangedListener.packageSendFailedAndRetry(currentPackageCount + 1, pageCount, tryCount, data);
+                }
+            }
+        });
+    }
+
+    private void performLargeDataSendFailedListener(final int pageCount, @NonNull final byte[] data,
+                                                    final int currentPackageCount,
+                                                    @Nullable final OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataSendStateChangedListener != null) {
+                    onLargeDataSendStateChangedListener.packageSendFailed(currentPackageCount + 1, pageCount, data);
+                }
+            }
+        });
+    }
+
+    private void performLargeDataSendFinishedListener(@Nullable final OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataSendStateChangedListener != null) {
+                    onLargeDataSendStateChangedListener.sendFinished();
+                }
+            }
+        });
+    }
+
+    private void performLargeDataSendStartedListener(@Nullable final OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataSendStateChangedListener != null) {
+                    onLargeDataSendStateChangedListener.sendStarted();
+                }
+            }
+        });
+    }
+
+    private void performLargeDataWriteWithNotificationSendFinishedListener(@Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
+                    onLargeDataWriteWithNotificationSendStateChangedListener.onDataSendFinished();
+                }
+            }
+        });
+    }
+
+    private void performLargeDataWriteWithNotificationSendFailedListener(final int pageCount,
+                                                                         @NonNull final byte[] data,
+                                                                         final int currentPackageCount,
+                                                                         @Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
+                    onLargeDataWriteWithNotificationSendStateChangedListener.onDataSendFailed(currentPackageCount, pageCount, data);
+                }
+            }
+        });
+    }
+
+    private void performLargeDataWriteWithNotificationSendFailedAndRetryListener(final int pageCount,
+                                                                                 @NonNull final byte[] data,
+                                                                                 final int tryCount,
+                                                                                 final int currentPackageCount,
+                                                                                 @Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
+                    onLargeDataWriteWithNotificationSendStateChangedListener.onDataSendFailedAndRetry(currentPackageCount, pageCount, data, tryCount);
+                }
+            }
+        });
+    }
+
+    private void performLargeDataWriteWithNotificationSendProgressChangedListener(final int pageCount,
+                                                                                  @NonNull final byte[] data,
+                                                                                  final int currentPackageCount,
+                                                                                  @Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
+                    onLargeDataWriteWithNotificationSendStateChangedListener.onDataSendProgressChanged(currentPackageCount + 1, pageCount, data);
+                }
+            }
+        });
+    }
+
+    private void performLargeDataWriteWithNotificationSendFailedWithWrongNotifyDataListener(@Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
+                    onLargeDataWriteWithNotificationSendStateChangedListener.onSendFailedWithWrongNotifyData();
+                }
+            }
+        });
+    }
+
+    private void performLargeDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(@Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener,
+                                                                                                    final int tryCount,
+                                                                                                    final int currentPackageIndex,
+                                                                                                    final int packageCount,
+                                                                                                    @NonNull final byte[] data) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
+                    onLargeDataWriteWithNotificationSendStateChangedListener.onSendFailedWithWrongNotifyDataAndRetry(tryCount, currentPackageIndex, packageCount, data);
+                }
+            }
+        });
+    }
+
+    private void performLargeDataSendWithNotificationStartFailedListener(@Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
+                    onLargeDataWriteWithNotificationSendStateChangedListener.onStartFailed();
+                }
+            }
+        });
+    }
+
+    private void performLargeDataSendStartFailedListener(@Nullable final OnLargeDataSendStateChangedListener onLargeDataSendStateChangedListener) {
+        BleManager.getHANDLER().post(new Runnable() {
+            @Override
+            public void run() {
+                if (onLargeDataSendStateChangedListener != null) {
+                    onLargeDataSendStateChangedListener.onStartFailed();
+                }
+            }
+        });
+    }
+
+    public boolean getInitialized() {
+        return initialized;
     }
 }
