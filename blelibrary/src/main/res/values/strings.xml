@@ -1,6 +1,4 @@
 <resources>
-    <string name="app_name">BLELibrary</string>
-
     <string name="ble_not_supported">Your phone doesn\'t support BLE mode</string>
     <string name="bluetooth_off">Bluetooth has been mClosed</string>
     <string name="bluetooth_on">Bluetooth has been opened</string>
