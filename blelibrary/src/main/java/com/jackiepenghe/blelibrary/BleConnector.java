@@ -1292,7 +1292,7 @@ public final class BleConnector {
                         if (!uuidString.equalsIgnoreCase(notificationCharacteristicUUID)) {
                             return;
                         }
-                            performLargeDataWriteWithNotificationSendStateChangedListener(data, onLargeDataWriteWithNotificationSendStateChangedListener, writeLargeDataWithNotificationCurrentPackageCount, writeLargeDataWithNotificationPackageCount, largeData, autoFormat, wrongNotificationResultCount, maxTryCount, receivedNotification);
+                        performLargeDataWriteWithNotificationSendStateChangedListener(data, onLargeDataWriteWithNotificationSendStateChangedListener, writeLargeDataWithNotificationCurrentPackageCount, writeLargeDataWithNotificationPackageCount, largeData, autoFormat, wrongNotificationResultCount, maxTryCount, receivedNotification);
                     }
                 };
 
@@ -1648,15 +1648,8 @@ public final class BleConnector {
             @Override
             public void run() {
                 if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
-                    boolean result = false;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                        result = onLargeDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat));
-                    } else {
-                        byte[] currentPackageData = getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat);
-                        if (currentPackageData != null) {
-                            result = onLargeDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, currentPackageData);
-                        }
-                    }
+                    boolean result;
+                    result = onLargeDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat));
                     DebugUtil.warnOut(TAG, "onLargeDataWriteWithNotificationSendStateChangedListener onReceiveNotification result = " + result);
                     if (!result) {
                         if (wrongNotificationResultCount[0] >= maxTryCount) {
@@ -1909,9 +1902,5 @@ public final class BleConnector {
                 }
             }
         });
-    }
-
-    public boolean getInitialized() {
-        return initialized;
     }
 }
