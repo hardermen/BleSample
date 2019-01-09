@@ -1,14 +1,12 @@
 package cn.almsound.www.myblesample.activity.bleconnect;
 
 import android.Manifest;
-import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -16,7 +14,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,7 +38,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.almsound.www.myblesample.R;
-import cn.almsound.www.myblesample.activity.AdRecordParseActivity;
 import cn.almsound.www.myblesample.adapter.DeviceListAdapter;
 import cn.almsound.www.myblesample.utils.Constants;
 import cn.almsound.www.myblesample.watcher.EditTextWatcherForMacAddress;

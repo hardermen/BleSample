@@ -53,8 +53,6 @@
     <string name="scan_record">Broadcast package</string>
     <string name="uuid_refresh_success">Device UUID refresh success</string>
     <string name="uuid_refresh_failed">Device UUID refresh failed</string>
-    <string name="response_record">Response package</string>
-    <string name="no_response_record">No response packet</string>
     <string name="filter_name">Filter device name</string>
     <string name="filter_address">Filter device address</string>
     <string name="write_big_data">Write large amounts of data</string>

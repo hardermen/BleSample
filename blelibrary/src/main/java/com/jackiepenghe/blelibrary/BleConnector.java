@@ -1292,7 +1292,7 @@ public final class BleConnector {
                         if (!uuidString.equalsIgnoreCase(notificationCharacteristicUUID)) {
                             return;
                         }
-                        performLargeDataWriteWithNotificationSendStateChangedListener(data, onLargeDataWriteWithNotificationSendStateChangedListener, writeLargeDataWithNotificationCurrentPackageCount, writeLargeDataWithNotificationPackageCount, largeData, autoFormat, wrongNotificationResultCount, maxTryCount, receivedNotification);
+                            performLargeDataWriteWithNotificationSendStateChangedListener(data, onLargeDataWriteWithNotificationSendStateChangedListener, writeLargeDataWithNotificationCurrentPackageCount, writeLargeDataWithNotificationPackageCount, largeData, autoFormat, wrongNotificationResultCount, maxTryCount, receivedNotification);
                     }
                 };
 
@@ -1635,7 +1635,7 @@ public final class BleConnector {
         BleManager.getThreadFactory().newThread(runnable).start();
     }
 
-    private void performLargeDataWriteWithNotificationSendStateChangedListener(@NonNull final byte[] values,
+    private void performLargeDataWriteWithNotificationSendStateChangedListener(@Nullable final byte[] values,
                                                                                @Nullable final OnLargeDataWriteWithNotificationSendStateChangedListener onLargeDataWriteWithNotificationSendStateChangedListener,
                                                                                @NonNull final int[] writeLargeDataWithNotificationCurrentPackageCount,
                                                                                final int writeLargeDataWithNotificationPackageCount,
@@ -1650,7 +1650,7 @@ public final class BleConnector {
                 if (onLargeDataWriteWithNotificationSendStateChangedListener != null) {
                     boolean result = false;
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                        result = onLargeDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, Objects.requireNonNull(getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat)));
+                        result = onLargeDataWriteWithNotificationSendStateChangedListener.onReceiveNotification(values, writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat));
                     } else {
                         byte[] currentPackageData = getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat);
                         if (currentPackageData != null) {

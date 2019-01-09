@@ -1,4 +1,4 @@
-package cn.almsound.www.myblesample.activity;
+package cn.almsound.www.myblesample.activity.bleconnect;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -35,10 +35,6 @@ public class AdRecordParseActivity extends BaseAppCompatActivity {
      * 广播包数据
      */
     private EditText scanRecordEditText;
-    /**
-     * 响应包数据
-     */
-    private EditText responseRecordEditText;
     /**
      * 将广播包按照AdType分开显示的列表
      */
@@ -96,7 +92,6 @@ public class AdRecordParseActivity extends BaseAppCompatActivity {
     @Override
     protected void initViews() {
         scanRecordEditText = findViewById(R.id.scan_record_et);
-        responseRecordEditText = findViewById(R.id.response_record_et);
         recyclerView = findViewById(R.id.scan_record_rv);
     }
 
@@ -175,28 +170,7 @@ public class AdRecordParseActivity extends BaseAppCompatActivity {
             return;
         }
         byte[] scanRecordBytes = bleDevice.getScanRecordBytes();
-        if (scanRecordBytes.length > 31){
-            initScanRecordAndResponseCord(scanRecordBytes);
-        }else {
-            initScanRecord(scanRecordBytes);
-        }
-    }
-
-    private void initScanRecord(byte[] scanRecordBytes) {
-        byte[] scanRecord = new byte[scanRecordBytes.length];
-        System.arraycopy(scanRecordBytes,0,scanRecord,0,scanRecord.length);
-        byte[] responseRecord = new byte[31];
-        scanRecordEditText.setText(Tool.bytesToHexStr(scanRecord));
-        responseRecordEditText.setText(Tool.bytesToHexStr(responseRecord));
-    }
-
-    private void initScanRecordAndResponseCord(byte[] scanRecordBytes) {
-        byte[] scanRecord = new byte[31];
-        byte[] responseRecord = new byte[scanRecordBytes.length - 31];
-        System.arraycopy(scanRecordBytes,0,scanRecord,0,scanRecord.length);
-        System.arraycopy(scanRecordBytes,31,responseRecord,0,responseRecord.length);
-        scanRecordEditText.setText(Tool.bytesToHexStr(scanRecord));
-        responseRecordEditText.setText(Tool.bytesToHexStr(responseRecord));
+        scanRecordEditText.setText(Tool.bytesToHexStr(scanRecordBytes));
     }
 
     private void initRecyclerView() {

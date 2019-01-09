@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:hint="@string/input_data"
         android:inputType="textMultiLine"
-        tools:ignore="Autofill" />
+        android:importantForAutofill="no" />
 
     <android.support.v7.widget.RecyclerView
         app:layout_constraintTop_toBottomOf="@id/scan_record_tv"

@@ -1,6 +1,7 @@
 package com.jackiepenghe.blelibrary.interfaces;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 /**
  * Callback that write large data and require remote devices to notify collaboration
@@ -22,7 +23,7 @@ public interface OnLargeDataWriteWithNotificationSendStateChangedListener {
      * @param values              Notification data from remote device
      * @return True means received data correct,and the next packet of data will be sent
      */
-    boolean onReceiveNotification(byte[] currentPackageData, int currentPackageIndex, int packageCount, @NonNull byte[] values);
+    boolean onReceiveNotification(byte[] currentPackageData, int currentPackageIndex, int packageCount,@Nullable byte[] values);
 
     /**
      * Data failed to send and attempt to resend
