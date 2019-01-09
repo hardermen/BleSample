@@ -1,6 +1,7 @@
 package com.jackiepenghe.blelibrary;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.jackiepenghe.blelibrary.interfaces.OnLargeDataWriteWithNotificationSendStateChangedListener;
 
@@ -23,8 +24,12 @@ final class DefaultLargeDataWriteWithNotificationSendStateChangedListener implem
     }
 
     @Override
-    public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageIndex, int packageCount,@NonNull byte[] values) {
-        DebugUtil.warnOut(TAG, "onReceiveNotification values = " + ConversionUtil.bytesToHexStr(values));
+    public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageIndex, int packageCount,@Nullable byte[] values) {
+        if (values != null) {
+            DebugUtil.warnOut(TAG, "onReceiveNotification values = " + ConversionUtil.bytesToHexStr(values));
+        }else {
+            DebugUtil.warnOut(TAG, "onReceiveNotification values = null");
+        }
         return true;
     }
 
