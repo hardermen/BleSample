@@ -7,7 +7,9 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.jackiepenghe.blelibrary.systems.BleArrayList;
 import com.jackiepenghe.blelibrary.systems.BleHashMap;
+import com.jackiepenghe.blelibrary.systems.BleParcelUuid;
 import com.jackiepenghe.blelibrary.systems.BleScanRecord;
 
 import java.io.Serializable;
@@ -34,7 +36,6 @@ public final class BleDevice implements Serializable, Parcelable {
     /**
      * Bluetooth Device
      */
-    @NonNull
     private BluetoothDevice bluetoothDevice;
 
     /**
@@ -44,7 +45,6 @@ public final class BleDevice implements Serializable, Parcelable {
     /**
      * BleScanRecord
      */
-    @NonNull
     private BleScanRecord bleScanRecord;
 
     /*-----------------------------------Constructor-----------------------------------*/
@@ -236,19 +236,11 @@ public final class BleDevice implements Serializable, Parcelable {
     }
 
     protected BleDevice(Parcel in) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            this.bluetoothDevice = (BluetoothDevice) Objects.requireNonNull(in.readParcelable(BluetoothDevice.class.getClassLoader()));
-        } else {
-            //noinspection ConstantConditions
-            this.bluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
-        }
+        //noinspection ConstantConditions
+        this.bluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
         this.rssi = in.readInt();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            this.bleScanRecord = (BleScanRecord) Objects.requireNonNull(in.readParcelable(BleScanRecord.class.getClassLoader()));
-        } else {
-            //noinspection ConstantConditions
-            this.bleScanRecord = in.readParcelable(BleScanRecord.class.getClassLoader());
-        }
+        //noinspection ConstantConditions
+        this.bleScanRecord = in.readParcelable(BleScanRecord.class.getClassLoader());
     }
 
     public static final Parcelable.Creator<BleDevice> CREATOR = new Parcelable.Creator<BleDevice>() {

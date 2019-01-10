@@ -9,7 +9,6 @@ import com.jackiepenghe.baselibrary.activity.BaseSplashActivity;
  * @author jacke
  * @date 2018/1/18 0018
  */
-
 public class SplashActivity extends BaseSplashActivity {
     @Override
     protected void onCreate() {

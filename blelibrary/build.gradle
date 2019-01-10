@@ -38,6 +38,7 @@ version = "0.3.7"
 def siteUrl = 'https://github.com/JackiePenghe/BleSample'
 def gitUrl = 'git@github.com:JackiePenghe/BleSample.git'
 
+//noinspection GroovyUnusedAssignment
 group = "com.jackiepenghe"
 
 install {

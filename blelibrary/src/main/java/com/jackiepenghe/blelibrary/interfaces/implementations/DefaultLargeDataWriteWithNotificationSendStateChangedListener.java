@@ -1,6 +1,7 @@
 package com.jackiepenghe.blelibrary.interfaces.implementations;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.jackiepenghe.blelibrary.interfaces.OnLargeDataWriteWithNotificationSendStateChangedListener;
 
@@ -26,7 +27,7 @@ public class DefaultLargeDataWriteWithNotificationSendStateChangedListener imple
      * @return True means received data correct,and the next packet of data will be sent
      */
     @Override
-    public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageIndex, int packageCount, @NonNull byte[] values) {
+    public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageIndex, int packageCount, @Nullable byte[] values) {
         return false;
     }
 
