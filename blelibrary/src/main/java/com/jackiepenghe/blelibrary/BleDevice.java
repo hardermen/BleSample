@@ -7,9 +7,7 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.jackiepenghe.blelibrary.systems.BleArrayList;
 import com.jackiepenghe.blelibrary.systems.BleHashMap;
-import com.jackiepenghe.blelibrary.systems.BleParcelUuid;
 import com.jackiepenghe.blelibrary.systems.BleScanRecord;
 
 import java.io.Serializable;
@@ -90,6 +88,7 @@ public final class BleDevice implements Serializable, Parcelable {
      *
      * @return device name
      */
+    @Nullable
     public String getDeviceName() {
         String deviceName = bluetoothDevice.getName();
         if (deviceName != null) {
@@ -209,7 +208,8 @@ public final class BleDevice implements Serializable, Parcelable {
         }
 
         BleDevice bleDevice = (BleDevice) obj;
-        return bleDevice.getBluetoothDevice().equals(getBluetoothDevice());
+        BluetoothDevice bluetoothDevice = bleDevice.getBluetoothDevice();
+        return bluetoothDevice.equals(getBluetoothDevice());
     }
 
     @Override
@@ -232,15 +232,13 @@ public final class BleDevice implements Serializable, Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeParcelable(this.bluetoothDevice, flags);
         dest.writeInt(this.rssi);
-        dest.writeParcelable(this.bleScanRecord, flags);
+        dest.writeSerializable(this.bleScanRecord);
     }
 
     protected BleDevice(Parcel in) {
-        //noinspection ConstantConditions
         this.bluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
         this.rssi = in.readInt();
-        //noinspection ConstantConditions
-        this.bleScanRecord = in.readParcelable(BleScanRecord.class.getClassLoader());
+        this.bleScanRecord = (BleScanRecord) in.readSerializable();
     }
 
     public static final Parcelable.Creator<BleDevice> CREATOR = new Parcelable.Creator<BleDevice>() {

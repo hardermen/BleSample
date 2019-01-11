@@ -30,7 +30,6 @@ import java.util.UUID;
  */
 public final class BleBluetoothUuid implements Serializable {
 
-
     private static final long serialVersionUID = -6971552374569074712L;
 
     /** See Bluetooth Assigned Numbers document - SDP section, to get the values of UUIDs

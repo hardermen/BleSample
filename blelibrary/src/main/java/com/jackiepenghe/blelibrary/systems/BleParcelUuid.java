@@ -113,8 +113,7 @@ public final class BleParcelUuid implements Serializable, Parcelable {
         return (this.mUuid.equals(that.mUuid));
     }
 
-    public static final Creator<BleParcelUuid> CREATOR =
-            new Creator<BleParcelUuid>() {
+    public static final Creator<BleParcelUuid> CREATOR = new Creator<BleParcelUuid>() {
                 @Override
                 public BleParcelUuid createFromParcel(Parcel source) {
                     long mostSigBits = source.readLong();

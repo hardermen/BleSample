@@ -33,13 +33,12 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:28.0.0'
 }
 
-version = "0.3.7"
+version = "0.0.1"
 
 def siteUrl = 'https://github.com/JackiePenghe/BleSample'
-def gitUrl = 'git@github.com:JackiePenghe/BleSample.git'
+def gitUrl = 'https://github.com/JackiePenghe/BleSample.git'
 
-//noinspection GroovyUnusedAssignment
-group = "com.jackiepenghe"
+group = "com.sscl"
 
 install {
     repositories.mavenInstaller {
@@ -59,8 +58,8 @@ install {
 
                 developers {
                     developer {
-                        id 'jackiepenghe'
-                        name 'jackiepenghe'
+                        id 'sscl'
+                        name 'sscl'
                         email 'p15583101939@gmail.com'
                     }
                 }
@@ -112,8 +111,8 @@ bintray {
     configurations = ['archives']
     pkg {
         repo = "maven"
-        name = "blelibrary"
-        userOrg = 'jackiepenghe'
+        name = "bluetoothlelibrary"
+        userOrg = 'sscl'
         websiteUrl = siteUrl
         vcsUrl = gitUrl
         licenses = ["Apache-2.0"]

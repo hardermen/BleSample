@@ -52,7 +52,7 @@ public interface OnLargeDataWriteWithNotificationSendStateChangedListener {
      * @param packageCount        Total number of packages
      * @param data                Data content
      */
-    void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, @NonNull byte[] data);
+    void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, @Nullable byte[] data);
 
     /**
      * data send timeout

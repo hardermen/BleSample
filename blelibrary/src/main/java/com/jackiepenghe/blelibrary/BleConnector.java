@@ -27,7 +27,6 @@ import com.jackiepenghe.blelibrary.interfaces.OnLargeDataSendStateChangedListene
 import com.jackiepenghe.blelibrary.interfaces.OnLargeDataWriteWithNotificationSendStateChangedListener;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -1657,14 +1656,7 @@ public final class BleConnector {
                             writeLargeDataWithNotificationContinueFlag = false;
                         } else {
                             wrongNotificationResultCount[0]++;
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                performLargeDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onLargeDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, Objects.requireNonNull(getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat)));
-                            } else {
-                                byte[] currentPackageData = getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat);
-                                if (currentPackageData != null) {
-                                    performLargeDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onLargeDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, currentPackageData);
-                                }
-                            }
+                            performLargeDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onLargeDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat));
                         }
                     } else {
                         wrongNotificationResultCount[0] = 0;
@@ -1871,7 +1863,7 @@ public final class BleConnector {
                                                                                                     final int tryCount,
                                                                                                     final int currentPackageIndex,
                                                                                                     final int packageCount,
-                                                                                                    @NonNull final byte[] data) {
+                                                                                                    @Nullable final byte[] data) {
         BleManager.getHANDLER().post(new Runnable() {
             @Override
             public void run() {

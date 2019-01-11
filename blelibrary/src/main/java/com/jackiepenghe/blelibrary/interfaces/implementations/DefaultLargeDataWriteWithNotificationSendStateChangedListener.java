@@ -65,7 +65,7 @@ public class DefaultLargeDataWriteWithNotificationSendStateChangedListener imple
      * @param data                Data content
      */
     @Override
-    public void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, @NonNull byte[] data) {
+    public void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, @Nullable byte[] data) {
 
     }
 

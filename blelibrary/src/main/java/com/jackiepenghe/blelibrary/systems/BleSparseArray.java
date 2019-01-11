@@ -11,7 +11,7 @@ import java.io.Serializable;
  *
  * @author jackie
  */
-public final class BleSparseArray<T> extends SparseArray<T> implements Serializable, Parcelable {
+public final class BleSparseArray<T> extends SparseArray<T> implements Serializable{
 
     /*-----------------------------------static constant-----------------------------------*/
 
@@ -28,28 +28,28 @@ public final class BleSparseArray<T> extends SparseArray<T> implements Serializa
         super();
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    protected BleSparseArray(Parcel in) {
-    }
-
-    public static final Parcelable.Creator<BleSparseArray> CREATOR = new Parcelable.Creator<BleSparseArray>() {
-        @Override
-        public BleSparseArray createFromParcel(Parcel source) {
-            return new BleSparseArray(source);
-        }
-
-        @Override
-        public BleSparseArray[] newArray(int size) {
-            return new BleSparseArray[size];
-        }
-    };
+//    @Override
+//    public int describeContents() {
+//        return 0;
+//    }
+//
+//    @Override
+//    public void writeToParcel(Parcel dest, int flags) {
+//    }
+//
+//    @SuppressWarnings("WeakerAccess")
+//    protected BleSparseArray(Parcel in) {
+//    }
+//
+//    public static final Parcelable.Creator<BleSparseArray> CREATOR = new Parcelable.Creator<BleSparseArray>() {
+//        @Override
+//        public BleSparseArray createFromParcel(Parcel source) {
+//            return new BleSparseArray(source);
+//        }
+//
+//        @Override
+//        public BleSparseArray[] newArray(int size) {
+//            return new BleSparseArray[size];
+//        }
+//    };
 }

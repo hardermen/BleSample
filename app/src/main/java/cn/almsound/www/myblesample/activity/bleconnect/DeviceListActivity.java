@@ -412,7 +412,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         }
         BleDevice bleDevice = adapterList.get(position);
         Intent intent = new Intent(DeviceListActivity.this, ConnectActivity.class);
-        intent.putExtra(Constants.DEVICE, (Serializable) bleDevice);
+        intent.putExtra(Constants.DEVICE,(Serializable) bleDevice);
         startActivity(intent);
     }
 
@@ -443,7 +443,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      */
     private void showScanRecordDataDialog(BleDevice bleDevice) {
        Intent intent = new Intent(DeviceListActivity.this,AdRecordParseActivity.class);
-       intent.putExtra(Constants.DEVICE,(Serializable) bleDevice);
+       intent.putExtra(Constants.DEVICE, (Serializable) bleDevice);
        startActivity(intent);
     }
 

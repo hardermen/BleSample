@@ -1,24 +1,21 @@
 package com.jackiepenghe.blelibrary.systems;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import java.util.Collection;
 import java.util.HashSet;
 
 /**
  * @author jackie
  */
-public class BleHashSet<E> extends HashSet<E> implements Parcelable {
+public class BleHashSet<E> extends HashSet<E>  {
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-    }
+//    @Override
+//    public int describeContents() {
+//        return 0;
+//    }
+//
+//    @Override
+//    public void writeToParcel(Parcel dest, int flags) {
+//    }
 
     @SuppressWarnings("unused")
     public BleHashSet() {
@@ -66,19 +63,19 @@ public class BleHashSet<E> extends HashSet<E> implements Parcelable {
         super(initialCapacity);
     }
 
-    @SuppressWarnings("WeakerAccess")
-    protected BleHashSet(Parcel in) {
-    }
-
-    public static final Creator<BleHashSet> CREATOR = new Creator<BleHashSet>() {
-        @Override
-        public BleHashSet createFromParcel(Parcel source) {
-            return new BleHashSet(source);
-        }
-
-        @Override
-        public BleHashSet[] newArray(int size) {
-            return new BleHashSet[size];
-        }
-    };
+//    @SuppressWarnings("WeakerAccess")
+//    protected BleHashSet(Parcel in) {
+//    }
+//
+//    public static final Creator<BleHashSet> CREATOR = new Creator<BleHashSet>() {
+//        @Override
+//        public BleHashSet createFromParcel(Parcel source) {
+//            return new BleHashSet(source);
+//        }
+//
+//        @Override
+//        public BleHashSet[] newArray(int size) {
+//            return new BleHashSet[size];
+//        }
+//    };
 }

@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -216,7 +217,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
          * @return true表示可以继续下一包发送，false表示传输出错
          */
         @Override
-        public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageCount, int packageCount, @NonNull byte[] values) {
+        public boolean onReceiveNotification(byte[] currentPackageData, int currentPackageCount, int packageCount, @Nullable byte[] values) {
             super.onReceiveNotification(currentPackageData, currentPackageCount, packageCount, values);
             return true;
         }
@@ -287,7 +288,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
          * @param data                当前包数据
          */
         @Override
-        public void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, @NonNull byte[] data) {
+        public void onSendFailedWithWrongNotifyDataAndRetry(int tryCount, int currentPackageIndex, int packageCount, @Nullable byte[] data) {
             super.onSendFailedWithWrongNotifyDataAndRetry(tryCount, currentPackageIndex, packageCount, data);
         }
 
