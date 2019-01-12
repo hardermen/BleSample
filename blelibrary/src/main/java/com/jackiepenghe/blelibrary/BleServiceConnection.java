@@ -21,18 +21,11 @@ public final class BleServiceConnection implements ServiceConnection {
      */
     private static final String TAG = BleServiceConnection.class.getSimpleName();
 
-    /*-----------------------------------field variables-----------------------------------*/
-
-    /**
-     * BLE connector
-     */
-    @Nullable
-    private BleConnector bleConnector;
 
     /*-----------------------------------Constructor-----------------------------------*/
 
-    BleServiceConnection(@NonNull BleConnector bleConnector) {
-        this.bleConnector = bleConnector;
+    BleServiceConnection() {
+
     }
 
     /*------------------------implementation method----------------------------*/
@@ -58,11 +51,7 @@ public final class BleServiceConnection implements ServiceConnection {
             DebugUtil.warnOut(TAG, "bluetoothLeService initialize failed!");
             return;
         }
-        if (bleConnector == null){
-            return;
-        }
-        bleConnector.setInitialized();
-        bleConnector.setBluetoothLeService(bluetoothLeService);
+        BleManager.setBluetoothLeService(bluetoothLeService);
     }
 
     /**
@@ -77,11 +66,7 @@ public final class BleServiceConnection implements ServiceConnection {
      */
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        if (bleConnector == null){
-            return;
-        }
-        bleConnector.setBluetoothLeService(null);
-        bleConnector = null;
+        BleManager.setBluetoothLeService(null);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.jackiepenghe.blelibrary;
 
 import android.Manifest;
+import android.app.AlarmManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -27,6 +28,7 @@ import com.jackiepenghe.blelibrary.interfaces.OnLargeDataSendStateChangedListene
 import com.jackiepenghe.blelibrary.interfaces.OnLargeDataWriteWithNotificationSendStateChangedListener;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -71,11 +73,6 @@ public final class BleConnector {
     private long sendLargeDataTimeOut = 3000;
 
     /**
-     * Service Connection for {@link BluetoothLeService}
-     */
-    private BleServiceConnection bleServiceConnection = new BleServiceConnection(this);
-
-    /**
      * BLE device Broadcast receiver of the binding result
      */
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -112,17 +109,13 @@ public final class BleConnector {
 
     private boolean closed;
 
-    private boolean initialized;
-
     /*-----------------------------------Constructor-----------------------------------*/
 
     /**
      * Constructor
      */
-    BleConnector() {
-        //bind BLE connection service
-        Intent intent = new Intent(BleManager.getContext(), BluetoothLeService.class);
-        BleManager.getContext().bindService(intent, bleServiceConnection, Context.BIND_AUTO_CREATE);
+    BleConnector(@Nullable BluetoothLeService bluetoothLeService) {
+        this.bluetoothLeService = bluetoothLeService;
     }
 
     /*-----------------------------------package private setter-----------------------------------*/
@@ -137,10 +130,6 @@ public final class BleConnector {
         if (this.bluetoothLeService != null) {
             this.bluetoothLeService.setOnBleConnectStateChangedListener(onBleConnectStateChangedListener);
         }
-    }
-
-    void setInitialized() {
-        this.initialized = true;
     }
 
     /*-----------------------------------setter and getter-----------------------------------*/
@@ -198,10 +187,6 @@ public final class BleConnector {
     @Nullable
     public BluetoothLeService getBluetoothLeService() {
         return bluetoothLeService;
-    }
-
-    public boolean isInitialized() {
-        return initialized;
     }
 
     /**
@@ -324,9 +309,9 @@ public final class BleConnector {
      * @param autoReconnect Whether to automatically reconnect
      * @return true means request successful
      */
-    public boolean connect(@NonNull String address, boolean autoReconnect) {
+    public boolean connect(@NonNull final String address, final boolean autoReconnect) {
         if (!isInitialized()) {
-            return connect(address, autoReconnect);
+            return false;
         }
         boolean result = bluetoothLeService != null && bluetoothLeService.connect(address, autoReconnect);
         if (result) {
@@ -353,9 +338,9 @@ public final class BleConnector {
      * @param autoReconnect   Whether to automatically reconnect
      * @return true means request successful.
      */
-    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect) {
+    public boolean connect(@NonNull final BluetoothDevice bluetoothDevice, final boolean autoReconnect) {
         if (!isInitialized()) {
-            return connect(bluetoothDevice, autoReconnect);
+            return false;
         }
         boolean result = bluetoothLeService != null && bluetoothLeService.connect(bluetoothDevice, autoReconnect);
         if (result) {
@@ -453,12 +438,7 @@ public final class BleConnector {
         }
         disconnect();
         closeGatt();
-        bluetoothLeService.stopSelf();
-        try {
-            BleManager.getContext().unbindService(bleServiceConnection);
-        } catch (Exception e) {
-            DebugUtil.verOut(TAG, "unbindService(bleServiceConnection) failed");
-        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             boundBleBroadcastReceiver.setOnDeviceBondStateChangedListener(null);
         }
@@ -1656,7 +1636,14 @@ public final class BleConnector {
                             writeLargeDataWithNotificationContinueFlag = false;
                         } else {
                             wrongNotificationResultCount[0]++;
-                            performLargeDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onLargeDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat));
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                performLargeDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onLargeDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, Objects.requireNonNull(getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat)));
+                            } else {
+                                byte[] currentPackageData = getCurrentPackageData(writeLargeDataWithNotificationCurrentPackageCount[0], largeData, writeLargeDataWithNotificationPackageCount, autoFormat);
+                                if (currentPackageData != null) {
+                                    performLargeDataWriteWithNotificationSendFailedWithWrongNotifyDataAndRetryListener(onLargeDataWriteWithNotificationSendStateChangedListener, wrongNotificationResultCount[0], writeLargeDataWithNotificationCurrentPackageCount[0] + 1, writeLargeDataWithNotificationPackageCount, currentPackageData);
+                                }
+                            }
                         }
                     } else {
                         wrongNotificationResultCount[0] = 0;
@@ -1744,6 +1731,11 @@ public final class BleConnector {
                 }
             }
         });
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private boolean isInitialized() {
+        return bluetoothLeService != null;
     }
 
     private void performLargeDataSendFailedAndRetryListener(final int pageCount, @NonNull final byte[] data,
@@ -1863,7 +1855,7 @@ public final class BleConnector {
                                                                                                     final int tryCount,
                                                                                                     final int currentPackageIndex,
                                                                                                     final int packageCount,
-                                                                                                    @Nullable final byte[] data) {
+                                                                                                    @NonNull final byte[] data) {
         BleManager.getHANDLER().post(new Runnable() {
             @Override
             public void run() {

@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -89,6 +90,13 @@ public final class BleManager {
     @SuppressLint("StaticFieldLeak")
     private static Context context;
 
+    /**
+     * Service Connection for {@link BluetoothLeService}
+     */
+    private static BleServiceConnection bleServiceConnection = new BleServiceConnection();
+
+    private static BluetoothLeService bluetoothLeService;
+
     /*-----------------------------------Package private method-----------------------------------*/
 
     /**
@@ -129,7 +137,7 @@ public final class BleManager {
      */
     @SuppressWarnings("WeakerAccess")
     @RequiresApi(Build.VERSION_CODES.KITKAT)
-    public static boolean unBound(@Nullable Context context,@NonNull String address) {
+    public static boolean unBound(@Nullable Context context, @NonNull String address) {
 
         if (context == null) {
             return false;
@@ -184,7 +192,7 @@ public final class BleManager {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isSupportBle() {
         checkInitStatus();
-        if (context == null){
+        if (context == null) {
             return false;
         }
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
@@ -198,6 +206,8 @@ public final class BleManager {
     public static void init(@NonNull Context context) {
         BleManager.context = context.getApplicationContext();
         BleManager.context.registerReceiver(BLUETOOTH_STATE_RECEIVER, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+        Intent intent = new Intent(BleManager.getContext(), BluetoothLeService.class);
+        BleManager.context.bindService(intent, bleServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     /**
@@ -210,7 +220,7 @@ public final class BleManager {
         if (!isSupportBle()) {
             return null;
         }
-        return new BleConnector();
+        return new BleConnector(bluetoothLeService);
     }
 
     public static Context getContext() {
@@ -231,7 +241,7 @@ public final class BleManager {
         if (bleConnector == null) {
             synchronized (BleManager.class) {
                 if (bleConnector == null) {
-                    bleConnector = new BleConnector();
+                    bleConnector = new BleConnector(bluetoothLeService);
                 }
             }
         }
@@ -284,7 +294,7 @@ public final class BleManager {
     }
 
     /**
-     *  Get a singleton of BleAdvertiser
+     * Get a singleton of BleAdvertiser
      *
      * @return BleAdvertiser
      */
@@ -486,7 +496,11 @@ public final class BleManager {
         return HANDLER;
     }
 
-    public static ThreadFactory getThreadFactory() {
+    static ThreadFactory getThreadFactory() {
         return THREAD_FACTORY;
+    }
+
+    static void setBluetoothLeService(BluetoothLeService bluetoothLeService) {
+        BleManager.bluetoothLeService = bluetoothLeService;
     }
 }

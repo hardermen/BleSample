@@ -798,30 +798,18 @@ public class ConnectActivity extends BaseAppCompatActivity {
      * 发起连接
      */
     private void startConnect() {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    if (bleConnector.isInitialized()) {
-                        break;
-                    }
+        if (bleConnector.connect(bluetoothDevice, true)) {
+            Tool.warnOut("开始连接");
+            BleManager.getHANDLER().post(new Runnable() {
+                @Override
+                public void run() {
+                    Tool.toastL(ConnectActivity.this, "发起连接");
+                    customTextCircleView.setColor(Color.YELLOW);
                 }
-                //先设置要连接的设备
-                if (bleConnector.connect(bluetoothDevice, true)) {
-                    Tool.warnOut("开始连接");
-                    BleManager.getHANDLER().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Tool.toastL(ConnectActivity.this, "发起连接");
-                            customTextCircleView.setColor(Color.YELLOW);
-                        }
-                    });
-                } else {
-                    Tool.warnOut("发起连接失败");
-                }
-            }
-        };
-        BleManager.getThreadFactory().newThread(runnable).start();
+            });
+        } else {
+            Tool.warnOut("发起连接失败");
+        }
 
     }
 

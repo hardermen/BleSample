@@ -65,4 +65,5 @@
     <string name="write_big_data_without_format">Write large amounts of data without format</string>
     <string name="write_big_data_with_notification_without_format">Write large amounts of data with Notify without format</string>
     <string name="request_sent">Request sent</string>
+    <string name="connect_failed">Connect failed</string>
 </resources>
