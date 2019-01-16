@@ -203,8 +203,10 @@ public final class BluetoothLeService extends Service {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback);
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback, BluetoothDevice.TRANSPORT_AUTO);
         } else {
-            bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
+            bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback, BluetoothDevice.TRANSPORT_AUTO, BluetoothDevice.PHY_LE_1M_MASK);
         }
         return autoReconnect || bluetoothGatt != null && bluetoothGatt.connect();
     }
