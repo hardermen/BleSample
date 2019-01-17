@@ -96,8 +96,6 @@ final class BleBluetoothGattCallback extends BluetoothGattCallback {
                     serviceDiscovered = false;
                 } else {
                     performGattStatusErrorListener(status);
-                    connected = false;
-                    serviceDiscovered=false;
                 }
                 break;
             //connecting

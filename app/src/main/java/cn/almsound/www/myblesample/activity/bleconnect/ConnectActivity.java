@@ -328,6 +328,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
             isLinked = true;
             //连接成功，将指示标志设置为蓝色
             customTextCircleView.setColor(Color.BLUE);
+
+            Tool.toastL(ConnectActivity.this, R.string.connected);
         }
 
         @Override
@@ -388,9 +390,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
 
             //服务发现完成，将指示标志设置为绿色（对BLE远端设备的所有操作都在服务扫描完成之后）
             customTextCircleView.setColor(Color.GREEN);
-
-            Tool.toastL(ConnectActivity.this, R.string.connect_success);
-
+            Tool.toastL(ConnectActivity.this, R.string.get_service_success);
             //获取服务列表
             List<BluetoothGattService> deviceServices = bleConnector.getServices();
 

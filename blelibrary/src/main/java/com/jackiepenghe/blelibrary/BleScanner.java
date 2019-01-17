@@ -1,6 +1,7 @@
 package com.jackiepenghe.blelibrary;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -37,7 +38,7 @@ public final class BleScanner {
     /*-----------------------------------static constant-----------------------------------*/
 
     /**
-     * TAG
+     * TAGs
      */
     private static final String TAG = BleScanner.class.getSimpleName();
 
@@ -530,7 +531,7 @@ public final class BleScanner {
                     return;
                 }
 
-                final BleDevice bleDevice = new BleDevice( device, rssi, bleScanRecord);
+                final BleDevice bleDevice = new BleDevice(device, rssi, bleScanRecord);
                 callOnScanFindOneDeviceListener(bleDevice);
                 if (!scanResults.contains(bleDevice)) {
                     scanResults.add(bleDevice);
@@ -738,7 +739,7 @@ public final class BleScanner {
 
         int rssi = result.getRssi();
 
-        final BleDevice bleDevice = new BleDevice( device, rssi, bleScanRecord);
+        final BleDevice bleDevice = new BleDevice(device, rssi, bleScanRecord);
 
         callOnScanFindOneDeviceListener(bleDevice);
 
@@ -792,9 +793,16 @@ public final class BleScanner {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private ScanSettings refreshScanSettings() {
         ScanSettings.Builder builder = new ScanSettings.Builder();
-        builder.setScanMode(bleScanMode.getScanMode());
+        builder.setScanMode(bleScanMode.getScanMode())
+                .setReportDelay(0);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            builder.setMatchMode(bleMatchMode.getMatchMode());
+            builder.setMatchMode(bleMatchMode.getMatchMode())
+                    .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                    .setNumOfMatches(ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setLegacy(true)
+                    .setPhy(ScanSettings.PHY_LE_ALL_SUPPORTED);
         }
         return builder.build();
     }
