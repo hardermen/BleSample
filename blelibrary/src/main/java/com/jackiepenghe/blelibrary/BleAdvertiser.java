@@ -222,6 +222,7 @@ public final class BleAdvertiser {
      */
     public void setBleAdvertiseMode(@NonNull BleAdvertiseMode bleAdvertiseMode) {
         this.bleAdvertiseMode = bleAdvertiseMode;
+        initAdvertiseSettings();
     }
 
     /**
@@ -231,6 +232,7 @@ public final class BleAdvertiser {
      */
     public void setConnectable(boolean connectable) {
         this.connectable = connectable;
+        initAdvertiseSettings();
     }
 
     /**
@@ -240,6 +242,7 @@ public final class BleAdvertiser {
      */
     public void setTxPowerLevel(@NonNull BleAdvertiseTxPowerLevel txPowerLevel) {
         this.txPowerLevel = txPowerLevel;
+        initAdvertiseSettings();
     }
 
     /**
@@ -258,6 +261,7 @@ public final class BleAdvertiser {
      */
     public void setTimeOut(@IntRange(from = 0, to = 180000) int timeOut) {
         this.timeOut = timeOut;
+        initAdvertiseSettings();
     }
 
     /**
@@ -267,6 +271,7 @@ public final class BleAdvertiser {
      */
     public void setScanResponseIncludeTxPowerLevel(boolean scanResponseIncludeTxPowerLevel) {
         this.scanResponseIncludeTxPowerLevel = scanResponseIncludeTxPowerLevel;
+        initScanResponse();
     }
 
     /**
@@ -276,6 +281,7 @@ public final class BleAdvertiser {
      */
     public void setScanResponseIncludeDeviceName(boolean scanResponseIncludeDeviceName) {
         this.scanResponseIncludeDeviceName = scanResponseIncludeDeviceName;
+        initScanResponse();
     }
 
     /**
@@ -285,6 +291,7 @@ public final class BleAdvertiser {
      */
     public void setAdvertiseDataIncludeTxPowerLevel(boolean advertiseDataIncludeTxPowerLevel) {
         this.advertiseDataIncludeTxPowerLevel = advertiseDataIncludeTxPowerLevel;
+        initAdvertiseData();
     }
 
     /**
@@ -294,6 +301,7 @@ public final class BleAdvertiser {
      */
     public void setAdvertiseDataIncludeDeviceName(boolean advertiseDataIncludeDeviceName) {
         this.advertiseDataIncludeDeviceName = advertiseDataIncludeDeviceName;
+        initAdvertiseData();
     }
 
     /**
@@ -417,6 +425,7 @@ public final class BleAdvertiser {
      */
     public void addScanResponseAdvertiseRecord(@NonNull AdvertiseData AdvertiseData) {
         this.scanResponseAdvertiseRecords.add(AdvertiseData);
+        initScanResponse();
     }
 
     /**
@@ -426,6 +435,7 @@ public final class BleAdvertiser {
      */
     public void removeScanResponseAdvertiseRecord(@NonNull AdvertiseData advertiseData) {
         this.scanResponseAdvertiseRecords.remove(advertiseData);
+        initScanResponse();
     }
 
     /**
@@ -435,6 +445,7 @@ public final class BleAdvertiser {
      */
     public void addScanResponseAdvertiseServiceUuid(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
         this.scanResponseAdvertiseServiceUuids.add(advertiseServiceUuid);
+        initScanResponse();
     }
 
     /**
@@ -444,6 +455,7 @@ public final class BleAdvertiser {
      */
     public void removeScanResponseAdvertiseServiceUuid(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
         this.scanResponseAdvertiseServiceUuids.remove(advertiseServiceUuid);
+        initScanResponse();
     }
 
     /**
@@ -453,6 +465,7 @@ public final class BleAdvertiser {
      */
     public void addAdvertiseDataAdvertiseRecord(@NonNull AdvertiseData advertiseData) {
         this.advertiseDataAdvertiseRecords.add(advertiseData);
+        initAdvertiseData();
     }
 
     /**
@@ -462,6 +475,7 @@ public final class BleAdvertiser {
      */
     public void removeAdvertiseDataAdvertiseRecord(@NonNull AdvertiseData advertiseData) {
         this.advertiseDataAdvertiseRecords.remove(advertiseData);
+        initAdvertiseData();
     }
 
     /**
@@ -471,6 +485,7 @@ public final class BleAdvertiser {
      */
     public void addAdvertiseDataAdvertiseServiceUuids(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
         this.advertiseDataAdvertiseServiceUuids.add(advertiseServiceUuid);
+        initAdvertiseData();
     }
 
     /**
@@ -480,6 +495,7 @@ public final class BleAdvertiser {
      */
     public void removeAdvertiseDataAdvertiseServiceUuids(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
         this.advertiseDataAdvertiseServiceUuids.remove(advertiseServiceUuid);
+        initAdvertiseData();
     }
 
     /*-----------------------------------private methods-----------------------------------*/
