@@ -32,9 +32,6 @@ import static android.bluetooth.le.AdvertiseData.*;
  */
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 public final class BleAdvertiser {
-
-    /*-----------------------------------static constant-----------------------------------*/
-
     private static final String TAG = BleAdvertiser.class.getSimpleName();
 
     /*-----------------------------------field variables-----------------------------------*/
@@ -56,7 +53,7 @@ public final class BleAdvertiser {
     /**
      * BLE Advertise Tx Power Level
      */
-    private BleAdvertiseTxPowerLevel txPowerLevel =  BleAdvertiseTxPowerLevel.HIGH;
+    private BleAdvertiseTxPowerLevel txPowerLevel = BleAdvertiseTxPowerLevel.HIGH;
 
     /**
      * BLE Advertise time out
@@ -98,7 +95,7 @@ public final class BleAdvertiser {
     /**
      * BLE advertisement scan response pack content data list.
      */
-    private ArrayList< AdvertiseData> advertiseDataAdvertiseRecords = new ArrayList<>();
+    private ArrayList<AdvertiseData> advertiseDataAdvertiseRecords = new ArrayList<>();
 
     /**
      * BLE advertisement pack service uuid list
@@ -191,9 +188,6 @@ public final class BleAdvertiser {
         if (mBluetoothAdapter == null) {
             return;
         }
-//        if (!mBluetoothAdapter.isMultipleAdvertisementSupported()) {
-//            return;
-//        }
         mBluetoothAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
         if (!mBluetoothAdapter.isEnabled()) {
             //If it is created by the activity, enable bluetooth by request code.
@@ -228,7 +222,6 @@ public final class BleAdvertiser {
      */
     public void setBleAdvertiseMode(@NonNull BleAdvertiseMode bleAdvertiseMode) {
         this.bleAdvertiseMode = bleAdvertiseMode;
-        initAdvertiseSettings();
     }
 
     /**
@@ -238,7 +231,6 @@ public final class BleAdvertiser {
      */
     public void setConnectable(boolean connectable) {
         this.connectable = connectable;
-        initAdvertiseSettings();
     }
 
     /**
@@ -248,7 +240,15 @@ public final class BleAdvertiser {
      */
     public void setTxPowerLevel(@NonNull BleAdvertiseTxPowerLevel txPowerLevel) {
         this.txPowerLevel = txPowerLevel;
-        initAdvertiseSettings();
+    }
+
+    /**
+     * Return true if the multi advertisement is supported by the chipset
+     *
+     * @return true if Multiple Advertisement feature is supported
+     */
+    public boolean isMultipleAdvertisementSupported() {
+        return mBluetoothAdapter != null && mBluetoothAdapter.isMultipleAdvertisementSupported();
     }
 
     /**
@@ -256,9 +256,8 @@ public final class BleAdvertiser {
      *
      * @param timeOut time out
      */
-    public void setTimeOut(@IntRange(from = 0,to = 180000) int timeOut) {
+    public void setTimeOut(@IntRange(from = 0, to = 180000) int timeOut) {
         this.timeOut = timeOut;
-        initAdvertiseSettings();
     }
 
     /**
@@ -268,7 +267,6 @@ public final class BleAdvertiser {
      */
     public void setScanResponseIncludeTxPowerLevel(boolean scanResponseIncludeTxPowerLevel) {
         this.scanResponseIncludeTxPowerLevel = scanResponseIncludeTxPowerLevel;
-        initScanResponse();
     }
 
     /**
@@ -278,7 +276,6 @@ public final class BleAdvertiser {
      */
     public void setScanResponseIncludeDeviceName(boolean scanResponseIncludeDeviceName) {
         this.scanResponseIncludeDeviceName = scanResponseIncludeDeviceName;
-        initScanResponse();
     }
 
     /**
@@ -288,7 +285,6 @@ public final class BleAdvertiser {
      */
     public void setAdvertiseDataIncludeTxPowerLevel(boolean advertiseDataIncludeTxPowerLevel) {
         this.advertiseDataIncludeTxPowerLevel = advertiseDataIncludeTxPowerLevel;
-        initAdvertiseData();
     }
 
     /**
@@ -298,7 +294,6 @@ public final class BleAdvertiser {
      */
     public void setAdvertiseDataIncludeDeviceName(boolean advertiseDataIncludeDeviceName) {
         this.advertiseDataIncludeDeviceName = advertiseDataIncludeDeviceName;
-        initAdvertiseData();
     }
 
     /**
@@ -365,9 +360,13 @@ public final class BleAdvertiser {
         }
         try {
             advertiserTimer.stopTimer();
+        } catch (Exception e) {
+            DebugUtil.warnOut(TAG,"stop advertiser timer failed");
+        }
+        try {
             mBluetoothAdvertiser.stopAdvertising(defaultBleAdvertiseCallback);
         } catch (Exception e) {
-            return;
+            DebugUtil.warnOut(TAG,"stop advertising failed");
         }
         advertiserTimer = null;
         mBluetoothAdvertiser = null;
@@ -388,9 +387,7 @@ public final class BleAdvertiser {
      * Close advertise
      */
     public void close() {
-        if (mBluetoothAdvertiser != null) {
-            stopAdvertising();
-        }
+        stopAdvertising();
         initSuccess = false;
         context = null;
         mBluetoothAdvertiser = null;
@@ -420,7 +417,6 @@ public final class BleAdvertiser {
      */
     public void addScanResponseAdvertiseRecord(@NonNull AdvertiseData AdvertiseData) {
         this.scanResponseAdvertiseRecords.add(AdvertiseData);
-        initScanResponse();
     }
 
     /**
@@ -428,9 +424,8 @@ public final class BleAdvertiser {
      *
      * @param advertiseData AdvertiseRecord
      */
-    public void removeScanResponseAdvertiseRecord(@NonNull  AdvertiseData advertiseData) {
+    public void removeScanResponseAdvertiseRecord(@NonNull AdvertiseData advertiseData) {
         this.scanResponseAdvertiseRecords.remove(advertiseData);
-        initScanResponse();
     }
 
     /**
@@ -440,7 +435,6 @@ public final class BleAdvertiser {
      */
     public void addScanResponseAdvertiseServiceUuid(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
         this.scanResponseAdvertiseServiceUuids.add(advertiseServiceUuid);
-        initScanResponse();
     }
 
     /**
@@ -450,7 +444,6 @@ public final class BleAdvertiser {
      */
     public void removeScanResponseAdvertiseServiceUuid(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
         this.scanResponseAdvertiseServiceUuids.remove(advertiseServiceUuid);
-        initScanResponse();
     }
 
     /**
@@ -458,9 +451,8 @@ public final class BleAdvertiser {
      *
      * @param advertiseData AdvertiseRecord
      */
-    public void addAdvertiseDataAdvertiseRecord(@NonNull  AdvertiseData advertiseData) {
+    public void addAdvertiseDataAdvertiseRecord(@NonNull AdvertiseData advertiseData) {
         this.advertiseDataAdvertiseRecords.add(advertiseData);
-        initAdvertiseData();
     }
 
     /**
@@ -468,9 +460,8 @@ public final class BleAdvertiser {
      *
      * @param advertiseData AdvertiseRecord
      */
-    public void removeAdvertiseDataAdvertiseRecord(@NonNull  AdvertiseData advertiseData) {
+    public void removeAdvertiseDataAdvertiseRecord(@NonNull AdvertiseData advertiseData) {
         this.advertiseDataAdvertiseRecords.remove(advertiseData);
-        initAdvertiseData();
     }
 
     /**
@@ -480,7 +471,6 @@ public final class BleAdvertiser {
      */
     public void addAdvertiseDataAdvertiseServiceUuids(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
         this.advertiseDataAdvertiseServiceUuids.add(advertiseServiceUuid);
-        initAdvertiseData();
     }
 
     /**
@@ -490,7 +480,6 @@ public final class BleAdvertiser {
      */
     public void removeAdvertiseDataAdvertiseServiceUuids(@NonNull AdvertiseServiceUuid advertiseServiceUuid) {
         this.advertiseDataAdvertiseServiceUuids.remove(advertiseServiceUuid);
-        initAdvertiseData();
     }
 
     /*-----------------------------------private methods-----------------------------------*/
@@ -590,18 +579,19 @@ public final class BleAdvertiser {
 
     /**
      * add Manufacturer Data to advertise data or scan response data
-     *  @param builder         AdvertiseData.Builder
+     *
+     * @param builder         AdvertiseData.Builder
      * @param advertiseRecord AdvertiseRecord
      */
     private void addManufacturerData(Builder builder, AdvertiseData advertiseRecord) {
         int manufacturerId = advertiseRecord.getManufacturerId();
         byte[] data = advertiseRecord.getData();
-        if (data == null){
+        if (data == null) {
             return;
         }
-       if (manufacturerId == 0){
+        if (manufacturerId == 0) {
             return;
-       }
+        }
         builder.addManufacturerData(manufacturerId, data);
     }
 

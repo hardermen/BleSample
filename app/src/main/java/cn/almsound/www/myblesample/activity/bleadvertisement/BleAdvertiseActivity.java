@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
 import com.jackiepenghe.baselibrary.tools.Tool;
+import com.jackiepenghe.blelibrary.AdvertiseData;
 import com.jackiepenghe.blelibrary.BleAdvertiser;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.enums.BleAdvertiseMode;
@@ -97,8 +98,14 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
             if (bleAdvertiser == null) {
                 return;
             }
-            bleAdvertiser.setAdvertiseDataIncludeDeviceName(false);
-            bleAdvertiser.setAdvertiseDataIncludeTxPowerLevel(false);
+            byte[] bytes = new byte[4];
+            for (int i = 0; i < bytes.length; i++) {
+                bytes[i] = (byte) 0xaa;
+            }
+            AdvertiseData advertiseData = new AdvertiseData(0x00008977, bytes);
+            bleAdvertiser.addAdvertiseDataAdvertiseRecord(advertiseData);
+            bleAdvertiser.setAdvertiseDataIncludeDeviceName(true);
+            bleAdvertiser.setAdvertiseDataIncludeTxPowerLevel(true);
             bleAdvertiser.setBleAdvertiseMode(BleAdvertiseMode.LOW_LATENCY);
             bleAdvertiser.setConnectable(false);
             bleAdvertiser.setOnBleAdvertiseStateChangedListener(defaultOnBleAdvertiseStateChangedListener);
@@ -235,7 +242,8 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //释放所有BLE设备相关的内存
-        BleManager.releaseAll();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            BleManager.releaseBleAdvertiser();
+        }
     }
 }

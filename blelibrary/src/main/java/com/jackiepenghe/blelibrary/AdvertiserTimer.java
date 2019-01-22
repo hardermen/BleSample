@@ -48,7 +48,7 @@ final class AdvertiserTimer {
     /**
      * Constructor
      *
-     * @param bleAdvertiser  BLE broadcast util class
+     * @param bleAdvertiser BLE broadcast util class
      */
     AdvertiserTimer(@NonNull BleAdvertiser bleAdvertiser) {
         bleAdvertiserWeakReference = new WeakReference<>(bleAdvertiser);
@@ -70,7 +70,9 @@ final class AdvertiserTimer {
      * stop timer
      */
     void stopTimer() {
-        scheduledExecutorService.shutdownNow();
-        scheduledExecutorService = null;
+        if (scheduledExecutorService != null) {
+            scheduledExecutorService.shutdownNow();
+            scheduledExecutorService = null;
+        }
     }
 }
