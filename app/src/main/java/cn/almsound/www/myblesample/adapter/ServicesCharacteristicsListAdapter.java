@@ -5,6 +5,8 @@ import android.view.View;
 import com.chad.library.adapter.base.BaseMultiItemQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.chad.library.adapter.base.entity.MultiItemEntity;
+import com.jackiepenghe.baselibrary.tools.DebugUtil;
+import com.jackiepenghe.baselibrary.tools.ToastUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 
 import java.util.List;
@@ -56,14 +58,14 @@ public class ServicesCharacteristicsListAdapter extends BaseMultiItemQuickAdapte
                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Tool.warnOut(TAG,"service");
+                        DebugUtil.warnOut(TAG,"service");
                         int adapterPosition = holder.getAdapterPosition();
                         if (serviceUuidItem.isExpanded()) {
                             collapse(adapterPosition);
                         } else {
                             int expand = expand(adapterPosition);
                             if (expand <= 0){
-                                Tool.toastL(mContext,R.string.nothing_to_expand);
+                                ToastUtil.toastL(mContext,R.string.nothing_to_expand);
                             }
                         }
                     }
@@ -77,7 +79,7 @@ public class ServicesCharacteristicsListAdapter extends BaseMultiItemQuickAdapte
                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Tool.warnOut(TAG,"characteristic");
+                        DebugUtil.warnOut(TAG,"characteristic");
                         if (onCharacteristicClickListener != null) {
                             int parentPosition = getParentPosition(item);
                             ServiceUuidItem serviceUuidItem1 = (ServiceUuidItem) getItem(parentPosition);

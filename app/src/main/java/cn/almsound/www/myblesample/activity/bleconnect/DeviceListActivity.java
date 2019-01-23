@@ -23,6 +23,8 @@ import android.widget.EditText;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.tools.DebugUtil;
+import com.jackiepenghe.baselibrary.tools.ToastUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.baselibrary.view.utils.DefaultItemDecoration;
 import com.jackiepenghe.blelibrary.BleDevice;
@@ -71,10 +73,10 @@ public class DeviceListActivity extends BaseAppCompatActivity {
     /**
      * 适配器添加的设备列表
      */
-    private ArrayList<BleDevice> adapterList;
+    private ArrayList<BleDevice> adapterList = new ArrayList<>();
     private RecyclerView recyclerView;
     private Button button;
-    private DeviceListAdapter adapter;
+    private DeviceListAdapter adapter = new DeviceListAdapter(adapterList);
     private int clickCount;
     /**
      * BLE扫描器
@@ -159,19 +161,19 @@ public class DeviceListActivity extends BaseAppCompatActivity {
 
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
-            Tool.warnOut(TAG, "onBatchScanResults");
+            DebugUtil.warnOut(TAG, "onBatchScanResults");
             if (results == null) {
                 return;
             }
             for (int i = 0; i < results.size(); i++) {
                 ScanResult scanResult = results.get(i);
-                Tool.warnOut(TAG, "scanResult[" + i + "] = " + scanResult.toString());
+                DebugUtil.warnOut(TAG, "scanResult[" + i + "] = " + scanResult.toString());
             }
         }
 
         @Override
         public void onScanFailed(int errorCode) {
-            Tool.warnOut(TAG, "onScanFailed:errorCode = " + errorCode);
+            DebugUtil.warnOut(TAG, "onScanFailed:errorCode = " + errorCode);
         }
     };
     private OnBluetoothStateChangedListener onBluetoothStateChangedListener = new OnBluetoothStateChangedListener() {
@@ -219,10 +221,8 @@ public class DeviceListActivity extends BaseAppCompatActivity {
     @Override
     protected void doBeforeSetLayout() {
         BleManager.addOnBluetoothStateChangedListener(onBluetoothStateChangedListener);
-        adapterList = new ArrayList<>();
         //初始化BLE扫描器
         initBleScanner();
-        adapter = new DeviceListAdapter(adapterList);
     }
 
     /**
@@ -329,7 +329,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     doButtonClick();
                 } else {
-                    Tool.toastL(DeviceListActivity.this, R.string.no_permission_for_local);
+                    ToastUtil.toastL(DeviceListActivity.this, R.string.no_permission_for_local);
                 }
                 break;
             default:
@@ -364,7 +364,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         bleScanner = BleManager.getBleScannerInstance();
         //如果手机不支持蓝牙的话，这里得到的是null,所以需要进行判空
         if (bleScanner == null) {
-            Tool.toastL(DeviceListActivity.this, R.string.ble_not_supported);
+            ToastUtil.toastL(DeviceListActivity.this, R.string.ble_not_supported);
             return;
         }
         bleScanner.init();

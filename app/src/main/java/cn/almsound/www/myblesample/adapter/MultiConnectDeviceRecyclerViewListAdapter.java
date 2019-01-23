@@ -7,7 +7,7 @@ import android.widget.CompoundButton;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
-import com.jackiepenghe.baselibrary.tools.Tool;
+import com.jackiepenghe.baselibrary.tools.ToastUtil;
 import com.jackiepenghe.blelibrary.BleDevice;
 
 import java.util.ArrayList;
@@ -101,7 +101,7 @@ public class MultiConnectDeviceRecyclerViewListAdapter extends BaseQuickAdapter<
      */
     public void selectAll() {
 
-        Tool.toastL(mContext,"设备数量：" + mData.size());
+        ToastUtil.toastL(mContext,"设备数量：" + mData.size());
 
         for (int i = 0; i < mData.size(); i++) {
             BleDeviceWithBoolean bleDeviceWithBoolean = mData.get(i);

@@ -5,6 +5,7 @@ import android.text.Spannable;
 import android.text.TextWatcher;
 import android.widget.EditText;
 
+import com.jackiepenghe.baselibrary.tools.DebugUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 
 
@@ -145,12 +146,12 @@ public class EditTextWatcherForMacAddress implements TextWatcher {
             /* Invalid input. */
             else {
                 mInvalid = true;
-                temp = temp.substring(0, start) + temp.substring(start + count, temp.length());
+                temp = temp.substring(0, start) + temp.substring(start + count);
                 editText.setText(temp);
             }
 
         } catch (Exception e) {
-            Tool.warnOut(TAG, e.getMessage());
+            DebugUtil.warnOut(TAG, e.getMessage());
         }
     }
 
@@ -197,7 +198,7 @@ public class EditTextWatcherForMacAddress implements TextWatcher {
                 editText.setText(text);
             }
         } catch (Exception e) {
-            Tool.warnOut(TAG, e.getMessage());
+            DebugUtil.warnOut(TAG, e.getMessage());
         }
     }
 }

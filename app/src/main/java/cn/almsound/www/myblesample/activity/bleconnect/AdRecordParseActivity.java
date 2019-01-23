@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.tools.ConversionUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.baselibrary.view.utils.DefaultItemDecoration;
 import com.jackiepenghe.blelibrary.AdvertiseRecord;
@@ -170,7 +171,7 @@ public class AdRecordParseActivity extends BaseAppCompatActivity {
             return;
         }
         byte[] scanRecordBytes = bleDevice.getScanRecordBytes();
-        scanRecordEditText.setText(Tool.bytesToHexStr(scanRecordBytes));
+        scanRecordEditText.setText(ConversionUtil.bytesToHexStr(scanRecordBytes));
     }
 
     private void initRecyclerView() {

@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 
 import com.jackiepenghe.baselibrary.activity.BaseWelcomeActivity;
 import com.jackiepenghe.baselibrary.tools.CrashHandler;
+import com.jackiepenghe.baselibrary.tools.ToastUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.Permission;
@@ -74,7 +75,7 @@ public class WelcomeActivity extends BaseWelcomeActivity {
             NotificationManagerCompat manager = NotificationManagerCompat.from(WelcomeActivity.this.getApplicationContext());
             boolean isOpened = manager.areNotificationsEnabled();
             if (!isOpened) {
-                Tool.toastL(WelcomeActivity.this, R.string.no_notification_permission);
+                ToastUtil.toastL(WelcomeActivity.this, R.string.no_notification_permission);
                 //去打开通知权限
                 showOpenNotificationPermissionDialog();
                 return;

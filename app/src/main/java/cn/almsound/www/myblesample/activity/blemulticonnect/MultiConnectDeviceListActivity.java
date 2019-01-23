@@ -16,6 +16,7 @@ import android.widget.Button;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.tools.ToastUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.baselibrary.view.utils.DefaultItemDecoration;
 import com.jackiepenghe.blelibrary.BleDevice;
@@ -326,12 +327,12 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
             buttonClickCount++;
         }
         if (selectedDeviceList.size() == 0) {
-            Tool.toastL(MultiConnectDeviceListActivity.this, R.string.nothing_selected);
+            ToastUtil.toastL(MultiConnectDeviceListActivity.this, R.string.nothing_selected);
             return;
         }
 
         if (selectedDeviceList.size() > MAX_DEVICE_SELECT_COUNT) {
-            Tool.toastL(MultiConnectDeviceListActivity.this, R.string.selected_more_than);
+            ToastUtil.toastL(MultiConnectDeviceListActivity.this, R.string.selected_more_than);
             return;
         }
 

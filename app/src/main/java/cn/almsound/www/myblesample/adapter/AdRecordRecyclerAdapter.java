@@ -4,6 +4,7 @@ import android.support.annotation.Nullable;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
+import com.jackiepenghe.baselibrary.tools.ConversionUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.blelibrary.AdvertiseRecord;
 
@@ -39,7 +40,7 @@ public class AdRecordRecyclerAdapter extends BaseQuickAdapter<AdvertiseRecord,Ba
             data = new byte[0];
         }
         helper.setText(R.id.length,String.valueOf(item.getLength()))
-                .setText(R.id.type,Tool.bytesToHexStr(new byte[]{item.getType()}))
-                .setText(R.id.data,Tool.bytesToHexStr(data));
+                .setText(R.id.type, ConversionUtil.bytesToHexStr(new byte[]{item.getType()}))
+                .setText(R.id.data,ConversionUtil.bytesToHexStr(data));
     }
 }

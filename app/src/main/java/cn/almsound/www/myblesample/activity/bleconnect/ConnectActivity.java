@@ -22,6 +22,9 @@ import android.widget.TextView;
 
 import com.chad.library.adapter.base.entity.MultiItemEntity;
 import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.tools.ConversionUtil;
+import com.jackiepenghe.baselibrary.tools.DebugUtil;
+import com.jackiepenghe.baselibrary.tools.ToastUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.baselibrary.view.utils.DefaultItemDecoration;
 import com.jackiepenghe.blelibrary.BleConnector;
@@ -112,7 +115,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
     private ServicesCharacteristicsListAdapter.OnCharacteristicClickListener onCharacteristicClickListener = new ServicesCharacteristicsListAdapter.OnCharacteristicClickListener() {
         @Override
         public void onCharacteristicClick(String serviceUUID, String characteristicUUID) {
-            Tool.warnOut(TAG, "serviceUUID = " + serviceUUID + ",characteristicUUID = " + characteristicUUID);
+            DebugUtil.warnOut(TAG, "serviceUUID = " + serviceUUID + ",characteristicUUID = " + characteristicUUID);
             showOptionsDialog(serviceUUID, characteristicUUID);
         }
     };
@@ -126,7 +129,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void sendStarted() {
             super.sendStarted();
-            Tool.toast(ConnectActivity.this, "sendStarted", toastKeepTime);
+            ToastUtil.toast(ConnectActivity.this, "sendStarted", toastKeepTime);
         }
 
         /**
@@ -135,7 +138,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void sendFinished() {
             super.sendFinished();
-            Tool.toast(ConnectActivity.this, "sendFinished", toastKeepTime);
+            ToastUtil.toast(ConnectActivity.this, "sendFinished", toastKeepTime);
         }
 
         /**
@@ -148,8 +151,8 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void packageSendProgressChanged(int currentPackageCount, int pageCount, @NonNull byte[] data) {
             super.packageSendProgressChanged(currentPackageCount, pageCount, data);
-            Tool.toast(ConnectActivity.this, "packageSendProgressChanged " + currentPackageCount + " / " + pageCount, toastKeepTime);
-            Tool.warnOut(TAG, "data = " + Tool.bytesToHexStr(data));
+            ToastUtil.toast(ConnectActivity.this, "packageSendProgressChanged " + currentPackageCount + " / " + pageCount, toastKeepTime);
+            DebugUtil.warnOut(TAG, "data = " + ConversionUtil.bytesToHexStr(data));
         }
 
         /**
@@ -162,7 +165,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void packageSendFailed(int currentPackageCount, int pageCount, @NonNull byte[] data) {
             super.packageSendFailed(currentPackageCount, pageCount, data);
-            Tool.toast(ConnectActivity.this, "packageSendFailed " + currentPackageCount + " / " + pageCount, toastKeepTime);
+            ToastUtil.toast(ConnectActivity.this, "packageSendFailed " + currentPackageCount + " / " + pageCount, toastKeepTime);
         }
 
         /**
@@ -189,7 +192,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onSendTimeOut(int currentPackageIndex, int pageCount, @NonNull byte[] data) {
             super.onSendTimeOut(currentPackageIndex, pageCount, data);
-            Tool.toast(ConnectActivity.this, "onSendTimeOut: " + currentPackageIndex + " / " + pageCount, toastKeepTime);
+            ToastUtil.toast(ConnectActivity.this, "onSendTimeOut: " + currentPackageIndex + " / " + pageCount, toastKeepTime);
         }
 
         /**
@@ -203,7 +206,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onSendTimeOutAndRetry(int tryCount, int currentPackageIndex, int pageCount, @NonNull byte[] data) {
             super.onSendTimeOutAndRetry(tryCount, currentPackageIndex, pageCount, data);
-            Tool.warnOut(TAG, "onSendTimeOut: tryCount = " + tryCount + " " + currentPackageIndex + " / " + pageCount);
+            DebugUtil.warnOut(TAG, "onSendTimeOut: tryCount = " + tryCount + " " + currentPackageIndex + " / " + pageCount);
         }
     };
     private DefaultLargeDataWriteWithNotificationSendStateChangedListener defaultLargeDataWriteWithNotificationSendStateChangedListener = new DefaultLargeDataWriteWithNotificationSendStateChangedListener() {
@@ -228,7 +231,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onDataSendFinished() {
             super.onDataSendFinished();
-            Tool.toastL(ConnectActivity.this, "onDataSendFinished");
+            ToastUtil.toastL(ConnectActivity.this, "onDataSendFinished");
         }
 
         /**
@@ -241,7 +244,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onDataSendFailed(int currentPackageCount, int pageCount, byte[] data) {
             super.onDataSendFailed(currentPackageCount, pageCount, data);
-            Tool.toastL(ConnectActivity.this, "onDataSendFailed");
+            ToastUtil.toastL(ConnectActivity.this, "onDataSendFailed");
         }
 
         /**
@@ -267,7 +270,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onDataSendProgressChanged(int currentPackageCount, int pageCount, @NonNull byte[] data) {
             super.onDataSendProgressChanged(currentPackageCount, pageCount, data);
-            Tool.toast(ConnectActivity.this, currentPackageCount + " / " + pageCount, toastKeepTime);
+            ToastUtil.toast(ConnectActivity.this, currentPackageCount + " / " + pageCount, toastKeepTime);
         }
 
         /**
@@ -276,7 +279,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onSendFailedWithWrongNotifyData() {
             super.onSendFailedWithWrongNotifyData();
-            Tool.toast(ConnectActivity.this, "onSendFailedWithWrongNotifyData", toastKeepTime);
+            ToastUtil.toast(ConnectActivity.this, "onSendFailedWithWrongNotifyData", toastKeepTime);
         }
 
         /**
@@ -302,7 +305,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         @Override
         public void onDataSendTimeOut(int currentPackageIndex, int packageCount, @NonNull byte[] data) {
             super.onDataSendTimeOut(currentPackageIndex, packageCount, data);
-            Tool.toast(ConnectActivity.this, "onDataSendTimeOut", toastKeepTime);
+            ToastUtil.toast(ConnectActivity.this, "onDataSendTimeOut", toastKeepTime);
         }
 
         /**
@@ -329,7 +332,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
             //连接成功，将指示标志设置为蓝色
             customTextCircleView.setColor(Color.BLUE);
 
-            Tool.toastL(ConnectActivity.this, R.string.connected);
+            ToastUtil.toastL(ConnectActivity.this, R.string.connected);
         }
 
         @Override
@@ -344,13 +347,13 @@ public class ConnectActivity extends BaseAppCompatActivity {
             serviceDiscovered = false;
             //断开连接，将指示标志设置为红色
             customTextCircleView.setColor(Color.RED);
-            Tool.toastL(ConnectActivity.this, R.string.disconnect);
+            ToastUtil.toastL(ConnectActivity.this, R.string.disconnect);
         }
 
         @Override
         public void gattStatusError(int errorStatus) {
-            Tool.warnOut(TAG, "连接出错，状态码：" + errorStatus);
-            Tool.toastL(ConnectActivity.this, "连接出错，状态码：" + errorStatus);
+            DebugUtil.warnOut(TAG, "连接出错，状态码：" + errorStatus);
+            ToastUtil.toastL(ConnectActivity.this, "连接出错，状态码：" + errorStatus);
             bleConnector.close();
             onBackPressed();
         }
@@ -362,12 +365,12 @@ public class ConnectActivity extends BaseAppCompatActivity {
 
         @Override
         public void autoDiscoverServicesFailed() {
-            Tool.warnOut(TAG, "远端设备服务列表扫描失败");
+            DebugUtil.warnOut(TAG, "远端设备服务列表扫描失败");
         }
 
         @Override
         public void disconnecting() {
-            Tool.warnOut(TAG, "onDisconnecting");
+            DebugUtil.warnOut(TAG, "onDisconnecting");
         }
 
         @Override
@@ -390,7 +393,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
 
             //服务发现完成，将指示标志设置为绿色（对BLE远端设备的所有操作都在服务扫描完成之后）
             customTextCircleView.setColor(Color.GREEN);
-            Tool.toastL(ConnectActivity.this, R.string.get_service_success);
+            ToastUtil.toastL(ConnectActivity.this, R.string.get_service_success);
             //获取服务列表
             List<BluetoothGattService> deviceServices = bleConnector.getServices();
 
@@ -399,7 +402,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                 for (int i = 0; i < deviceServices.size(); i++) {
                     BluetoothGattService bluetoothGattService = deviceServices.get(i);
                     String serviceUuidString = bluetoothGattService.getUuid().toString();
-                    Tool.warnOut(TAG, "bluetoothGattService UUID = " + serviceUuidString);
+                    DebugUtil.warnOut(TAG, "bluetoothGattService UUID = " + serviceUuidString);
 
                     ServiceUuidItem serviceUuidItem = new ServiceUuidItem(BleUtils.getServiceUuidName(serviceUuidString), serviceUuidString);
                     List<BluetoothGattCharacteristic> characteristics = bluetoothGattService.getCharacteristics();
@@ -417,9 +420,9 @@ public class ConnectActivity extends BaseAppCompatActivity {
 
                 servicesCharacteristicsListAdapter.notifyDataSetChanged();
                 if (bleConnector.refreshGattCache()) {
-                    Tool.toastL(ConnectActivity.this, R.string.uuid_refresh_success);
+                    ToastUtil.toastL(ConnectActivity.this, R.string.uuid_refresh_success);
                 } else {
-                    Tool.toastL(ConnectActivity.this, R.string.uuid_refresh_failed);
+                    ToastUtil.toastL(ConnectActivity.this, R.string.uuid_refresh_failed);
                 }
             }
 
@@ -431,34 +434,34 @@ public class ConnectActivity extends BaseAppCompatActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 int mtu = 24;
                 if (bleConnector.requestMtu(mtu)) {
-                    Tool.warnOut(TAG, mtu + " 字节MTU请求成功");
+                    DebugUtil.warnOut(TAG, mtu + " 字节MTU请求成功");
                 } else {
-                    Tool.warnOut(TAG, mtu + " 字节MTU请求失败");
+                    DebugUtil.warnOut(TAG, mtu + " 字节MTU请求失败");
                 }
             } else {
-                Tool.warnOut(TAG, "系统版本过低，无法请求更新MTU");
+                DebugUtil.warnOut(TAG, "系统版本过低，无法请求更新MTU");
             }
         }
 
         @Override
         public void readCharacteristicData(BluetoothGattCharacteristic characteristic, byte[] data) {
-            String hexStr = Tool.bytesToHexStr(data);
+            String hexStr = ConversionUtil.bytesToHexStr(data);
             String str = new String(data);
-            Tool.warnOut(TAG, "读取到的数据 = " + hexStr);
+            DebugUtil.warnOut(TAG, "读取到的数据 = " + hexStr);
             showReadDataResultDialog(hexStr, str);
         }
 
         @Override
         public void writeCharacteristicData(BluetoothGattCharacteristic characteristic, byte[] data) {
-            String hexStr = Tool.bytesToHexStr(data);
-            Tool.warnOut(TAG, "onCharacteristicWrite hexStr = " + hexStr);
+            String hexStr = ConversionUtil.bytesToHexStr(data);
+            DebugUtil.warnOut(TAG, "onCharacteristicWrite hexStr = " + hexStr);
         }
 
         @Override
         public void receivedNotification(BluetoothGattCharacteristic characteristic, byte[] data) {
-            String hexStr = Tool.bytesToHexStr(data);
+            String hexStr = ConversionUtil.bytesToHexStr(data);
             String str = new String(data);
-            Tool.warnOut("ConnectActivity", "value = " + hexStr);
+            DebugUtil.warnOut("ConnectActivity", "value = " + hexStr);
             showReceiveNotificationDialog(hexStr, str);
         }
 
@@ -479,12 +482,12 @@ public class ConnectActivity extends BaseAppCompatActivity {
 
         @Override
         public void readRemoteRssi(int rssi) {
-            Tool.warnOut("ConnectActivity", "rssi = " + rssi);
+            DebugUtil.warnOut("ConnectActivity", "rssi = " + rssi);
         }
 
         @Override
         public void mtuChanged(int mtu) {
-            Tool.warnOut(TAG, "onMtuChanged:mtu = " + mtu);
+            DebugUtil.warnOut(TAG, "onMtuChanged:mtu = " + mtu);
         }
 
         @Override
@@ -505,29 +508,29 @@ public class ConnectActivity extends BaseAppCompatActivity {
 
         @Override
         public void onConnectTimeOut() {
-            Tool.toastL(ConnectActivity.this, R.string.connect_time_out);
+            ToastUtil.toastL(ConnectActivity.this, R.string.connect_time_out);
             onBackPressed();
         }
     };
     private OnDeviceBondStateChangedListener onDeviceBondStateChangedListener = new OnDeviceBondStateChangedListener() {
         @Override
         public void onDeviceBinding() {
-            Tool.warnOut(TAG, "绑定中");
-            Tool.toastL(ConnectActivity.this, "绑定中");
+            DebugUtil.warnOut(TAG, "绑定中");
+            ToastUtil.toastL(ConnectActivity.this, "绑定中");
         }
 
         @Override
         public void onDeviceBonded() {
-            Tool.warnOut(TAG, "绑定成功");
-            Tool.toastL(ConnectActivity.this, "绑定成功");
+            DebugUtil.warnOut(TAG, "绑定成功");
+            ToastUtil.toastL(ConnectActivity.this, "绑定成功");
             //发起连接
             startConnect();
         }
 
         @Override
         public void onDeviceBindNone() {
-            Tool.warnOut(TAG, "绑定失败");
-            Tool.toastL(ConnectActivity.this, "绑定失败");
+            DebugUtil.warnOut(TAG, "绑定失败");
+            ToastUtil.toastL(ConnectActivity.this, "绑定失败");
             onBackPressed();
         }
     };
@@ -550,7 +553,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         //获取BleDevice对象
         BleDevice bleDevice = (BleDevice) intent.getSerializableExtra(Constants.DEVICE);
         if (bleDevice == null) {
-            Tool.toastL(ConnectActivity.this, R.string.device_info_error);
+            ToastUtil.toastL(ConnectActivity.this, R.string.device_info_error);
             finish();
             return;
         }
@@ -735,7 +738,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         bleConnector = BleManager.getBleConnectorInstance();
         //如果手机不支持蓝牙的话，这里得到的是null,所以需要进行判空
         if (bleConnector == null) {
-            Tool.toastL(ConnectActivity.this, R.string.ble_not_supported);
+            ToastUtil.toastL(ConnectActivity.this, R.string.ble_not_supported);
             return;
         }
         bleConnector.setConnectTimeOut(60000);
@@ -799,16 +802,16 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     private void startConnect() {
         if (bleConnector.connect(bluetoothDevice, true)) {
-            Tool.warnOut("开始连接");
+            DebugUtil.warnOut("开始连接");
             BleManager.getHANDLER().post(new Runnable() {
                 @Override
                 public void run() {
-                    Tool.toastL(ConnectActivity.this, "发起连接");
+                    ToastUtil.toastL(ConnectActivity.this, "发起连接");
                     customTextCircleView.setColor(Color.YELLOW);
                 }
             });
         } else {
-            Tool.warnOut("发起连接失败");
+            DebugUtil.warnOut("发起连接失败");
         }
 
     }
@@ -839,20 +842,20 @@ public class ConnectActivity extends BaseAppCompatActivity {
                             //读
                             case 0:
                                 if (!bleConnector.canRead(serviceUUID, characteristicUUID)) {
-                                    Tool.toastL(ConnectActivity.this, R.string.read_not_support);
+                                    ToastUtil.toastL(ConnectActivity.this, R.string.read_not_support);
                                     return;
                                 }
                                 boolean readData = bleConnector.readData(serviceUUID, characteristicUUID);
                                 if (!readData) {
-                                    Tool.toastL(ConnectActivity.this, R.string.read_failed);
+                                    ToastUtil.toastL(ConnectActivity.this, R.string.read_failed);
                                     return;
                                 }
-                                Tool.toastL(ConnectActivity.this, R.string.request_sent);
+                                ToastUtil.toastL(ConnectActivity.this, R.string.request_sent);
                                 break;
                             //写
                             case 1:
                                 if (!bleConnector.canWrite(serviceUUID, characteristicUUID)) {
-                                    Tool.toastL(ConnectActivity.this, R.string.write_not_support);
+                                    ToastUtil.toastL(ConnectActivity.this, R.string.write_not_support);
                                     return;
                                 }
                                 showWriteDataDialog(serviceUUID, characteristicUUID);
@@ -860,7 +863,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                             //打开通知
                             case 2:
                                 if (!bleConnector.canNotify(serviceUUID, characteristicUUID)) {
-                                    Tool.toastL(ConnectActivity.this, R.string.notify_not_support);
+                                    ToastUtil.toastL(ConnectActivity.this, R.string.notify_not_support);
                                     return;
                                 }
                                 bleConnector.addOnBleDescriptorWriteListener(new OnBleDescriptorWriteListener() {
@@ -873,22 +876,22 @@ public class ConnectActivity extends BaseAppCompatActivity {
                                      */
                                     @Override
                                     public void onBleDescriptorWrite(BluetoothGattDescriptor bluetoothGattDescriptor, byte[] data) {
-                                        Tool.toastL(ConnectActivity.this, R.string.open_notification_success);
+                                        ToastUtil.toastL(ConnectActivity.this, R.string.open_notification_success);
                                         bleConnector.removeOnBleDescriptorWriteListener(this);
 //                                        bleConnector.addOnBleReceiveNotificationListener(onReceiveNotificationListener);
                                     }
                                 });
                                 boolean openNotification = bleConnector.enableNotification(serviceUUID, characteristicUUID, true);
                                 if (!openNotification) {
-                                    Tool.toastL(ConnectActivity.this, R.string.open_notification_failed);
+                                    ToastUtil.toastL(ConnectActivity.this, R.string.open_notification_failed);
                                     return;
                                 }
-                                Tool.toastL(ConnectActivity.this, R.string.request_sent);
+                                ToastUtil.toastL(ConnectActivity.this, R.string.request_sent);
                                 break;
                             //写入超长数据,自动格式化（分包传输）
                             case 3:
                                 if (!bleConnector.canWrite(serviceUUID, characteristicUUID)) {
-                                    Tool.toastL(ConnectActivity.this, R.string.write_not_support);
+                                    ToastUtil.toastL(ConnectActivity.this, R.string.write_not_support);
                                     return;
                                 }
                                 showWriteBigDataDialog(serviceUUID, characteristicUUID, true);
@@ -896,11 +899,11 @@ public class ConnectActivity extends BaseAppCompatActivity {
                             //写入超长数据，自动格式化（分包传输且需要通知处理）
                             case 4:
                                 if (!bleConnector.canWrite(serviceUUID, characteristicUUID)) {
-                                    Tool.toastL(ConnectActivity.this, R.string.write_not_support);
+                                    ToastUtil.toastL(ConnectActivity.this, R.string.write_not_support);
                                     return;
                                 }
                                 if (!bleConnector.canNotify(serviceUUID, characteristicUUID)) {
-                                    Tool.toastL(ConnectActivity.this, R.string.notify_not_support);
+                                    ToastUtil.toastL(ConnectActivity.this, R.string.notify_not_support);
                                     return;
                                 }
                                 showWriteBigDataWithNotifyDialog(serviceUUID, characteristicUUID, true);
@@ -908,7 +911,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
                             //写入超长数据,不自动格式化（分包传输）
                             case 5:
                                 if (!bleConnector.canWrite(serviceUUID, characteristicUUID)) {
-                                    Tool.toastL(ConnectActivity.this, R.string.write_not_support);
+                                    ToastUtil.toastL(ConnectActivity.this, R.string.write_not_support);
                                     return;
                                 }
                                 showWriteBigDataDialog(serviceUUID, characteristicUUID, false);
@@ -916,11 +919,11 @@ public class ConnectActivity extends BaseAppCompatActivity {
                             //写入超长数据，不自动格式化（分包传输且需要通知处理）
                             case 6:
                                 if (!bleConnector.canWrite(serviceUUID, characteristicUUID)) {
-                                    Tool.toastL(ConnectActivity.this, R.string.write_not_support);
+                                    ToastUtil.toastL(ConnectActivity.this, R.string.write_not_support);
                                     return;
                                 }
                                 if (!bleConnector.canNotify(serviceUUID, characteristicUUID)) {
-                                    Tool.toastL(ConnectActivity.this, R.string.notify_not_support);
+                                    ToastUtil.toastL(ConnectActivity.this, R.string.notify_not_support);
                                     return;
                                 }
                                 showWriteBigDataWithNotifyDialog(serviceUUID, characteristicUUID, false);
@@ -943,7 +946,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         for (int i = 0; i < bytes.length; i++) {
             bytes[i] = (byte) i;
         }
-        editText.setText(Tool.bytesToHexStr(bytes));
+        editText.setText(ConversionUtil.bytesToHexStr(bytes));
         new AlertDialog.Builder(this)
                 .setTitle(R.string.input_data)
                 .setView(editText)
@@ -952,12 +955,12 @@ public class ConnectActivity extends BaseAppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         String text = editText.getText().toString();
                         if ("".equals(text)) {
-                            Tool.toastL(ConnectActivity.this, R.string.set_nothing);
+                            ToastUtil.toastL(ConnectActivity.this, R.string.set_nothing);
                             showWriteDataDialog(serviceUUID, characteristicUUID);
                             return;
                         }
                         text = text.replace(" ", "");
-                        byte[] bytes = Tool.hexStrToBytes(text);
+                        byte[] bytes = ConversionUtil.hexStrToBytes(text);
                         bleConnector.writeLargeDataWithNotification(serviceUUID, characteristicUUID, bytes, defaultLargeDataWriteWithNotificationSendStateChangedListener, autoFormat);
 
                     }
@@ -975,7 +978,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
         for (int i = 0; i < bytes.length; i++) {
             bytes[i] = (byte) i;
         }
-        editText.setText(Tool.bytesToHexStr(bytes));
+        editText.setText(ConversionUtil.bytesToHexStr(bytes));
         new AlertDialog.Builder(this)
                 .setTitle(R.string.input_data)
                 .setView(editText)
@@ -984,12 +987,12 @@ public class ConnectActivity extends BaseAppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         String text = editText.getText().toString();
                         if ("".equals(text)) {
-                            Tool.toastL(ConnectActivity.this, R.string.set_nothing);
+                            ToastUtil.toastL(ConnectActivity.this, R.string.set_nothing);
                             showWriteDataDialog(serviceUUID, characteristicUUID);
                             return;
                         }
                         text = text.replace(" ", "");
-                        byte[] bytes = Tool.hexStrToBytes(text);
+                        byte[] bytes = ConversionUtil.hexStrToBytes(text);
                         bleConnector.writeLargeData(serviceUUID, characteristicUUID, bytes, defaultOnLargeDataSendStateChangedListener, autoFormat);
                     }
                 })
@@ -1010,17 +1013,17 @@ public class ConnectActivity extends BaseAppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         String text = editText.getText().toString();
                         if ("".equals(text)) {
-                            Tool.toastL(ConnectActivity.this, R.string.set_nothing);
+                            ToastUtil.toastL(ConnectActivity.this, R.string.set_nothing);
                             showWriteDataDialog(serviceUUID, characteristicUUID);
                             return;
                         }
                         text = text.replace(" ", "");
-                        byte[] bytes = Tool.hexStrToBytes(text);
+                        byte[] bytes = ConversionUtil.hexStrToBytes(text);
                         boolean b = bleConnector.writeData(serviceUUID, characteristicUUID, bytes);
                         if (b) {
-                            Tool.toastL(ConnectActivity.this, R.string.write_success);
+                            ToastUtil.toastL(ConnectActivity.this, R.string.write_success);
                         } else {
-                            Tool.toastL(ConnectActivity.this, R.string.write_failed);
+                            ToastUtil.toastL(ConnectActivity.this, R.string.write_failed);
                         }
                     }
                 })

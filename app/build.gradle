@@ -35,7 +35,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support:design:28.0.0'
-    implementation 'com.jackiepenghe:baselibrary:1.0.0-rc3'
+    implementation 'com.sscl:baselibrary:0.0.8'
     implementation 'com.yanzhenjie:permission:1.1.2'
     implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.30'
     implementation project(':blelibrary')

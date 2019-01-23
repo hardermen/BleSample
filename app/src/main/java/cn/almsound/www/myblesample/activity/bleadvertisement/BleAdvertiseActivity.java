@@ -11,6 +11,8 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.tools.DebugUtil;
+import com.jackiepenghe.baselibrary.tools.ToastUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.blelibrary.AdvertiseData;
 import com.jackiepenghe.blelibrary.BleAdvertiser;
@@ -65,7 +67,7 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
         public void onBroadCastStartFailure(int errorCode) {
             super.onBroadCastStartFailure(errorCode);
             broadcastStatusTv.setText(R.string.open_broadcast_failed);
-            Tool.warnOut(TAG, "errorCode = " + errorCode);
+            DebugUtil.warnOut(TAG, "errorCode = " + errorCode);
         }
 
         /**
@@ -112,9 +114,9 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
             bleAdvertiser.setTimeOut(0);
             //初始化
             if (!bleAdvertiser.init()) {
-                Tool.warnOut(TAG, "初始化失败");
+                DebugUtil.warnOut(TAG, "初始化失败");
             } else {
-                Tool.warnOut(TAG, "初始化成功");
+                DebugUtil.warnOut(TAG, "初始化成功");
                 bleAdvertiser.setOnBluetoothGattServerCallbackListener(defaultOnBluetoothGattServerCallbackListener);
                 BluetoothGattServer bluetoothGattServer = bleAdvertiser.getBluetoothGattServer();
                 if (bluetoothGattServer != null) {
@@ -125,7 +127,7 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
                 }
             }
         } else {
-            Tool.toastL(BleAdvertiseActivity.this, "系统版本过低，不支持蓝牙广播");
+            ToastUtil.toastL(BleAdvertiseActivity.this, "系统版本过低，不支持蓝牙广播");
         }
     }
 
@@ -191,11 +193,11 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
                 b = bleAdvertiser.startAdvertising();
             }
             if (b) {
-                Tool.warnOut(TAG, "广播请求发起成功（是否真的成功，在init的advertiseCallback回调中查看）");
+                DebugUtil.warnOut(TAG, "广播请求发起成功（是否真的成功，在init的advertiseCallback回调中查看）");
             } else {
-                Tool.warnOut(TAG, "广播请求发起失败（这是真的失败了，连请求都没有发起成功）");
+                DebugUtil.warnOut(TAG, "广播请求发起失败（这是真的失败了，连请求都没有发起成功）");
             }
-            Tool.warnOut(TAG, "startAdvertising = " + b);
+            DebugUtil.warnOut(TAG, "startAdvertising = " + b);
         }
     }
 

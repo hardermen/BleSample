@@ -3,6 +3,7 @@ package cn.almsound.www.myblesample;
 import android.app.Application;
 
 import com.jackiepenghe.baselibrary.files.FileUtil;
+import com.jackiepenghe.baselibrary.tools.ToastUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.DebugUtil;
@@ -30,11 +31,11 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         //打开debug信息开关
-        Tool.setDebugFlag(true);
-        Tool.setToastReuse(true);
+        DebugUtil.setDebugFlag(true);
+        ToastUtil.setToastReuse(true);
         //初始化文件工具类
         FileUtil.init(this.getApplicationContext());
         BleManager.init(MyApplication.this);
-        DebugUtil.setDebugFlag(true);
+        com.jackiepenghe.baselibrary.tools.DebugUtil.setDebugFlag(true);
     }
 }

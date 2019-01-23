@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
+import com.jackiepenghe.baselibrary.tools.ToastUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.blelibrary.BleManager;
 
@@ -156,7 +157,7 @@ public class MainActivity extends BaseAppCompatActivity {
     private void toDeviceListActivity() {
 
         if (!BleManager.isSupportBle()) {
-            Tool.toastL(this, R.string.ble_not_supported);
+            ToastUtil.toastL(this, R.string.ble_not_supported);
             return;
         }
         Intent intent = new Intent(MainActivity.this, DeviceListActivity.class);
@@ -169,7 +170,7 @@ public class MainActivity extends BaseAppCompatActivity {
     private void toMultiConnectActivity() {
 
         if (!BleManager.isSupportBle()) {
-            Tool.toastL(this, R.string.ble_not_supported);
+            ToastUtil.toastL(this, R.string.ble_not_supported);
             return;
         }
         Intent intent = new Intent(MainActivity.this, MultiConnectDeviceListActivity.class);
@@ -181,11 +182,11 @@ public class MainActivity extends BaseAppCompatActivity {
      */
     private void toBroadcastActivity() {
         if (!BleManager.isSupportBle()) {
-            Tool.toastL(this, R.string.ble_not_supported);
+            ToastUtil.toastL(this, R.string.ble_not_supported);
             return;
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            Tool.toastL(this, R.string.android_version_too_low);
+            ToastUtil.toastL(this, R.string.android_version_too_low);
             return;
         }
 

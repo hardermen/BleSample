@@ -4,6 +4,7 @@ import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.AdvertisingSet;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 
+import com.jackiepenghe.baselibrary.tools.DebugUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.blelibrary.interfaces.OnBleAdvertiseStateChangedListener;
 
@@ -23,7 +24,7 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onBroadCastStartSuccess(AdvertiseSettings settingsInEffect) {
-        Tool.warnOut(TAG,"onBroadCastStartSuccess");
+        DebugUtil.warnOut(TAG,"onBroadCastStartSuccess");
     }
 
     /**
@@ -34,7 +35,7 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onBroadCastStartFailure(int errorCode) {
-        Tool.warnOut(TAG,"onBroadCastStartFailure");
+        DebugUtil.warnOut(TAG,"onBroadCastStartFailure");
     }
 
     /**
@@ -42,7 +43,7 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onBroadCastStopped() {
-        Tool.warnOut(TAG,"onBroadCastStopped");
+        DebugUtil.warnOut(TAG,"onBroadCastStopped");
     }
 
     /**
@@ -57,7 +58,7 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onAdvertisingSetStarted(AdvertisingSet advertisingSet, int txPower, int status) {
-        Tool.warnOut(TAG,"onAdvertisingSetStarted");
+        DebugUtil.warnOut(TAG,"onAdvertisingSetStarted");
     }
 
     /**
@@ -68,7 +69,7 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onAdvertisingSetStopped(AdvertisingSet advertisingSet) {
-        Tool.warnOut(TAG,"onAdvertisingSetStopped");
+        DebugUtil.warnOut(TAG,"onAdvertisingSetStopped");
     }
 
     /**
@@ -81,7 +82,7 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status) {
-        Tool.warnOut(TAG,"onAdvertisingEnabled");
+        DebugUtil.warnOut(TAG,"onAdvertisingEnabled");
     }
 
     /**
@@ -93,7 +94,7 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onScanResponseDataSet(AdvertisingSet advertisingSet, int status) {
-        Tool.warnOut(TAG,"onScanResponseDataSet");
+        DebugUtil.warnOut(TAG,"onScanResponseDataSet");
     }
 
     /**
@@ -106,7 +107,7 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int txPower, int status) {
-        Tool.warnOut(TAG,"onAdvertisingParametersUpdated");
+        DebugUtil.warnOut(TAG,"onAdvertisingParametersUpdated");
     }
 
     /**
@@ -118,7 +119,7 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onPeriodicAdvertisingParametersUpdated(AdvertisingSet advertisingSet, int status) {
-        Tool.warnOut(TAG,"onPeriodicAdvertisingParametersUpdated");
+        DebugUtil.warnOut(TAG,"onPeriodicAdvertisingParametersUpdated");
     }
 
     /**
@@ -130,7 +131,7 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onPeriodicAdvertisingDataSet(AdvertisingSet advertisingSet, int status) {
-        Tool.warnOut(TAG,"onPeriodicAdvertisingDataSet");
+        DebugUtil.warnOut(TAG,"onPeriodicAdvertisingDataSet");
     }
 
     /**
@@ -143,7 +144,7 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onPeriodicAdvertisingEnabled(AdvertisingSet advertisingSet, boolean enable, int status) {
-        Tool.warnOut(TAG,"onPeriodicAdvertisingEnabled");
+        DebugUtil.warnOut(TAG,"onPeriodicAdvertisingEnabled");
     }
 
     /**
@@ -155,6 +156,6 @@ public class DefaultOnBleAdvertiseStateChangedListener implements OnBleAdvertise
      */
     @Override
     public void onAdvertisingDataSet(AdvertisingSet advertisingSet, int status) {
-        Tool.warnOut(TAG,"onAdvertisingDataSet");
+        DebugUtil.warnOut(TAG,"onAdvertisingDataSet");
     }
 }
