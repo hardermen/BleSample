@@ -105,6 +105,9 @@ public final class BleScanRecord implements Serializable {
      */
     @Nullable
     public byte[] getManufacturerSpecificData(byte adType) {
+        if (mManufacturerSpecificData == null){
+            return null;
+        }
         return mManufacturerSpecificData.get(adType);
     }
 
@@ -121,7 +124,7 @@ public final class BleScanRecord implements Serializable {
      */
     @Nullable
     public byte[] getServiceData(BleParcelUuid serviceDataUuid) {
-        if (serviceDataUuid == null) {
+        if (mServiceData == null) {
             return null;
         }
         return mServiceData.get(serviceDataUuid);
@@ -160,9 +163,6 @@ public final class BleScanRecord implements Serializable {
                           @Nullable String localName, @NonNull byte[] bytes) {
         mServiceUuids = serviceUuids;
         mManufacturerSpecificData = manufacturerData;
-        if (mManufacturerSpecificData != null) {
-            DebugUtil.warnOut(TAG, "mManufacturerSpecificData size = " + mManufacturerSpecificData.size());
-        }
         mServiceData = serviceData;
         mDeviceName = localName;
         mAdvertiseFlags = advertiseFlags;
@@ -268,8 +268,8 @@ public final class BleScanRecord implements Serializable {
     @Override
     public String toString() {
         return "BleScanRecord [mAdvertiseFlags=" + mAdvertiseFlags + ", mServiceUuids=" + mServiceUuids
-                + ", mManufacturerSpecificData=" + mManufacturerSpecificData.toString()
-                + ", mServiceData=" + mServiceData.toString()
+                + ", mManufacturerSpecificData=" + mManufacturerSpecificData
+                + ", mServiceData=" + mServiceData
                 + ", mTxPowerLevel=" + mTxPowerLevel + ", mDeviceName=" + mDeviceName + "]";
     }
 
@@ -292,46 +292,6 @@ public final class BleScanRecord implements Serializable {
         System.arraycopy(scanRecord, start, bytes, 0, length);
         return bytes;
     }
-
-
-//    @Override
-//    public int describeContents() {
-//        return 0;
-//    }
-//
-//    @Override
-//    public void writeToParcel(Parcel dest, int flags) {
-//        dest.writeInt(this.mAdvertiseFlags);
-//        dest.writeTypedList(this.mServiceUuids);
-//        dest.writeParcelable(this.mManufacturerSpecificData, flags);
-//        dest.writeParcelable(this.mServiceData, flags);
-//        dest.writeInt(this.mTxPowerLevel);
-//        dest.writeString(this.mDeviceName);
-//        dest.writeByteArray(this.mBytes);
-//    }
-//
-//    @SuppressWarnings("WeakerAccess")
-//    protected BleScanRecord(Parcel in) {
-//        this.mAdvertiseFlags = in.readInt();
-//        this.mServiceUuids = in.readParcelable(BleArrayList.class.getClassLoader());
-//        this.mManufacturerSpecificData = in.readParcelable(BleSparseArray.class.getClassLoader());
-//        this.mServiceData = in.readParcelable(BleHashMap.class.getClassLoader());
-//        this.mTxPowerLevel = in.readInt();
-//        this.mDeviceName = in.readString();
-//        this.mBytes = in.createByteArray();
-//    }
-//
-//    public static final Creator<BleScanRecord> CREATOR = new Creator<BleScanRecord>() {
-//        @Override
-//        public BleScanRecord createFromParcel(Parcel source) {
-//            return new BleScanRecord(source);
-//        }
-//
-//        @Override
-//        public BleScanRecord[] newArray(int size) {
-//            return new BleScanRecord[size];
-//        }
-//    };
 
 
     /**

@@ -4,5 +4,4 @@
     <string name="bluetooth_on">藍牙已開啟</string>
     <string name="bluetooth_not_enable">在您打開藍牙之前，將無法使用某些功能</string>
     <string name="no_bluetooth_mode">您的手機不支持藍牙</string>
-    <string name="multiple_advertisement_not_supported">您的手機可能不支持BLE藍牙廣播</string>
 </resources>
