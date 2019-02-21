@@ -382,7 +382,6 @@ public final class BleMultiConnector {
      * @param address device address
      * @return true means request success
      */
-    @Deprecated
     public boolean connect(@NonNull String address) {
         return BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), false);
     }
@@ -405,7 +404,6 @@ public final class BleMultiConnector {
      * @param autoConnect true means request success
      * @return true means request success
      */
-    @Deprecated
     public boolean connect(@NonNull String address, boolean autoConnect) {
         return BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), new DefaultBleConnectCallBack(), autoConnect);
     }
@@ -428,7 +426,6 @@ public final class BleMultiConnector {
      * @param baseBleConnectCallback callback for connection
      * @return true means request success
      */
-    @Deprecated
     public boolean connect(@NonNull String address, @NonNull BaseBleConnectCallback baseBleConnectCallback) {
         return BluetoothAdapter.checkBluetoothAddress(address) && connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address), baseBleConnectCallback, false);
     }
@@ -441,7 +438,6 @@ public final class BleMultiConnector {
      * @param autoConnect            true means request success
      * @return true means request success
      */
-    @Deprecated
     public boolean connect(@NonNull String address, @NonNull BaseBleConnectCallback baseBleConnectCallback, boolean autoConnect) {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             return false;
@@ -501,5 +497,12 @@ public final class BleMultiConnector {
             return null;
         }
         return new BleDeviceController(this, address);
+    }
+
+    boolean isConnected(String address) {
+        if (bluetoothMultiService == null) {
+            return false;
+        }
+        return bluetoothMultiService.isConnected(address);
     }
 }

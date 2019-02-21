@@ -182,14 +182,23 @@ public final class BluetoothMultiService extends Service {
         if (bluetoothAdapter == null) {
             return false;
         }
-
+        String address = bluetoothDevice.getAddress();
+        if (bleBluetoothMultiGattCallback.callbackHashMap.containsKey(address) && gattCallbackHashMap.containsKey(address)) {
+            BluetoothGatt bluetoothGatt = gattCallbackHashMap.get(address);
+            if (bluetoothGatt != null){
+                return bluetoothGatt.connect();
+            }else {
+                gattCallbackHashMap.remove(address);
+                bleBluetoothMultiGattCallback.callbackHashMap.remove(address);
+            }
+        }
         BluetoothGatt bluetoothGatt = bluetoothDevice.connectGatt(this, autoConnect, bleBluetoothMultiGattCallback);
         if (autoConnect) {
-            if (!bleBluetoothMultiGattCallback.callbackHashMap.containsKey(bluetoothDevice.getAddress())) {
-                bleBluetoothMultiGattCallback.callbackHashMap.put(bluetoothDevice.getAddress(), baseBleConnectCallback);
+            if (!bleBluetoothMultiGattCallback.callbackHashMap.containsKey(address)) {
+                bleBluetoothMultiGattCallback.callbackHashMap.put(address, baseBleConnectCallback);
             }
-            if (!gattCallbackHashMap.containsKey(bluetoothDevice.getAddress())) {
-                gattCallbackHashMap.put(bluetoothDevice.getAddress(), bluetoothGatt);
+            if (!gattCallbackHashMap.containsKey(address)) {
+                gattCallbackHashMap.put(address, bluetoothGatt);
             }
             return true;
         }
@@ -198,11 +207,11 @@ public final class BluetoothMultiService extends Service {
             return false;
         }
 
-        if (!bleBluetoothMultiGattCallback.callbackHashMap.containsKey(bluetoothDevice.getAddress())) {
-            bleBluetoothMultiGattCallback.callbackHashMap.put(bluetoothDevice.getAddress(), baseBleConnectCallback);
+        if (!bleBluetoothMultiGattCallback.callbackHashMap.containsKey(address)) {
+            bleBluetoothMultiGattCallback.callbackHashMap.put(address, baseBleConnectCallback);
         }
-        if (!gattCallbackHashMap.containsKey(bluetoothDevice.getAddress())) {
-            gattCallbackHashMap.put(bluetoothDevice.getAddress(), bluetoothGatt);
+        if (!gattCallbackHashMap.containsKey(address)) {
+            gattCallbackHashMap.put(address, bluetoothGatt);
         }
         checkTimeOut(baseBleConnectCallback, bluetoothGatt);
         return bluetoothGatt.connect();

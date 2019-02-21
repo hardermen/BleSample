@@ -103,4 +103,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/connect" />
+
+    <Button
+        android:id="@+id/open_socket"
+        android:text="@string/open_socket"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/close_socket"
+        android:text="@string/close_socket"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/disconnect"
+        android:text="@string/disconnect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </LinearLayout>

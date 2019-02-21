@@ -174,7 +174,7 @@ public class MultiConnectDeviceListActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doBeforeInitOthers() {
-
+        setTitleText(R.string.app_name);
     }
 
     /**

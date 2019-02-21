@@ -9,7 +9,10 @@ import com.jackiepenghe.baselibrary.tools.DebugUtil;
 import com.jackiepenghe.baselibrary.tools.ToastUtil;
 import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.blelibrary.BaseBleConnectCallback;
+import com.jackiepenghe.blelibrary.BleDeviceController;
+import com.jackiepenghe.blelibrary.BleMultiConnector;
 
+import cn.almsound.www.myblesample.utils.Constants;
 import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 
 /**
@@ -20,11 +23,13 @@ import cn.almsound.www.myblesample.wideget.CustomTextCircleView;
 public class Device1Callback extends BaseBleConnectCallback {
 
     private static final String TAG = Device1Callback.class.getSimpleName();
+    private BleMultiConnector bleMultiConnector;
 
     private CustomTextCircleView customTextCircleView;
 
-    public Device1Callback(CustomTextCircleView customTextCircleView) {
+    public Device1Callback(CustomTextCircleView customTextCircleView, BleMultiConnector bleMultiConnector) {
         this.customTextCircleView = customTextCircleView;
+        this.bleMultiConnector = bleMultiConnector;
     }
 
     /**
@@ -67,6 +72,12 @@ public class Device1Callback extends BaseBleConnectCallback {
         DebugUtil.warnOut(TAG, gatt.getDevice().getAddress() + " onServicesDiscovered");
         customTextCircleView.setColor(Color.GREEN);
         ToastUtil.toastL(customTextCircleView.getContext(), gatt.getDevice().getAddress() + ":onServicesDiscovered");
+        BleDeviceController bleDeviceController = bleMultiConnector.getBleDeviceController(gatt.getDevice().getAddress());
+        if (bleDeviceController != null) {
+            if (bleDeviceController.isConnected()) {
+                bleDeviceController.writeData(Constants.DEVICE_SERVICE_UUID, Constants.DEVICE_CHARACTERISTIC_UUID, new byte[]{0x00, 0x00});
+            }
+        }
     }
 
     /**

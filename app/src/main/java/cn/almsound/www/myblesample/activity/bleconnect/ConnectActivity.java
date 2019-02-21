@@ -25,7 +25,6 @@ import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
 import com.jackiepenghe.baselibrary.tools.ConversionUtil;
 import com.jackiepenghe.baselibrary.tools.DebugUtil;
 import com.jackiepenghe.baselibrary.tools.ToastUtil;
-import com.jackiepenghe.baselibrary.tools.Tool;
 import com.jackiepenghe.baselibrary.view.utils.DefaultItemDecoration;
 import com.jackiepenghe.blelibrary.BleConnector;
 import com.jackiepenghe.blelibrary.BleDevice;
@@ -347,7 +346,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
             serviceDiscovered = false;
             //断开连接，将指示标志设置为红色
             customTextCircleView.setColor(Color.RED);
-            ToastUtil.toastL(ConnectActivity.this, R.string.disconnect);
+            ToastUtil.toastL(ConnectActivity.this, R.string.disconnected);
         }
 
         @Override
@@ -578,6 +577,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doBeforeInitOthers() {
+        setTitleText(R.string.app_name);
         servicesCharacteristicsListAdapter = new ServicesCharacteristicsListAdapter(adapterData);
     }
 

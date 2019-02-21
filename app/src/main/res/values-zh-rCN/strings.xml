@@ -7,7 +7,7 @@
     <string name="connecting">正在发起连接</string>
     <string name="get_service_success">获取信息完成</string>
     <string name="get_name_failed">获取设备名失败</string>
-    <string name="disconnect">连接断开</string>
+    <string name="disconnected">连接断开</string>
     <string name="connected">连接成功</string>
     <string name="device_name">设备名：</string>
     <string name="device_address">设备地址</string>
@@ -66,4 +66,7 @@
     <string name="write_big_data_with_notification_without_format">传输大量数据，不自动格式化(需要通知回调)</string>
     <string name="request_sent">请求已发送</string>
     <string name="connect_failed">连接失败</string>
+    <string name="open_socket">打开</string>
+    <string name="close_socket">关闭</string>
+    <string name="disconnect">断开连接</string>
 </resources>

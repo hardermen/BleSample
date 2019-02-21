@@ -1,5 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -316,7 +317,7 @@ public final class BleDeviceController {
      * cancel the current transaction without commiting any values on the
      * remote device.
      *
-     * <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
+     * <p>Requires {@link Manifest.permission#BLUETOOTH} permission.
      *
      * @return true, if the reliable write transaction has been initiated
      */
@@ -336,7 +337,7 @@ public final class BleDeviceController {
      * <p>Calling this function will discard all queued characteristic write
      * operations for a given remote device.
      *
-     * <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
+     * <p>Requires {@link Manifest.permission#BLUETOOTH} permission.
      */
     @SuppressWarnings("WeakerAccess")
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -359,7 +360,7 @@ public final class BleDeviceController {
      * triggered. If the discovery was successful, the remote services can be
      * retrieved using the {@link #getServices} function.
      *
-     * <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
+     * <p>Requires {@link Manifest.permission#BLUETOOTH} permission.
      *
      * @return true, if the remote service discovery has been started
      */
@@ -382,7 +383,7 @@ public final class BleDeviceController {
      * <p>A {@link BluetoothGattCallback#onReliableWriteCompleted} callback is
      * invoked to indicate whether the transaction has been executed correctly.
      *
-     * <p>Requires {@link android.Manifest.permission#BLUETOOTH} permission.
+     * <p>Requires {@link Manifest.permission#BLUETOOTH} permission.
      *
      * @return true, if the request to execute the transaction has been sent
      */
@@ -395,5 +396,9 @@ public final class BleDeviceController {
             return false;
         }
         return bleMultiConnector.executeReliableWrite(address);
+    }
+
+    public boolean isConnected() {
+        return bleMultiConnector.isConnected(address);
     }
 }

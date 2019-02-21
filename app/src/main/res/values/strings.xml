@@ -7,7 +7,7 @@
     <string name="connecting">Connecting</string>
     <string name="get_service_success">Get information completed</string>
     <string name="get_name_failed">Get device name failed</string>
-    <string name="disconnect">disconnected</string>
+    <string name="disconnected">disconnected</string>
     <string name="connected">connected</string>
     <string name="device_name">Device name:</string>
     <string name="device_address">Device address</string>
@@ -66,4 +66,7 @@
     <string name="write_big_data_with_notification_without_format">Write large amounts of data with Notify without format</string>
     <string name="request_sent">Request sent</string>
     <string name="connect_failed">Connect failed</string>
+    <string name="open_socket">Open</string>
+    <string name="close_socket">Close</string>
+    <string name="disconnect">Disconnect</string>
 </resources>

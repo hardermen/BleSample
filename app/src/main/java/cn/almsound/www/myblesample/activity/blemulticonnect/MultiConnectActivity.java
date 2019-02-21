@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.jackiepenghe.baselibrary.activity.BaseAppCompatActivity;
 import com.jackiepenghe.baselibrary.tools.Tool;
+import com.jackiepenghe.blelibrary.BleDeviceController;
 import com.jackiepenghe.blelibrary.BleManager;
 import com.jackiepenghe.blelibrary.BleMultiConnector;
 
@@ -40,9 +41,11 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
 
     private BleMultiConnector bleMultiConnector;
     private Button connectButton;
+    private Button openButton;
+    private Button closeButton;
+    private Button disconnectButton;
     private CustomTextCircleView customTextCircleView1, customTextCircleView2, customTextCircleView3, customTextCircleView4, customTextCircleView5;
     private TextView deviceAddressTv1, deviceAddressTv2, deviceAddressTv3, deviceAddressTv4, deviceAddressTv5;
-    private boolean first = true;
 
     private BluetoothDevice device1;
     private BluetoothDevice device2;
@@ -67,11 +70,21 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
                 case R.id.connect_button:
                     doConnect();
                     break;
+                case R.id.open_socket:
+                    openSocket();
+                    break;
+                case R.id.close_socket:
+                    closeSocket();
+                    break;
+                case R.id.disconnect:
+                    disconnect();
+                    break;
                 default:
                     break;
             }
         }
     };
+
     private ArrayList<BluetoothDevice> bluetoothDevices;
 
     /**
@@ -134,6 +147,7 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void doBeforeInitOthers() {
+        setTitleText(R.string.app_name);
         bleMultiConnector = BleManager.getBleMultiConnectorInstance();
     }
 
@@ -143,6 +157,9 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
     @Override
     protected void initViews() {
         connectButton = findViewById(R.id.connect_button);
+        openButton = findViewById(R.id.open_socket);
+        closeButton = findViewById(R.id.close_socket);
+        disconnectButton = findViewById(R.id.disconnect);
 
         customTextCircleView1 = findViewById(R.id.circle_device1);
         customTextCircleView2 = findViewById(R.id.circle_device2);
@@ -194,11 +211,11 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
      */
     @Override
     protected void initOtherData() {
-        device1BleCallback = new Device1Callback(customTextCircleView1);
-        device2BleCallback = new Device2Callback(customTextCircleView2);
-        device3BleCallback = new Device3Callback(customTextCircleView3);
-        device4BleCallback = new Device4Callback(customTextCircleView4);
-        device5BleCallback = new Device5Callback(customTextCircleView5);
+        device1BleCallback = new Device1Callback(customTextCircleView1,bleMultiConnector);
+        device2BleCallback = new Device2Callback(customTextCircleView2,bleMultiConnector);
+        device3BleCallback = new Device3Callback(customTextCircleView3,bleMultiConnector);
+        device4BleCallback = new Device4Callback(customTextCircleView4,bleMultiConnector);
+        device5BleCallback = new Device5Callback(customTextCircleView5,bleMultiConnector);
     }
 
     /**
@@ -207,6 +224,9 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
     @Override
     protected void initEvents() {
         connectButton.setOnClickListener(onClickListener);
+        openButton.setOnClickListener(onClickListener);
+        closeButton.setOnClickListener(onClickListener);
+        disconnectButton.setOnClickListener(onClickListener);
     }
 
 
@@ -251,10 +271,6 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
      * 开始连接
      */
     private void doConnect() {
-        if (!first) {
-            return;
-        }
-        first = false;
 
         /*        //使用默认的回调连接直接发起连接 */
         /*bleMultiConnector.connect(device1Address);*/
@@ -349,6 +365,7 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
                     @Override
                     public void run() {
                         bleMultiConnector.connect(device3, device3BleCallback, true);
+//                        bleMultiConnector.connect("00:19:5d:00:55:66", device3BleCallback, true);
                     }
                 });
             }
@@ -370,6 +387,7 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
                     @Override
                     public void run() {
                         bleMultiConnector.connect(device2, device2BleCallback, true);
+//                        bleMultiConnector.connect("00:19:5d:00:33:44", device2BleCallback, true);
                     }
                 });
             }
@@ -391,10 +409,133 @@ public class MultiConnectActivity extends BaseAppCompatActivity {
                     @Override
                     public void run() {
                         bleMultiConnector.connect(device1, device1BleCallback, true);
+//                        bleMultiConnector.connect("00:19:5d:00:11:22", device1BleCallback, true);
                     }
                 });
             }
         };
         THREAD_FACTORY.newThread(runnable).start();
+    }
+
+    private void openSocket() {
+        BleDeviceController bleDeviceController;
+        if (device1 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device1.getAddress());
+            if (bleDeviceController != null) {
+                if (bleDeviceController.isConnected()) {
+                    bleDeviceController.writeData(Constants.DEVICE_SERVICE_UUID, Constants.DEVICE_CHARACTERISTIC_UUID, new byte[]{0x00, 0x00});
+                }
+            }
+        }
+        if (device2 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device2.getAddress());
+            if (bleDeviceController != null) {
+                if (bleDeviceController.isConnected()) {
+                    bleDeviceController.writeData(Constants.DEVICE_SERVICE_UUID, Constants.DEVICE_CHARACTERISTIC_UUID, new byte[]{0x00, 0x00});
+                }
+            }
+        }
+        if (device3 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device3.getAddress());
+            if (bleDeviceController != null) {
+                if (bleDeviceController.isConnected()) {
+                    bleDeviceController.writeData(Constants.DEVICE_SERVICE_UUID, Constants.DEVICE_CHARACTERISTIC_UUID, new byte[]{0x00, 0x00});
+                }
+            }
+        }
+        if (device4 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device4.getAddress());
+            if (bleDeviceController != null) {
+                if (bleDeviceController.isConnected()) {
+                    bleDeviceController.writeData(Constants.DEVICE_SERVICE_UUID, Constants.DEVICE_CHARACTERISTIC_UUID, new byte[]{0x00, 0x00});
+                }
+            }
+        }
+        if (device5 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device5.getAddress());
+            if (bleDeviceController != null) {
+                if (bleDeviceController.isConnected()) {
+                    bleDeviceController.writeData(Constants.DEVICE_SERVICE_UUID, Constants.DEVICE_CHARACTERISTIC_UUID, new byte[]{0x00, 0x00});
+                }
+            }
+        }
+    }
+
+    private void closeSocket() {
+        BleDeviceController bleDeviceController;
+        if (device1 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device1.getAddress());
+            if (bleDeviceController != null) {
+                if (bleDeviceController.isConnected()) {
+                    bleDeviceController.writeData(Constants.DEVICE_SERVICE_UUID, Constants.DEVICE_CHARACTERISTIC_UUID, new byte[]{0x00, 0x01});
+                }
+            }
+        }
+        if (device2 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device2.getAddress());
+            if (bleDeviceController != null) {
+                if (bleDeviceController.isConnected()) {
+                    bleDeviceController.writeData(Constants.DEVICE_SERVICE_UUID, Constants.DEVICE_CHARACTERISTIC_UUID, new byte[]{0x00, 0x01});
+                }
+            }
+        }
+        if (device3 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device3.getAddress());
+            if (bleDeviceController != null) {
+                if (bleDeviceController.isConnected()) {
+                    bleDeviceController.writeData(Constants.DEVICE_SERVICE_UUID, Constants.DEVICE_CHARACTERISTIC_UUID, new byte[]{0x00, 0x01});
+                }
+            }
+        }
+        if (device4 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device4.getAddress());
+            if (bleDeviceController != null) {
+                if (bleDeviceController.isConnected()) {
+                    bleDeviceController.writeData(Constants.DEVICE_SERVICE_UUID, Constants.DEVICE_CHARACTERISTIC_UUID, new byte[]{0x00, 0x01});
+                }
+            }
+        }
+        if (device5 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device5.getAddress());
+            if (bleDeviceController != null) {
+                if (bleDeviceController.isConnected()) {
+                    bleDeviceController.writeData(Constants.DEVICE_SERVICE_UUID, Constants.DEVICE_CHARACTERISTIC_UUID, new byte[]{0x00, 0x01});
+                }
+            }
+        }
+    }
+
+    private void disconnect() {
+        BleDeviceController bleDeviceController;
+        if (device1 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device1.getAddress());
+            if (bleDeviceController != null) {
+                bleDeviceController.disconnect();
+            }
+        }
+        if (device2 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device2.getAddress());
+            if (bleDeviceController != null) {
+                bleDeviceController.disconnect();
+            }
+        }
+        if (device3 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device3.getAddress());
+            if (bleDeviceController != null) {
+                bleDeviceController.disconnect();
+            }
+        }
+        if (device4 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device4.getAddress());
+            if (bleDeviceController != null) {
+                bleDeviceController.disconnect();
+            }
+        }
+        if (device5 != null) {
+            bleDeviceController = bleMultiConnector.getBleDeviceController(device5.getAddress());
+            if (bleDeviceController != null) {
+                bleDeviceController.disconnect();
+            }
+        }
     }
 }
