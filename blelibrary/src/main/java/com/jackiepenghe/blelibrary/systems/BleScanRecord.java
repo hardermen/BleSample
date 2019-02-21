@@ -23,6 +23,8 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 
+import com.jackiepenghe.blelibrary.DebugUtil;
+
 import java.io.Serializable;
 import java.util.Arrays;
 
@@ -60,7 +62,7 @@ public final class BleScanRecord implements Serializable {
     @Nullable
     private final BleArrayList<BleParcelUuid> mServiceUuids;
 
-    private final BleHashMap<Byte,byte[]> mManufacturerSpecificData;
+    private final BleHashMap<Byte, byte[]> mManufacturerSpecificData;
 
     private final BleHashMap<BleParcelUuid, byte[]> mServiceData;
 
@@ -93,7 +95,7 @@ public final class BleScanRecord implements Serializable {
      * Returns a sparse array of manufacturer identifier and its corresponding manufacturer specific
      * data.
      */
-    public BleHashMap<Byte,byte[]> getManufacturerSpecificData() {
+    public BleHashMap<Byte, byte[]> getManufacturerSpecificData() {
         return mManufacturerSpecificData;
     }
 
@@ -152,12 +154,15 @@ public final class BleScanRecord implements Serializable {
     }
 
     private BleScanRecord(@Nullable BleArrayList<BleParcelUuid> serviceUuids,
-                          BleHashMap<Byte,byte[]> manufacturerData,
-                          BleHashMap<BleParcelUuid, byte[]> serviceData,
+                          @Nullable BleHashMap<Byte, byte[]> manufacturerData,
+                          @Nullable BleHashMap<BleParcelUuid, byte[]> serviceData,
                           int advertiseFlags, int txPowerLevel,
-                          String localName, byte[] bytes) {
+                          @Nullable String localName, @NonNull byte[] bytes) {
         mServiceUuids = serviceUuids;
         mManufacturerSpecificData = manufacturerData;
+        if (mManufacturerSpecificData != null) {
+            DebugUtil.warnOut(TAG, "mManufacturerSpecificData size = " + mManufacturerSpecificData.size());
+        }
         mServiceData = serviceData;
         mDeviceName = localName;
         mAdvertiseFlags = advertiseFlags;
@@ -250,7 +255,7 @@ public final class BleScanRecord implements Serializable {
                 serviceUuids = null;
             }
 
-            return new BleScanRecord(serviceUuids,  parseScanRecord(scanRecord), serviceData,
+            return new BleScanRecord(serviceUuids, parseScanRecord(scanRecord), serviceData,
                     advertiseFlag, txPowerLevel, localName, scanRecord);
         } catch (Exception e) {
             Log.e(TAG, "unable to parse scan record: " + Arrays.toString(scanRecord));
@@ -263,8 +268,8 @@ public final class BleScanRecord implements Serializable {
     @Override
     public String toString() {
         return "BleScanRecord [mAdvertiseFlags=" + mAdvertiseFlags + ", mServiceUuids=" + mServiceUuids
-                + ", mManufacturerSpecificData=" + BluetoothLeUtils.toString(mManufacturerSpecificData)
-                + ", mServiceData=" + BluetoothLeUtils.toString(mServiceData)
+                + ", mManufacturerSpecificData=" + mManufacturerSpecificData.toString()
+                + ", mServiceData=" + mServiceData.toString()
                 + ", mTxPowerLevel=" + mTxPowerLevel + ", mDeviceName=" + mDeviceName + "]";
     }
 
@@ -334,8 +339,9 @@ public final class BleScanRecord implements Serializable {
      *
      * @param scanRecord 完整的广播包
      */
-    private static  BleHashMap<Byte,byte[]> parseScanRecord(byte[] scanRecord) {
-        BleHashMap<Byte,byte[]> bleSparseArray = new BleHashMap<>();
+    @NonNull
+    private static BleHashMap<Byte, byte[]> parseScanRecord(byte[] scanRecord) {
+        BleHashMap<Byte, byte[]> bleSparseArray = new BleHashMap<>();
         if (scanRecord == null) {
             return bleSparseArray;
         }

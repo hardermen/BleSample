@@ -509,7 +509,7 @@ public final class BleScanner {
                     return;
                 }
                 String name = device.getName();
-
+                DebugUtil.warnOut(TAG,"address = " + device.getAddress());
                 BleScanRecord bleScanRecord = BleScanRecord.parseFromBytes(scanRecord);
                 if (null == name || "".equals(name)) {
                     name = bleScanRecord.getDeviceName();
@@ -717,6 +717,7 @@ public final class BleScanner {
             deviceName = scanRecord.getDeviceName();
         }
         String address = device.getAddress();
+        DebugUtil.warnOut(TAG,"address = " + address);
         BleScanRecord bleScanRecord = BleScanRecord.parseFromBytes(scanRecord.getBytes());
 
         if (null == deviceName || "".equals(deviceName)) {

@@ -29,6 +29,8 @@ public final class BleDevice implements Serializable, Parcelable {
 
     private static final long serialVersionUID = -2219219185665113265L;
 
+    private static final String TAG = BleDevice.class.getSimpleName();
+
     /*-----------------------------------field variables-----------------------------------*/
 
     /**
@@ -115,10 +117,11 @@ public final class BleDevice implements Serializable, Parcelable {
     @Nullable
     public ArrayList<AdvertiseRecord> getAdvertiseRecords() {
         ArrayList<AdvertiseRecord> advertiseRecords = new ArrayList<>();
-        BleHashMap<Byte, byte[]> manufacturerSpecificDatas = bleScanRecord.getManufacturerSpecificData();
+        BleHashMap<Byte, byte[]> manufacturerSpecificDatas = getManufacturerSpecificData();
         if (manufacturerSpecificDatas == null) {
             return null;
         }
+        DebugUtil.warnOut(TAG,"manufacturerSpecificDatas size = " + manufacturerSpecificDatas.size());
 
         Set<Map.Entry<Byte, byte[]>> entries = manufacturerSpecificDatas.entrySet();
         for (Map.Entry<Byte, byte[]> next : entries) {
@@ -140,6 +143,15 @@ public final class BleDevice implements Serializable, Parcelable {
     @Nullable
     public byte[] getManufacturerSpecificData(byte type) {
         return bleScanRecord.getManufacturerSpecificData(type);
+    }
+
+    /**
+     * Returns a sparse array of manufacturer identifier and its corresponding manufacturer specific
+     * data.
+     */
+    @SuppressWarnings("WeakerAccess")
+    public BleHashMap<Byte, byte[]> getManufacturerSpecificData() {
+        return bleScanRecord.getManufacturerSpecificData();
     }
 
     /**
