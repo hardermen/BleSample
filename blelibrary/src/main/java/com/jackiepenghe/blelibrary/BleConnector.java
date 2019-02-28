@@ -19,6 +19,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
+import com.jackiepenghe.blelibrary.enums.PhyMask;
+import com.jackiepenghe.blelibrary.enums.Transport;
 import com.jackiepenghe.blelibrary.interfaces.OnBleCharacteristicWriteListener;
 import com.jackiepenghe.blelibrary.interfaces.OnBleConnectStateChangedListener;
 import com.jackiepenghe.blelibrary.interfaces.OnBleDescriptorWriteListener;
@@ -299,7 +301,30 @@ public final class BleConnector {
      */
     public boolean connect(@NonNull String address) {
         return connect(address, false);
+    }
 
+    private boolean connect(@NonNull String address, boolean autoReconnect) {
+        return connect(address, autoReconnect, (Transport) null);
+    }
+
+    private boolean connect(@NonNull String address, @Nullable Transport transport) {
+        return connect(address, transport, null);
+    }
+
+    private boolean connect(@NonNull String address, @Nullable PhyMask phyMask) {
+        return connect(address, false, phyMask);
+    }
+
+    private boolean connect(@NonNull String address, boolean autoReconnect, @Nullable Transport transport) {
+        return connect(address, autoReconnect, transport, null);
+    }
+
+    private boolean connect(@NonNull String address, boolean autoReconnect, @Nullable PhyMask phyMask) {
+        return connect(address, autoReconnect, null, phyMask);
+    }
+
+    private boolean connect(@NonNull String address, @Nullable Transport transport, @Nullable PhyMask phyMask) {
+        return connect(address, false, transport, phyMask);
     }
 
     /**
@@ -307,13 +332,19 @@ public final class BleConnector {
      *
      * @param address       device address
      * @param autoReconnect Whether to automatically reconnect
+     * @param transport     preferred transport for GATT connections to remote dual-mode devices {@link
+     *                      BluetoothDevice#TRANSPORT_AUTO} or {@link BluetoothDevice#TRANSPORT_BREDR} or {@link
+     *                      BluetoothDevice#TRANSPORT_LE}
+     * @param phyMask       preferred PHY for connections to remote LE device. Bitwise OR of any of {@link
+     *                      BluetoothDevice#PHY_LE_1M_MASK}, {@link BluetoothDevice#PHY_LE_2M_MASK}, and {@link
+     *                      BluetoothDevice#PHY_LE_CODED_MASK}. This option does not take effect if {@code autoConnect}
      * @return true means request successful
      */
-    public boolean connect(@NonNull final String address, final boolean autoReconnect) {
+    public boolean connect(@NonNull final String address, final boolean autoReconnect, @Nullable Transport transport, @Nullable PhyMask phyMask) {
         if (!isInitialized()) {
             return false;
         }
-        boolean result = bluetoothLeService != null && bluetoothLeService.connect(address, autoReconnect);
+        boolean result = bluetoothLeService != null && bluetoothLeService.connect(address, autoReconnect, transport, phyMask);
         if (result) {
             closed = false;
             checkConnectTimeOut();
@@ -331,18 +362,48 @@ public final class BleConnector {
         return connect(bluetoothDevice, false);
     }
 
+    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect) {
+        return connect(bluetoothDevice, autoReconnect, (Transport) null);
+    }
+
+    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, @Nullable Transport transport) {
+        return connect(bluetoothDevice, transport, null);
+    }
+
+    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, @Nullable PhyMask phyMask) {
+        return connect(bluetoothDevice, false, phyMask);
+    }
+
+    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect, @Nullable Transport transport) {
+        return connect(bluetoothDevice, autoReconnect, transport, null);
+    }
+
+    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect, @Nullable PhyMask phyMask) {
+        return connect(bluetoothDevice, autoReconnect, null, phyMask);
+    }
+
+    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, @Nullable Transport transport, @Nullable PhyMask phyMask) {
+        return connect(bluetoothDevice, false, transport, phyMask);
+    }
+
     /**
      * Initiate a request to connect to a remote device
      *
      * @param bluetoothDevice remote device
      * @param autoReconnect   Whether to automatically reconnect
+     * @param transport       preferred transport for GATT connections to remote dual-mode devices {@link
+     *                        BluetoothDevice#TRANSPORT_AUTO} or {@link BluetoothDevice#TRANSPORT_BREDR} or {@link
+     *                        BluetoothDevice#TRANSPORT_LE}
+     * @param phyMask         preferred PHY for connections to remote LE device. Bitwise OR of any of {@link
+     *                        BluetoothDevice#PHY_LE_1M_MASK}, {@link BluetoothDevice#PHY_LE_2M_MASK}, and {@link
+     *                        BluetoothDevice#PHY_LE_CODED_MASK}. This option does not take effect if {@code autoConnect}
      * @return true means request successful.
      */
-    public boolean connect(@NonNull final BluetoothDevice bluetoothDevice, final boolean autoReconnect) {
+    public boolean connect(@NonNull final BluetoothDevice bluetoothDevice, final boolean autoReconnect, @Nullable Transport transport, @Nullable PhyMask phyMask) {
         if (!isInitialized()) {
             return false;
         }
-        boolean result = bluetoothLeService != null && bluetoothLeService.connect(bluetoothDevice, autoReconnect);
+        boolean result = bluetoothLeService != null && bluetoothLeService.connect(bluetoothDevice, autoReconnect, transport, phyMask);
         if (result) {
             closed = false;
             checkConnectTimeOut();

@@ -17,6 +17,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
+import com.jackiepenghe.blelibrary.enums.PhyMask;
+import com.jackiepenghe.blelibrary.enums.Transport;
 import com.jackiepenghe.blelibrary.interfaces.OnBleCharacteristicWriteListener;
 import com.jackiepenghe.blelibrary.interfaces.OnBleConnectStateChangedListener;
 import com.jackiepenghe.blelibrary.interfaces.OnBleDescriptorWriteListener;
@@ -172,9 +174,15 @@ public final class BluetoothLeService extends Service {
      *
      * @param address       device address
      * @param autoReconnect Whether to automatically reconnect
+     * @param transport     preferred transport for GATT connections to remote dual-mode devices {@link
+     *                      BluetoothDevice#TRANSPORT_AUTO} or {@link BluetoothDevice#TRANSPORT_BREDR} or {@link
+     *                      BluetoothDevice#TRANSPORT_LE}
+     * @param phyMask       preferred PHY for connections to remote LE device. Bitwise OR of any of {@link
+     *                      BluetoothDevice#PHY_LE_1M_MASK}, {@link BluetoothDevice#PHY_LE_2M_MASK}, and {@link
+     *                      BluetoothDevice#PHY_LE_CODED_MASK}. This option does not take effect if {@code autoConnect}
      * @return true means request successful
      */
-    boolean connect(@NonNull String address, boolean autoReconnect) {
+    boolean connect(@NonNull String address, boolean autoReconnect, @Nullable Transport transport, @Nullable PhyMask phyMask) {
         if (bluetoothAdapter == null) {
             return false;
         }
@@ -186,7 +194,7 @@ public final class BluetoothLeService extends Service {
             return false;
         }
 
-        return connect(remoteDevice, autoReconnect);
+        return connect(remoteDevice, autoReconnect, transport, phyMask);
     }
 
     /**
@@ -194,9 +202,15 @@ public final class BluetoothLeService extends Service {
      *
      * @param bluetoothDevice remote device
      * @param autoReconnect   Whether to automatically reconnect
+     * @param transport       preferred transport for GATT connections to remote dual-mode devices {@link
+     *                        BluetoothDevice#TRANSPORT_AUTO} or {@link BluetoothDevice#TRANSPORT_BREDR} or {@link
+     *                        BluetoothDevice#TRANSPORT_LE}
+     * @param phyMask         preferred PHY for connections to remote LE device. Bitwise OR of any of {@link
+     *                        BluetoothDevice#PHY_LE_1M_MASK}, {@link BluetoothDevice#PHY_LE_2M_MASK}, and {@link
+     *                        BluetoothDevice#PHY_LE_CODED_MASK}. This option does not take effect if {@code autoConnect}
      * @return true means request successful.
      */
-    boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect) {
+    boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect, @Nullable Transport transport, @Nullable PhyMask phyMask) {
         if (bluetoothAdapter == null) {
             return false;
         }
@@ -204,9 +218,18 @@ public final class BluetoothLeService extends Service {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback);
         } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback, BluetoothDevice.TRANSPORT_AUTO);
+            if (transport == null) {
+                transport = Transport.TRANSPORT_AUTO;
+            }
+            bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback, transport.getValue());
         } else {
-            bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback, BluetoothDevice.TRANSPORT_AUTO, BluetoothDevice.PHY_LE_1M_MASK);
+            if (transport == null) {
+                transport = Transport.TRANSPORT_AUTO;
+            }
+            if (phyMask == null) {
+                phyMask = PhyMask.PHY_LE_1M_MASK;
+            }
+            bluetoothGatt = bluetoothDevice.connectGatt(this, autoReconnect, bleBluetoothGattCallback, transport.getValue(), phyMask.getValue());
         }
         return autoReconnect || bluetoothGatt != null && bluetoothGatt.connect();
     }
