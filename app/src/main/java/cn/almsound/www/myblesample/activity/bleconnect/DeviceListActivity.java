@@ -113,10 +113,35 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         @Override
         public boolean onItemLongClick(BaseQuickAdapter adapter, View view, int position) {
             BleDevice bleDevice = adapterList.get(position);
-            showScanRecordDataDialog(bleDevice);
+            showOptionsDialog(bleDevice);
             return true;
         }
     };
+
+    private void showOptionsDialog(final BleDevice bleDevice) {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.options)
+                .setItems(R.array.device_list_options, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        bleScanner.stopScan();
+                        switch (which) {
+                            case 0:
+                                toBroadcastIntervalTestActivity(bleDevice.getDeviceAddress());
+                                break;
+                            case 1:
+                                toAdRecordParseActivity(bleDevice);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .setCancelable(false)
+                .show();
+    }
+
     private OnBleScanStateChangedListener onBleScanStateChangedListener = new OnBleScanStateChangedListener() {
         @Override
         public void onScanFindOneDevice(BleDevice bleDevice) {
@@ -412,7 +437,7 @@ public class DeviceListActivity extends BaseAppCompatActivity {
         }
         BleDevice bleDevice = adapterList.get(position);
         Intent intent = new Intent(DeviceListActivity.this, ConnectActivity.class);
-        intent.putExtra(Constants.DEVICE,(Serializable) bleDevice);
+        intent.putExtra(Constants.DEVICE, (Serializable) bleDevice);
         startActivity(intent);
     }
 
@@ -441,10 +466,10 @@ public class DeviceListActivity extends BaseAppCompatActivity {
      *
      * @param bleDevice 广播包
      */
-    private void showScanRecordDataDialog(BleDevice bleDevice) {
-       Intent intent = new Intent(DeviceListActivity.this,AdRecordParseActivity.class);
-       intent.putExtra(Constants.DEVICE, (Serializable) bleDevice);
-       startActivity(intent);
+    private void toAdRecordParseActivity(BleDevice bleDevice) {
+        Intent intent = new Intent(DeviceListActivity.this, AdRecordParseActivity.class);
+        intent.putExtra(Constants.DEVICE, (Serializable) bleDevice);
+        startActivity(intent);
     }
 
     /**
@@ -494,5 +519,11 @@ public class DeviceListActivity extends BaseAppCompatActivity {
                 .setNegativeButton(R.string.cancel, null)
                 .setCancelable(false)
                 .show();
+    }
+
+    private void toBroadcastIntervalTestActivity(String deviceAddress) {
+        Intent intent = new Intent(DeviceListActivity.this, BroadcastIntervalTestActivity.class);
+        intent.putExtra(Constants.DEVICE_ADDRESS, deviceAddress);
+        startActivity(intent);
     }
 }

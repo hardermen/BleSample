@@ -1,5 +1,6 @@
 package cn.almsound.www.myblesample.guid;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -8,16 +9,16 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AlertDialog;
+import android.text.TextUtils;
 
 import com.jackiepenghe.baselibrary.activity.BaseWelcomeActivity;
 import com.jackiepenghe.baselibrary.tools.CrashHandler;
 import com.jackiepenghe.baselibrary.tools.ToastUtil;
-import com.jackiepenghe.baselibrary.tools.Tool;
+import com.yanzhenjie.permission.Action;
 import com.yanzhenjie.permission.AndPermission;
-import com.yanzhenjie.permission.Permission;
-import com.yanzhenjie.permission.PermissionListener;
 import com.yanzhenjie.permission.Rationale;
-import com.yanzhenjie.permission.RationaleListener;
+import com.yanzhenjie.permission.RequestExecutor;
+import com.yanzhenjie.permission.runtime.Permission;
 
 import java.util.List;
 
@@ -30,40 +31,73 @@ import cn.almsound.www.myblesample.main.MainActivity;
 public class WelcomeActivity extends BaseWelcomeActivity {
 
     /*-----------------------成员变量-----------------------*/
-
-    /**
-     * 权限请求码
-     */
-    private static final int REQUEST_CODE = 1;
     /**
      * 进入设置界面的权限请求码
      */
     private static final int REQUEST_CODE_SETTING = 2;
-    /**
-     * 权限回调
-     */
-    private PermissionListener permissionListener = new PermissionListener() {
+    private Action<List<String>> onGrantedListener = new Action<List<String>>() {
         @Override
-        public void onSucceed(int requestCode, @NonNull List<String> grantPermissions) {
+        public void onAction(List<String> data) {
             toNext();
         }
-
+    };
+    private Action<List<String>> onDeniedListener = new Action<List<String>>() {
         @Override
-        public void onFailed(int requestCode, @NonNull List<String> deniedPermissions) {
-            // 用户否勾选了不再提示并且拒绝了权限，那么提示用户到设置中授权。
-            if (AndPermission.hasAlwaysDeniedPermission(WelcomeActivity.this, deniedPermissions)) {
-                // 第一种：用默认的提示语。
-                AndPermission.defaultSettingDialog(WelcomeActivity.this, REQUEST_CODE_SETTING).show();
+        public void onAction(List<String> deniedPermissions) {
+            if (!AndPermission.hasAlwaysDeniedPermission(WelcomeActivity.this, deniedPermissions)) {
+                ToastUtil.toastL(WelcomeActivity.this, R.string.no_permission_exits);
+                finish();
+            } else {
+                List<String> strings =Permission.transformText(WelcomeActivity.this, deniedPermissions);
+                String permissionText = TextUtils.join(",\n", strings);
+                new AlertDialog.Builder(WelcomeActivity.this)
+                        .setTitle(R.string.no_permission)
+                        .setMessage(permissionText)
+                        .setPositiveButton(R.string.settings, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                AndPermission.with(WelcomeActivity.this)
+                                        .runtime()
+                                        .setting()
+                                        .start(REQUEST_CODE_SETTING);
+                            }
+                        })
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }
+                        })
+                        .setCancelable(false)
+                        .show();
             }
         }
     };
-    /**
-     * 二次权限请求回调
-     */
-    private RationaleListener rationaleListener = new RationaleListener() {
+    private Rationale<List<String>> rationaleListener = new Rationale<List<String>>() {
         @Override
-        public void showRequestPermissionRationale(int requestCode, Rationale rationale) {
-            AndPermission.rationaleDialog(WelcomeActivity.this, rationale).show();
+        public void showRationale(Context context, List<String> data, RequestExecutor executor) {
+            List<String> strings = Permission.transformText(WelcomeActivity.this, data);
+            String permissionText = TextUtils.join(",\n", strings);
+            new AlertDialog.Builder(WelcomeActivity.this)
+                    .setTitle(R.string.no_permission)
+                    .setMessage(permissionText)
+                    .setPositiveButton(R.string.settings, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            AndPermission.with(WelcomeActivity.this)
+                                    .runtime()
+                                    .setting()
+                                    .start(REQUEST_CODE_SETTING);
+                        }
+                    })
+                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .setCancelable(false)
+                    .show();
         }
     };
 
@@ -122,9 +156,10 @@ public class WelcomeActivity extends BaseWelcomeActivity {
      */
     private void requestPermission() {
         AndPermission.with(this)
-                .requestCode(REQUEST_CODE)
-                .permission(Permission.LOCATION, Permission.STORAGE)
-                .callback(permissionListener)
+                .runtime()
+                .permission(Permission.Group.LOCATION, Permission.Group.STORAGE)
+                .onGranted(onGrantedListener)
+                .onDenied(onDeniedListener)
                 .rationale(rationaleListener)
                 .start();
     }

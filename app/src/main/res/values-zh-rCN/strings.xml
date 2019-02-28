@@ -69,4 +69,11 @@
     <string name="open_socket">打开</string>
     <string name="close_socket">关闭</string>
     <string name="disconnect">断开连接</string>
+    <string name="options">选项</string>
+    <string name="test_broadcast_interval">测试广播间隔</string>
+    <string name="view_broadcast_package">查看广播包</string>
+    <string name="scanning">扫描中</string>
+    <string name="no_permission_exits">没有权限，程序退出！</string>
+    <string name="no_permission">没有权限</string>
+    <string name="settings">设置</string>
 </resources>

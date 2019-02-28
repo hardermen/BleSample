@@ -69,4 +69,12 @@
     <string name="open_socket">Open</string>
     <string name="close_socket">Close</string>
     <string name="disconnect">Disconnect</string>
+    <string name="options">Options</string>
+    <string name="test_broadcast_interval">Test broadcast interval</string>
+    <string name="view_broadcast_package">View broadcast package</string>
+    <string name="zero" translatable="false">0</string>
+    <string name="scanning">Scanning</string>
+    <string name="no_permission_exits">No permission, the program exits</string>
+    <string name="no_permission">No Permission</string>
+    <string name="settings">Settings</string>
 </resources>

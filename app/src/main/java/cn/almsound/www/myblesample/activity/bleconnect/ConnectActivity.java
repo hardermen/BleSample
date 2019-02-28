@@ -835,7 +835,7 @@ public class ConnectActivity extends BaseAppCompatActivity {
     private void showOptionsDialog(final String serviceUUID, final String characteristicUUID) {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.select_options)
-                .setItems(R.array.bleOptions, new DialogInterface.OnClickListener() {
+                .setItems(R.array.device_options, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         switch (which) {
