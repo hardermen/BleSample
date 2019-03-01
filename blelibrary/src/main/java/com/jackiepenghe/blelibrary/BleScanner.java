@@ -1,7 +1,6 @@
 package com.jackiepenghe.blelibrary;
 
 import android.app.Activity;
-import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -436,7 +435,53 @@ public final class BleScanner {
      * @return true means the scanner successfully started scanning
      */
     public boolean startScan(boolean clearScanResult) {
-        return startScan(clearScanResult, 0);
+        if (context == null) {
+            return false;
+        }
+        if (bluetoothAdapter == null) {
+            return false;
+        }
+
+        if (!initialized) {
+            return false;
+        }
+
+        if (!bluetoothAdapter.isEnabled()) {
+            return false;
+        }
+
+        if (scanning) {
+            return false;
+        }
+
+        if (clearScanResult) {
+            clearScanResults();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                flushPendingScanResults();
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+            try {
+                bluetoothLeScanner.startScan(refreshScanFilter(), refreshScanSettings(), scanCallback21);
+                scanTimer.startTimer(scanPeriod);
+                scanning = true;
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+
+        } else {
+            try {
+                bluetoothAdapter.startLeScan(this.scanCallback18);
+                scanTimer.startTimer(scanPeriod);
+                scanning = true;
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
     }
 
     /**
@@ -804,72 +849,6 @@ public final class BleScanner {
                     .setPhy(ScanSettings.PHY_LE_ALL_SUPPORTED);
         }
         return builder.build();
-    }
-
-    /**
-     * start scan
-     *
-     * @param clearScanResult whether to clear previous scan records
-     * @param tryCount        try count
-     * @return true means start successful
-     */
-    private boolean startScan(boolean clearScanResult, int tryCount) {
-        tryCount++;
-        if (context == null) {
-            return false;
-        }
-        if (bluetoothAdapter == null) {
-            return false;
-        }
-
-        if (!initialized) {
-            return false;
-        }
-
-        if (!bluetoothAdapter.isEnabled()) {
-            return false;
-        }
-
-        if (scanning) {
-            return false;
-        }
-
-        if (clearScanResult) {
-            clearScanResults();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                flushPendingScanResults();
-            }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-
-            bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
-            try {
-                bluetoothLeScanner.startScan(refreshScanFilter(), refreshScanSettings(), scanCallback21);
-                scanTimer.startTimer(scanPeriod);
-                scanning = true;
-                return true;
-            } catch (Exception e) {
-                e.printStackTrace();
-                if (tryCount >= 3) {
-                    return false;
-                }
-                return startScan(clearScanResult, tryCount);
-            }
-        } else {
-            try {
-                bluetoothAdapter.startLeScan(this.scanCallback18);
-                scanTimer.startTimer(scanPeriod);
-                scanning = true;
-                return true;
-            } catch (Exception e) {
-                e.printStackTrace();
-                if (tryCount >= 3) {
-                    return false;
-                }
-                return startScan(clearScanResult, tryCount);
-            }
-        }
     }
 
     /**
