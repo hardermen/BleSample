@@ -303,15 +303,15 @@ public final class BleConnector {
         return connect(address, false);
     }
 
-    private boolean connect(@NonNull String address, boolean autoReconnect) {
+    public boolean connect(@NonNull String address, boolean autoReconnect) {
         return connect(address, autoReconnect, (Transport) null);
     }
 
-    private boolean connect(@NonNull String address, @Nullable Transport transport) {
+    public boolean connect(@NonNull String address, @Nullable Transport transport) {
         return connect(address, transport, null);
     }
 
-    private boolean connect(@NonNull String address, @Nullable PhyMask phyMask) {
+    public boolean connect(@NonNull String address, @Nullable PhyMask phyMask) {
         return connect(address, false, phyMask);
     }
 
@@ -319,11 +319,11 @@ public final class BleConnector {
         return connect(address, autoReconnect, transport, null);
     }
 
-    private boolean connect(@NonNull String address, boolean autoReconnect, @Nullable PhyMask phyMask) {
+    public boolean connect(@NonNull String address, boolean autoReconnect, @Nullable PhyMask phyMask) {
         return connect(address, autoReconnect, null, phyMask);
     }
 
-    private boolean connect(@NonNull String address, @Nullable Transport transport, @Nullable PhyMask phyMask) {
+    public boolean connect(@NonNull String address, @Nullable Transport transport, @Nullable PhyMask phyMask) {
         return connect(address, false, transport, phyMask);
     }
 
@@ -362,27 +362,27 @@ public final class BleConnector {
         return connect(bluetoothDevice, false);
     }
 
-    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect) {
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect) {
         return connect(bluetoothDevice, autoReconnect, (Transport) null);
     }
 
-    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, @Nullable Transport transport) {
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, @Nullable Transport transport) {
         return connect(bluetoothDevice, transport, null);
     }
 
-    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, @Nullable PhyMask phyMask) {
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, @Nullable PhyMask phyMask) {
         return connect(bluetoothDevice, false, phyMask);
     }
 
-    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect, @Nullable Transport transport) {
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect, @Nullable Transport transport) {
         return connect(bluetoothDevice, autoReconnect, transport, null);
     }
 
-    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect, @Nullable PhyMask phyMask) {
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, boolean autoReconnect, @Nullable PhyMask phyMask) {
         return connect(bluetoothDevice, autoReconnect, null, phyMask);
     }
 
-    private boolean connect(@NonNull BluetoothDevice bluetoothDevice, @Nullable Transport transport, @Nullable PhyMask phyMask) {
+    public boolean connect(@NonNull BluetoothDevice bluetoothDevice, @Nullable Transport transport, @Nullable PhyMask phyMask) {
         return connect(bluetoothDevice, false, transport, phyMask);
     }
 
