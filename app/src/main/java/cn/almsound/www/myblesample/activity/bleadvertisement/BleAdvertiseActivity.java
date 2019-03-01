@@ -109,7 +109,7 @@ public class BleAdvertiseActivity extends BaseAppCompatActivity {
             bleAdvertiser.setAdvertiseDataIncludeDeviceName(true);
             bleAdvertiser.setAdvertiseDataIncludeTxPowerLevel(true);
             bleAdvertiser.setBleAdvertiseMode(BleAdvertiseMode.LOW_LATENCY);
-            bleAdvertiser.setConnectable(false);
+            bleAdvertiser.setConnectable(true);
             bleAdvertiser.setOnBleAdvertiseStateChangedListener(defaultOnBleAdvertiseStateChangedListener);
             bleAdvertiser.setTimeOut(0);
             //初始化
